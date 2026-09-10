@@ -1,0 +1,309 @@
+---
+import Base from '../layouts/Base.astro';
+import AppDemo from '../components/AppDemo.astro';
+import Bento from '../components/Bento.astro';
+import Comparison from '../components/Comparison.astro';
+import ToolTabs from '../components/ToolTabs.astro';
+import PlatformCta from '../components/PlatformCta.astro';
+import Faq from '../components/Faq.astro';
+import FeatureAsk from '../components/FeatureAsk.astro';
+import data from '../data/formats.json';
+
+type Fmt = { id: string; kind: string; routes: { to: string }[] };
+const formats = data.formats as Fmt[];
+const sources = formats.filter((f) => f.routes.length > 0);
+const routeCount = sources.reduce((n, f) => n + f.routes.length, 0);
+
+/* The three tool groups, each with the screen it opens on. The items are the
+   real Tools menu, grouped exactly as the app groups it. */
+const toolGroups = [
+  {
+    id: 'image',
+    title: 'Image editing tools',
+    shots: [
+      { id: 'remove-bg', alt: 'The OpenConvert image workspace with a subject cut out of its background onto transparency.' },
+      { id: 'upscale', alt: 'The same workspace enlarging an image four times on device.' },
+      { id: 'colour-picker', alt: 'The colour picker sampling a value straight out of the image.' },
+    ],
+    items: [
+      'Remove background: on-device matting, nothing uploaded, different AI models available',
+      'Upscale x2 or x4 without the usual blur using a local AI model',
+      'Invert colours, black and white',
+      'Compress to the quality you pick, without changing the format',
+      'Read the text out of a screenshot or a scan',
+      'Colour picker, sampled from the image itself',
+      'Convert between HEIC, JPEG, PNG, WebP, AVIF, TIFF, JPEG XL, SVG and camera raw',
+    ],
+  },
+  {
+    id: 'pdf',
+    title: 'PDF tools',
+    shots: [
+      { id: 'pdf-merge', alt: 'Two PDFs loaded in OpenConvert, ready to merge into one file.' },
+      { id: 'pdf-reorder', alt: 'A document’s pages listed so they can be moved or dropped before the file is written.' },
+    ],
+    items: [
+      'Merge documents into one file while keeping hyperlinks, or split one into many',
+      'Keep, drop, reorder, rotate or crop pages',
+      'Add a password, or remove one you know',
+      'Compress without touching a single image',
+      'Sign, with the signature kept on your machine',
+      'Render any page to an image',
+      'Read a scan into searchable text',
+      'PDF to Markdown, HTML, DOCX or ODT',
+    ],
+  },
+  {
+    id: 'audio',
+    title: 'Audio tools',
+    shots: [
+      { id: 'transcribe', alt: 'A recording and the transcript OpenConvert produced from it locally.' },
+      { id: 'denoise', alt: 'The same recording with its background noise removed on this machine.' },
+    ],
+    items: [
+      'Transcribe speech into text you can search',
+      'Remove background noise from a recording',
+      'Convert between FLAC, WAV, MP3, OGG and M4A',
+      'Pull the audio out of a video without re-encoding it',
+    ],
+  },
+];
+
+const faq = [
+  {
+    q: 'Is it really free?',
+    a: 'Yes, and there is no paid tier holding a feature back. OpenConvert is Apache-2.0, so open source and ' +
+      'community driven. Support contracts and enterprise licensing fund the work — ' +
+      '<a href="/enterprise">talk to us about that</a> if you are one.',
+  },
+  {
+    q: 'Does anything leave my computer?',
+    a: 'Your files never leave your computer. Two things reach the network: downloading the AI models you chose ' +
+      'and their updates.',
+  },
+  {
+    q: 'What if it converts my file wrong?',
+    a: 'You still have the original. Every write in the program is exclusive and there is no truncating open ' +
+      'anywhere in it, so a conversion cannot replace a file you already had unless you specifically want it ' +
+      'to. The receipt beside the output names the engine, its version, the parameters and the operation ' +
+      'class, so a wrong result can be traced. If this ever happens, send us the receipt on ' +
+      '<a href="/community">Discord or GitHub</a>.',
+  },
+  {
+    q: 'Do I need the AI models?',
+    a: 'No. Conversion works in full without a single model on disk, and none is installed unless you ask for ' +
+      'one. Some features are driven by these models, so those are the ones you lose without them.',
+  },
+  {
+    q: 'How is this different from a website converter?',
+    a: 'A website converter has your file. That is the entire difference, and it is the reason the FBI issued an ' +
+      'advisory about free online converters in March 2025. OpenConvert reads the bytes on your own machine, inside ' +
+      'an OS sandbox that has no network capability at all.',
+  },
+  {
+    q: 'Who is behind it, and will it still exist in two years?',
+    a: 'I am Fabrizio, an aerospace engineering student who writes software in his spare time. I made OpenConvert ' +
+      'because I needed it, and thought of sharing it with everyone else. The licence answers the second half: ' +
+      'Apache-2.0 with the whole engine layer in the repository means the software outlives whoever is ' +
+      'maintaining it.',
+  },
+];
+---
+<Base
+  title="OpenConvert: convert & modify any file locally"
+  description="A local file converter with sandboxed engines, on-device AI models and a receipt for every job. Open Source & free."
+  path="/"
+  island>
+
+  <!-- ══════════ 1 · HERO ══════════ -->
+  <section class="hero">
+    <div class="wrap stack stack-6 hero-inner">
+      <div class="stack stack-5 hero-copy">
+        <h1 class="hero-title">Convert any file on your machine.</h1>
+        <p class="lede hero-lede">
+          Images, audio, video, documents; {routeCount} routes across {formats.length} formats,
+          using locally run AI models where useful.
+        </p>
+        <a href="/download" class="btn btn-primary btn-lg">Download OpenConvert</a>
+      </div>
+
+      <!-- The sample IS the hero picture, and its controls work: Tools and
+           Settings switch the stage to a real capture of that screen, the sun
+           flips the window's own appearance, and the brand comes back here. -->
+      <div class="hero-app">
+        <!-- The mascot, leaning on the window. Two files rather than one with
+             a media query, because the theme button sets `data-theme` and
+             `prefers-color-scheme` would ignore it. `alt=""` and aria-hidden:
+             it is decoration, and a screen reader announcing "OpenConvert mole"
+             between the heading and the app tells nobody anything. -->
+        <img class="hero-mole only-light" src="/mole.svg" width="207" height="170" alt="" aria-hidden="true" />
+        <img class="hero-mole only-dark" src="/mole-dark.svg" width="207" height="170" alt="" aria-hidden="true" />
+
+        <AppDemo>
+          <div class="tw-stage">
+            <div id="convert-island">
+              <div class="il" data-out hidden>
+                <p class="il-head" data-detected></p>
+                <div class="il-targets" data-targets></div>
+                <div class="il-planbox" data-plan></div>
+                <div class="il-action" data-action></div>
+                <div class="il-result" data-result hidden></div>
+              </div>
+              <p class="caption drop-status" data-status role="status"></p>
+
+              <label class="tw-zone" data-zone>
+                <span class="zone-idle" data-idle>
+                  <span class="up" aria-hidden="true">⇪</span>
+                  <span class="title">
+                    <span class="t-idle">Drop files to convert</span>
+                    <span class="t-drag">Release to add files</span>
+                  </span>
+                  <span class="choose">or click to choose <span class="key">Ctrl+O</span></span>
+                </span>
+                <input type="file" data-file hidden />
+              </label>
+            </div>
+          </div>
+        </AppDemo>
+
+        <p class="caption app-note">
+          A real sample: the conversions and tools your browser can do run here,
+          on your machine. What it cannot do is greyed out and says why.
+          <a href="/download">Download the desktop app</a> for every feature.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 2 · BENTO ══════════ -->
+  <section class="band">
+    <div class="wrap stack stack-7">
+      <div class="sec-head stack stack-3">
+        <h2>Built to be the last converter you install.</h2>
+      </div>
+      <Bento />
+    </div>
+  </section>
+
+  <!-- ══════════ 3 · COMPARISON ══════════ -->
+  <section>
+    <div class="wrap stack stack-6">
+      <div class="sec-head stack stack-3">
+        <h2>How it compares to other solutions.</h2>
+        <p class="lede">Measured against the most common options.</p>
+      </div>
+      <Comparison />
+    </div>
+  </section>
+
+  <!-- ══════════ 4 · WHAT IT DOES ══════════ -->
+  <!-- `#tools` is where the window's own Tools control points, so the control
+       goes to the thing it names rather than to a page that mentions it. -->
+  <section class="band" id="tools">
+    <div class="wrap stack stack-7">
+      <div class="sec-head stack stack-3">
+        <h2>The only app you need to manage files.</h2>
+      </div>
+      <ToolTabs groups={toolGroups} />
+    </div>
+  </section>
+
+  <!-- ══════════ 5 · THE BOARD ══════════ -->
+  <section>
+    <div class="wrap">
+      <FeatureAsk />
+    </div>
+  </section>
+
+  <!-- ══════════ 6 · GET OPENCONVERT ══════════ -->
+  <section class="band">
+    <div class="wrap">
+      <PlatformCta />
+    </div>
+  </section>
+
+  <!-- ══════════ 7 · FAQ ══════════ -->
+  <section>
+    <div class="wrap stack stack-6">
+      <div class="sec-head stack stack-3">
+        <h2>Questions people actually ask.</h2>
+      </div>
+      <Faq items={faq} />
+    </div>
+  </section>
+
+  <!-- The one script the site ships. Deferred: it reads markup that exists,
+       and fetches nothing until first interaction. -->
+  <script src="/island.js" defer is:inline></script>
+</Base>
+
+<style>
+  /* Sections own their own rules on this page: the band alternation replaces
+     base.css's hairline-between-sections, and two dividers stacked on one seam
+     is a line nobody asked for. */
+  section { border-top: 0; }
+
+  /* ---- 1 · hero ---- */
+  .hero { padding-block: clamp(var(--s-6), 4vw, var(--s-8)) var(--s-8); }
+
+  /* The hero runs wider than the site's 1000px measure, because the window has
+     to read as the product rather than as a figure in a column. The copy above
+     it keeps its own narrow measure, so only the picture gets the extra room. */
+  .hero .wrap { max-width: min(94vw, 1140px); }
+  .hero-inner { align-items: center; }
+  .hero-copy { align-items: center; text-align: center; }
+  .hero-copy .hero-title { max-width: 18ch; }
+  .hero-copy .hero-lede { max-width: 52ch; }
+  .cta-stack { align-items: center; }
+
+  /* The window runs wider than the reading measure — a share of the viewport
+     rather than of the column — because at column width it reads as a figure
+     rather than as the product. */
+  .hero-app {
+    width: 100%;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    /* The mole hangs off the top of this box, so it anchors here. */
+    position: relative;
+  }
+
+  /* ---- the mascot ----
+     The window's top edge is the top of this box, and the mole's artwork puts
+     its own leaning line at y=1000 of an 850-unit tall viewBox starting at 335
+     — so 78.2% of the drawing sits above that line and the paws make up the
+     rest. Offsetting the image by exactly that fraction of its height lands
+     the leaning line on the window's edge, at any size the mole is drawn.
+
+     `left: 75%` with a half-width shift centres it a quarter of the way in
+     from the right, and it never takes a click: the title bar underneath it is
+     a real control. */
+  .hero-mole {
+    position: absolute;
+    z-index: 3;
+    height: clamp(104px, 14vw, 170px);
+    width: auto;
+    left: 75%;
+    transform: translateX(-50%);
+    top: calc(clamp(104px, 14vw, 170px) * -0.782);
+    pointer-events: none;
+  }
+
+  /* Below the point where the window itself stops being the picture, the mole
+     is one more thing crowding a narrow screen.
+
+     Two class names, not one: the light/dark swap in base.css is written
+     `:root[data-theme='light'] .only-light`, which outweighs a bare
+     `.hero-mole` and put the mole back on screen at 500px when this rule was
+     one class lighter. */
+  @media (max-width: 560px) {
+    .hero-app .hero-mole { display: none; }
+  }
+  .app-note { text-align: center; }
+
+  /* ---- shared ---- */
+  .sec-head { text-align: center; align-items: center; }
+  .sec-head h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); letter-spacing: -0.028em; }
+  .sec-head .lede { max-width: 56ch; }
+</style>

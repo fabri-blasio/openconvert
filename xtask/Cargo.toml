@@ -1,0 +1,40 @@
+[package]
+name    = "xtask"
+version = "0.0.0"
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+publish = false
+
+[dependencies]
+anyhow     = { workspace = true }
+serde      = { workspace = true }
+serde_json = "1"
+# engines.toml is a licence gate, and hand-parsing a licence field is how a
+# gate comes to disagree with the file it guards. xtask is not shipped.
+toml       = "0.9"
+
+# `xtask deps` unpacks the native libraries and checks them against a pin.
+# Setup tooling, never shipped -- which is why a hash and two archive readers
+# live here rather than anywhere the product can reach.
+sha2       = "0.10"
+zip        = { version = "2", default-features = false, features = ["deflate"] }
+
+# `xtask routes` generates docs/ROUTES.md FROM the route table, so the
+# reference cannot describe a conversion that does not exist. That means
+# linking core -- which is a pure crate with no native library, so it does not
+# widen anything `depcheck` guards.
+# THE WORKSPACE ENTRY, not a bare path. A path dependency with no version is a
+# WILDCARD, and `cargo-deny`'s bans check refuses one — for the reason
+# `deny.toml` states beside that rule: a `*` accepts whatever the registry
+# serves tomorrow, which is a supply-chain decision made by somebody else.
+# `cargo publish` refuses a bare path dependency for the same reason.
+openconvert-core = { workspace = true }
+tar        = "0.4"
+flate2     = { version = "1", default-features = false, features = ["rust_backend"] }
+
+[lints.clippy]
+# The build tooling necessarily shells out to cargo and reads the tree. It is
+# not shipped, and it is not the core.
+disallowed_types   = "allow"
+disallowed_methods = "allow"

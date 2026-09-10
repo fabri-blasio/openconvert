@@ -1,0 +1,80 @@
+---
+/**
+ * The repeated download call, one card per platform.
+ *
+ * The reference sites put this near the bottom of every page and it is the
+ * second-highest-converting block they have. Ours carries the package-manager
+ * line as well as the file, because the people most likely to install a file
+ * converter from the internet are the ones least likely to want to.
+ *
+ * There is no OS auto-detection: that needs JavaScript, and every content page
+ * here budgets none.
+ */
+import release from '../data/release.json';
+
+export interface Props {
+  title?: string;
+  /** Suppress the heading when the page has already made the ask. */
+  bare?: boolean;
+}
+const { title = 'Get OpenConvert.', bare = false } = Astro.props;
+
+type Artifact = {
+  platform: string; label: string; arch: string;
+  file: string; bytes: number; manager: string;
+};
+
+// One card per platform: the first artifact each publishes is the recommended
+// one, and the rest live on /download where someone has come to compare them.
+const seen = new Set<string>();
+const platforms = (release.artifacts as Artifact[]).filter((a) => {
+  if (seen.has(a.platform)) return false;
+  seen.add(a.platform);
+  return true;
+});
+
+const mb = (b: number) => (b > 0 ? `${(b / 1048576).toFixed(0)} MB` : null);
+---
+<div class="cta stack stack-6">
+  {!bare && (
+    <div class="stack stack-3 head">
+      <h2>{title}</h2>
+      <p class="reassure">Free and open source · No account · Nothing is uploaded</p>
+    </div>
+  )}
+
+  <ul class="cards">
+    {platforms.map((a) => (
+      <li class="card stack stack-3">
+        <span class="plat">{a.label}</span>
+        <code class="mono cmd">{a.manager}</code>
+        <span class="caption mono">
+          {a.arch}{mb(a.bytes) ? ` · ${mb(a.bytes)}` : ''}
+        </span>
+      </li>
+    ))}
+  </ul>
+
+  <p class="foot caption">
+    <a href="/download">All artifacts, checksums and signatures →</a>
+  </p>
+</div>
+
+<style>
+  .cta { text-align: center; align-items: center; }
+  .head { align-items: center; }
+  .cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--s-4); list-style: none; margin: 0; padding: 0;
+    width: 100%; max-width: 820px;
+  }
+  .card {
+    align-items: center; text-align: center;
+    border: 1px solid var(--hairline); border-radius: var(--r-lg);
+    padding: var(--s-5) var(--s-4);
+    background: var(--surface-base);
+  }
+  .plat { font-weight: var(--fw-strong); letter-spacing: -0.012em; }
+  .cmd { font-size: 0.74rem; color: var(--brand); overflow-wrap: anywhere; }
+  .foot { margin: 0; }
+</style>

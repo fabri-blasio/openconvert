@@ -1,0 +1,328 @@
+---
+/*
+  ONE JOB, FOUR SCREENS — the app's own interface, advancing as you scroll.
+
+  Prose describing an interface is prose. This is the interface: the same markup
+  and the same measurements as the desktop window, moved through the four
+  screens a conversion actually passes. Scrolling is the transport, so nothing
+  autoplays, nothing loops, and the reader sets the pace.
+
+  **Every value on screen comes from one real run** — the `openconvert convert
+  bundle.zip -t tar --json` capture in data/receipt.json, the same file the
+  receipt further down the page prints in full. That job is here because its
+  receipt is the one the export script captured; picking a more photogenic
+  conversion would have meant typing the numbers in by hand, which turns a
+  picture of a product into a mock-up of one.
+
+  Motion is scroll-driven CSS with no JavaScript at all, and that is not
+  showmanship: every page but the homepage ships `script-src 'none'`, so a
+  sequence that needed a script could never be reused anywhere else. Browsers
+  without scroll-driven animations, and readers who asked for reduced motion,
+  get the four screens stacked down the page — every word still on screen,
+  nothing hidden behind an effect that never ran.
+*/
+import AppWindow from './AppWindow.astro';
+import receipt from '../data/receipt.json';
+
+const r = receipt.receipt;
+const step = r.steps[0];
+const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
+const gib = step.limits.memory_bytes / 1024 ** 3;
+/* Mebipixels, not decimal millions: the limit is 2^28 and the app reports it as
+   "256 Mpx". Dividing by 1e6 rendered "268.435456 Mpx decode" on the page. */
+const mpx = step.limits.decode_pixels / 1024 ** 2;
+---
+
+<figure class="flow">
+  <div class="rec-bar flow-bar">
+    <span class="rec-label mono">{receipt.command}</span>
+    <span class="rec-label">captured on {receipt.platform}</span>
+  </div>
+
+  <div class="flow-track">
+    <div class="flow-stick">
+      <div class="flow-frames">
+
+        <!-- 1 · DROP -->
+        <div class="flow-frame">
+          <AppWindow>
+            <div class="tw-stage">
+              <div class="tw-zone">
+                <span class="up" aria-hidden="true">⇪</span>
+                <span class="title">Drop files to convert</span>
+                <span class="choose">or click to choose <span class="key">Ctrl+O</span></span>
+              </div>
+            </div>
+          </AppWindow>
+        </div>
+
+        <!-- 2 · PLAN -->
+        <div class="flow-frame">
+          <AppWindow>
+            <div class="tw-stage">
+              <div class="tw-list">
+                <div class="tw-row">
+                  <span class="icon" aria-hidden="true">⊞</span>
+                  <span class="ident">
+                    <span class="name">bundle.zip</span>
+                    <span class="meta">ZIP — read from the bytes, not the extension</span>
+                  </span>
+                  <span class="controls">
+                    <span class="convert"><span aria-hidden="true">⟳</span> Convert</span>
+                    <span class="from">{r.detected.toUpperCase()}</span>
+                    <span class="arrow" aria-hidden="true">→</span>
+                    <span class="tw-pick"><span class="value">TAR</span><span class="caret">▾</span></span>
+                    <span class="tw-dots" aria-hidden="true">
+                      <svg viewBox="0 0 16 16"><circle cx="3.2" cy="8" r="1.4" fill="currentColor"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><circle cx="12.8" cy="8" r="1.4" fill="currentColor"/></svg>
+                    </span>
+                  </span>
+                </div>
+                <div class="tw-row flow-plan">
+                  <span class="flow-glyph" aria-hidden="true">=</span>
+                  <span class="flow-planline">
+                    {step.kind} · {step.class} · {step.engine} · {gib} GiB memory ·
+                    {mpx} Mpx decode · {step.limits.wall_time_secs}s wall
+                  </span>
+                </div>
+              </div>
+              <div class="tw-actions">
+                <span class="tw-ready">1 of 1 ready</span>
+                <span class="tw-btn secondary">Add more files</span>
+                <span class="tw-btn primary">Convert <span class="key" aria-hidden="true">⏎</span></span>
+              </div>
+            </div>
+          </AppWindow>
+        </div>
+
+        <!-- 3 · CONFINED -->
+        <div class="flow-frame">
+          <AppWindow>
+            <div class="tw-stage">
+              <div class="tw-progress" aria-hidden="true"><i class="flow-fill"></i></div>
+              <div class="tw-list">
+                <div class="tw-row">
+                  <span class="icon" aria-hidden="true">⊞</span>
+                  <span class="ident">
+                    <span class="name">bundle.zip</span>
+                    <span class="meta flow-iso">{step.isolation}</span>
+                  </span>
+                  <span class="controls">
+                    <span class="convert">no network · descriptors, not filenames</span>
+                  </span>
+                </div>
+              </div>
+              <div class="tw-actions">
+                <span class="tw-ready">converting 1 file</span>
+                <span class="tw-btn secondary">Cancel <span class="key" aria-hidden="true">Esc</span></span>
+              </div>
+            </div>
+          </AppWindow>
+        </div>
+
+        <!-- 4 · RECEIPT -->
+        <div class="flow-frame">
+          <AppWindow>
+            <div class="tw-stage">
+              <div class="tw-result">
+                <span class="head">
+                  <span class="ok" aria-hidden="true">=</span>
+                  <strong>{r.output}</strong>
+                  <span class="tw-ready">class {r.class} — lossless</span>
+                </span>
+                <span class="facts">
+                  <span>{kb(r.output_bytes)}</span>
+                  <span>{step.engine}</span>
+                  <span>0 network calls</span>
+                  <span>sha256 {r.content_id.slice(0, 12)}…</span>
+                </span>
+                <span class="facts">removed · {step.removed.join(', ')}</span>
+              </div>
+              <div class="tw-actions">
+                <span class="tw-ready">1 converted</span>
+                <span class="tw-btn secondary">Undo <span class="key" aria-hidden="true">Ctrl+Z</span></span>
+                <span class="tw-btn primary">Show receipt</span>
+              </div>
+            </div>
+          </AppWindow>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- The four captions live OUT here, not inside the frames, and that is the
+       whole degradation story. A scroll timeline is inactive until the page
+       composites — a tab restored in the background, a tab never brought to
+       the front — and an animation on an inactive timeline produces no output
+       at all, so anything hiding under `opacity: 0` stays hidden. Screens 2 to
+       4 accept that; the words never do. -->
+  <ol class="flow-legend">
+      <li class="flow-step"><i class="flow-dot" aria-hidden="true"></i><span><b>1 · drop</b> — nothing has been read yet.</span></li>
+      <li class="flow-step"><i class="flow-dot" aria-hidden="true"></i><span><b>2 · plan</b> — detected, routed, classed. Nothing has run.</span></li>
+      <li class="flow-step"><i class="flow-dot" aria-hidden="true"></i><span><b>3 · confined</b> — the engine runs inside the sandbox the plan named.</span></li>
+      <li class="flow-step"><i class="flow-dot" aria-hidden="true"></i><span><b>4 · receipt</b> — what happened, written down beside the output.</span></li>
+  </ol>
+</figure>
+
+<style>
+  /* ------------------------------------------------------------------------
+     DEFAULT: the four screens, stacked down the page.
+
+     This is what a browser without scroll-driven animations gets, and what
+     `prefers-reduced-motion` gets. It is written first and unconditionally so
+     that it is also what happens when anything else fails — a sequence whose
+     fallback is a blank box has already cost someone the content.
+     ------------------------------------------------------------------------ */
+  .flow { display: grid; gap: var(--s-5); }
+  .flow-bar {
+    width: 100%; max-width: 760px; margin-inline: auto;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-md);
+  }
+  /* `minmax(0, 1fr)`, not the implicit `auto`: an auto column is sized by its
+     content's minimum, so one screen that cannot shrink below 400px would widen
+     the column, the window, and the page. */
+  .flow-frames { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
+  /* A plain block, deliberately. As a grid container the frame sized its single
+     implicit column to the WINDOW's min-content — `min-width: 0` on the window
+     does not change a track's sizing — and one screen came out 356px wide
+     sitting over three at 342px. The frame holds one child; it needs no layout
+     mode of its own to do that. */
+  .flow-frame { min-width: 0; }
+
+  .flow-legend {
+    width: 100%; max-width: 760px; margin: 0 auto; padding: 0;
+    list-style: none;
+    display: grid; gap: var(--s-2);
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+  }
+  .flow-step { display: flex; align-items: baseline; gap: var(--s-3); }
+  .flow-step b { font-family: var(--mono); font-weight: 500; color: var(--text-primary); }
+
+  /* The active-step marker. It is ADDITIVE: the resting state is an invisible
+     dot beside text at full strength, so the highlight can fail to run without
+     making a single line harder to read. Dimming the other three would have put
+     a 4.5:1 contrast ratio behind an animation working. */
+  .flow-dot {
+    flex: none; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--brand);
+    opacity: 0;
+    translate: 0 -2px;
+  }
+
+  /* the classed step, sitting under the file it belongs to */
+  .flow-plan { min-height: 0; padding-block: 6px; gap: 8px; }
+  .flow-glyph { font-family: var(--mono); color: var(--brand); font-size: 13px; }
+  .flow-planline {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text-tertiary);
+    overflow-wrap: anywhere;
+  }
+  /* The isolation string is the receipt's own words and is a sentence, not a
+     label — so it wraps rather than ellipsising the half that names the
+     mechanism. */
+  .flow-iso { white-space: normal; overflow: visible; }
+  .flow-fill { transform: scaleX(0.62); }
+
+  /* ------------------------------------------------------------------------
+     ENHANCED: one window, four screens, scrubbed by scroll position.
+     Everything here sits behind both a support query and a motion query, so the
+     stacked layout above stays the truth whenever this cannot run.
+     ------------------------------------------------------------------------ */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .flow-track {
+        /* The scroll distance the four screens are spread across. The window is
+           pinned for the middle of it, so the sequence is scrubbed rather than
+           played: stop scrolling and it stops. */
+        height: 250vh;
+        view-timeline: --flow block;
+      }
+      .flow-stick { position: sticky; top: 84px; }
+
+      /* One grid cell, four screens in it. Stacking by grid rather than by
+         absolute positioning keeps the tallest screen's height reserved, so
+         nothing below the section moves as frames swap. CLS budget is 0. */
+      .flow-frames { gap: 0; }
+      .flow-frame { grid-area: 1 / 1; }
+      /* Screen 1 carries no animation and is never hidden: it is the floor the
+         others are painted over, so an inactive timeline leaves a window on
+         screen rather than an empty rectangle. Screens 2-4 fade IN over it and
+         hold — later in the DOM is higher in the stack — which also means the
+         sequence scrubs correctly in both directions. */
+      .flow-frame + .flow-frame {
+        opacity: 0;
+        animation: flow-step linear both;
+      }
+      /* `animation-timeline` is set from its own rule, under a selector that is
+         deliberately spelled differently, and that is load-bearing.
+         
+         Written next to `animation:` in the same block, the CSS minifier folds
+         the two into `animation: linear both flow-step --flow` — the shorthand's
+         timeline component, which was in an early draft and which no shipping
+         browser accepts. The declaration is then invalid as a whole, so
+         `animation-name` computes to `none`, nothing animates, and every frame
+         holds the `opacity: 0` underneath it. The section renders blank, and the
+         stacked fallback cannot save it because `@supports` is satisfied.
+         
+         Two selectors the minifier cannot prove equivalent means two rules it
+         cannot merge. A gate in scripts/gates.mjs fails the build if the
+         shorthand ever reappears with a timeline in it. */
+      .flow-frames > .flow-frame + .flow-frame { animation-timeline: --flow; }
+      .flow-frame:nth-child(2) { animation-range: cover 26% cover 44%; }
+      .flow-frame:nth-child(3) { animation-range: cover 46% cover 62%; }
+      .flow-frame:nth-child(4) { animation-range: cover 64% cover 80%; }
+
+      /* The legend tracks the window: the step being shown is at full strength,
+         the others sit back. Both states are legible, so a reader who never
+         triggers the timeline still reads all four. */
+      .flow-dot { animation: flow-mark linear both; }
+      .flow-step > .flow-dot { animation-timeline: --flow; }
+      .flow-step:nth-child(1) .flow-dot { animation-range: cover 6%  cover 30%; }
+      .flow-step:nth-child(2) .flow-dot { animation-range: cover 26% cover 48%; }
+      .flow-step:nth-child(3) .flow-dot { animation-range: cover 46% cover 66%; }
+      .flow-step:nth-child(4) .flow-dot { animation-range: cover 64% cover 84%; }
+
+      /* One window height for all four screens. Stacked, the tallest would
+         otherwise show below the shorter ones painted over it. `100%` rather
+         than a number: the frames share a grid cell, the cell is already as
+         tall as the tallest of them, and a hard-coded height would be wrong at
+         the first width where a row wraps. */
+      /* `:global` because the window is rendered by AppWindow, not by this
+         file. Astro scopes a component's CSS by stamping its own elements with
+         a cid attribute and adding that attribute to every selector — and a
+         component with no <style> of its own stamps nothing, so `.flow-frame >
+         .tw` compiled to a selector that could never match. It failed silently:
+         the frames kept their natural heights and the tallest showed out from
+         under the ones stacked over it. */
+      .flow-frame > :global(.tw) { height: 100%; }
+
+      /* The one value that changes rather than being replaced. */
+      .flow-fill {
+        animation: flow-fill linear both;
+        animation-range: cover 54% cover 72%;
+      }
+      .tw-progress > .flow-fill { animation-timeline: --flow; }
+    }
+  }
+
+  /* In and held. Nothing fades back out, so the window always shows the
+     furthest screen the reader has scrolled to. */
+  @keyframes flow-step {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes flow-mark {
+    0%   { opacity: 0; }
+    25%  { opacity: 1; }
+    75%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes flow-fill {
+    from { transform: scaleX(0.04); }
+    to   { transform: scaleX(1); }
+  }
+
+
+</style>

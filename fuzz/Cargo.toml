@@ -1,0 +1,61 @@
+﻿[package]
+name    = "openconvert-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Its own workspace. cargo-fuzz needs -Z flags the main workspace must not
+# inherit, and a fuzz target that forces the whole tree onto nightly is a fuzz
+# target nobody runs.
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+openconvert-core = { path = "../crates/openconvert-core", features = ["test-util"] }
+openconvert-run  = { path = "../crates/openconvert-run" }
+openconvert-sandbox = { path = "../crates/openconvert-sandbox" }
+
+[[bin]]
+name = "sniff"
+path = "fuzz_targets/sniff.rs"
+test = false
+doc  = false
+
+[[bin]]
+name = "route"
+path = "fuzz_targets/route.rs"
+test = false
+doc  = false
+
+[[bin]]
+name = "predict"
+path = "fuzz_targets/predict.rs"
+test = false
+doc  = false
+
+[[bin]]
+name = "strip"
+path = "fuzz_targets/strip.rs"
+test = false
+doc  = false
+
+[[bin]]
+name = "outputname"
+path = "fuzz_targets/outputname.rs"
+test = false
+doc  = false
+
+[[bin]]
+name = "frame"
+path = "fuzz_targets/frame.rs"
+test = false
+doc  = false
+
+[[bin]]
+name = "matroska"
+path = "fuzz_targets/matroska.rs"
+test = false
+doc  = false

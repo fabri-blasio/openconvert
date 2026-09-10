@@ -1,0 +1,83 @@
+[package]
+name = "oc-pdf"
+description = "PDF rendering worker via pdfium."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+publish = false
+
+[[bin]]
+name = "oc-pdf"
+path = "src/main.rs"
+
+[dependencies]
+oc-image-codecs = { path = "../oc-image-codecs", version = "0.1.0" }
+openconvert-worker = { path = "../openconvert-worker", version = "0.1.0" }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+# DOCX and ODT are ZIP containers; this reads the one member that holds the
+# text. `deflate` only -- the office formats use it, and every other method
+# would be more surface for no gain. Same crate and features as oc-archive.
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+# CommonMark, so `md -> pdf` parses the same Markdown everything else does.
+# MIT, pure Rust, no unsafe by default, and no dependencies of its own worth
+# the name -- which is what makes it acceptable inside a worker that handles
+# untrusted input. `html` is OFF: this crate renders through its own writers,
+# and pulling in an HTML serialiser for output we generate ourselves would add
+# surface for nothing.
+pulldown-cmark = { version = "0.13", default-features = false }
+
+# Workbooks. MIT, pure Rust, and it reads xlsx, xlsm, xlsb, ods and the old
+# binary xls -- which is more than the route table offers, deliberately: the
+# rows exist for the two formats there are tests for.
+#
+# `default-features = false` drops the `dates` feature, which pulls chrono. The
+# epoch question that feature answers is real (a 1900 workbook and a 1904 one
+# differ by four years) and it is answered here by NOT converting: a serial
+# number is written as the number the cell holds, and the receipt says so. A
+# date silently shifted by four years is the worse of the two outcomes.
+calamine = { version = "0.36", default-features = false }
+
+# The writing half, for `ods -> xlsx`. MIT OR Apache-2.0, pure Rust, and by the
+# same author as `calamine` -- so the two agree about what a cell is, which is
+# the part a workbook-to-workbook conversion turns on.
+#
+# `default-features = false` drops `chrono` and the ryu/serde extras: this
+# writes numbers, strings and booleans, and the date question is answered by
+# NOT converting (see `sheets.rs`), so nothing here needs a date type.
+rust_xlsxwriter = { version = "0.99", default-features = false }
+
+# A Jupyter notebook IS JSON, so reading one needs a JSON parser at RUN time.
+# It was already here as a dev-dependency for the tests; `ipynb.rs` is why it
+# is now a real one.
+serde_json = "1"
+
+# THE PLAN FOR THIS SAID "no new dependencies". That was wrong, and this is
+# the correction: AES-256 (PDF 2.0 V5) does not derive its file encryption key
+# from the password -- the password unlocks a RANDOM 256-bit key -- and lopdf
+# does not generate one. Its own example reaches for `rand`.
+#
+# `getrandom` is the smallest thing that can: a call into the OS CSPRNG and
+# nothing else. The alternative, deriving the key from the password, needs no
+# dependency and throws away most of what AES-256 is for.
+getrandom = "0.3"
+# NO `embed_image`. That feature would decode the stamp image for us and pulls
+# in a second image stack -- zune, y4m, an AV1 decoder -- into a worker whose
+# whole job is parsing untrusted input. This crate already links `image`, so the
+# decode happens there and `stamp.rs` builds the PDF image object itself, which
+# is also what gives it explicit control over the alpha channel.
+lopdf = { version = "0.44.0", default-features = false }
+thiserror.workspace = true
+
+[lints.clippy]
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+[dev-dependencies]
+openconvert-sandbox = { workspace = true }
+openconvert-core    = { workspace = true }
+serde_json        = "1"
+openconvert-run     = { workspace = true, features = ["test-support"] }

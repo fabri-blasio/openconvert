@@ -1,0 +1,271 @@
+/* The UI font ships with the app (07 §6.1: "Ship the font; don't use
+   system-ui"). OFL 1.1, licence text beside the file. `font-src 'self'`
+   serves it; xtask's desktop gate asserts both halves of this. */
+@font-face {
+  font-family: "InterVariable";
+  src: url("/fonts/InterVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* `--fraction` is a real, typed custom property.
+
+   Progress fills are driven by a number set through the CSSOM (Svelte's
+   `style:` directive, which survives `style-src 'self'`). Left UNREGISTERED,
+   that number is substituted into `calc()` as an opaque token and the used
+   length does not re-resolve when it changes — measured: the fraction went
+   0.083 -> 0.167 while the computed width stayed pinned at 53.3281px.
+   Registering it gives the property a type, which makes it both re-resolve
+   and animate. */
+@property --fraction {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+/* Waveform bar height, same reasoning as --fraction. */
+@property --h {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0.2;
+}
+
+/* Colour-picker crosshair position, as a fraction of the image. */
+@property --cx {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0.5;
+}
+
+@property --cy {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0.5;
+}
+
+:root {
+  color-scheme: light dark;
+
+  --neutral-0: #ffffff;
+  --neutral-50: #fafafa;
+  --neutral-100: #f4f4f5;
+  --neutral-200: #e8e8ea;
+  --neutral-300: #d4d4d6;
+  --neutral-400: #a1a1a6;
+  --neutral-500: #79797e;
+  --neutral-600: #5a5a5f;
+  --neutral-700: #3d3d42;
+  --neutral-800: #2a2a2e;
+  --neutral-900: #1d1d1f;
+  --neutral-1000: #000000;
+
+  --surface-base: var(--neutral-0);
+  --surface-raised: var(--neutral-50);
+  --surface-sunken: var(--neutral-100);
+
+  --text-primary: rgba(29, 29, 31, 1);
+  --text-secondary: rgba(29, 29, 31, 0.62);
+  /* 0.38 measured 2.33:1 on --surface-raised — below AA for the section
+     headings and hints that use it. 0.52 is 3.5:1 and still reads as the
+     third level below secondary's 62%. */
+  --text-tertiary: rgba(29, 29, 31, 0.52);
+  --text-disabled: rgba(29, 29, 31, 0.24);
+
+  --hairline: rgba(29, 29, 31, 0.08);
+  --hairline-strong: rgba(29, 29, 31, 0.16);
+
+  /* #b4690e measured 4.05:1 on --surface-raised; darkened to clear AA. */
+  --accent-attention: #98570b;
+  --accent-critical: #b83426;
+  /* A FILL, NOT INK. The only thing wearing this is a 7 px ready dot beside
+     the graphics card, so it is chosen to read as green at that size rather
+     than to clear a text-contrast ratio it will never be asked for. Nothing
+     depends on it alone: the dot sits next to the name it is about, and the
+     switch beside it carries the same state. */
+  --accent-positive: #1f8a3f;
+  /* The error banner's own ground and ink.
+
+     It used to be a raised surface with a 2 px rail down its left edge, which
+     read as a card that happened to be about an error. A filled red hue says
+     the same thing without the rail, and the text colour is chosen per scheme
+     so it stays legible on it rather than inheriting a red that was picked to
+     sit ON a neutral. */
+  --banner-bg: #f7dedb;
+  --banner-ink: #1a1a1c;
+
+  --focus-ring: var(--neutral-900);
+
+  --material-thin: rgba(255, 255, 255, 0.62);
+  --material-regular: rgba(255, 255, 255, 0.76);
+  --material-thick: rgba(255, 255, 255, 0.88);
+  --blur-thin: blur(20px);
+  --blur-regular: blur(32px);
+  --blur-thick: blur(48px);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+  --space-9: 64px;
+
+  --font-ui: "InterVariable", "Inter", -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "Segoe UI Variable", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, "SF Mono",
+    "Cascadia Mono", Consolas, monospace;
+
+  --text-caption-size: 11px;
+  --text-caption-lh: 14px;
+  --text-small-size: 12px;
+  --text-small-lh: 16px;
+  --text-body-size: 13px;
+  --text-body-lh: 18px;
+  --text-title-size: 15px;
+  --text-title-lh: 20px;
+  --text-heading-size: 21px;
+  --text-heading-lh: 26px;
+  --text-display-size: 28px;
+  --text-display-lh: 34px;
+
+  --weight-regular: 400;
+  --weight-medium: 550;
+  --weight-semibold: 600;
+
+  --motion-micro: 120ms ease-out;
+  --motion-standard: 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-large: 340ms cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Room a scroll container must leave for its children's shadows.
+
+     Every `overflow: auto` element clips on BOTH axes, so a card inside one
+     loses the ring that draws its border unless the scroller pads itself by
+     at least the shadow's reach. Big enough for the blur in `--shadow-card`,
+     small enough to read as breathing room. */
+  --shadow-gutter: 10px;
+
+
+  --shadow-card: 0 0 0 0.5px var(--hairline), 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+  --shadow-float: 0 0 0 0.5px var(--hairline), 0 12px 40px rgba(0, 0, 0, 0.14);
+
+  /* Semantic tokens for controls.
+
+     These exist because the ramp does NOT invert between themes: a rule that
+     reached for `--neutral-800` got a dark value in both, which is how the
+     switch track and the progress fill came to be dark-on-dark. Anything that
+     needs "the strong end" or "the page behind me" asks by role instead. */
+  --control-track: var(--neutral-300);
+  --control-track-on: var(--neutral-800);
+  --control-knob: #ffffff;
+  --on-accent: #ffffff;
+  --emphasis: var(--neutral-800);
+
+  /* `--accent` IS `--emphasis`, and it exists because eleven rules already
+     used it.
+
+     `var(--accent)` was written across ToolWorkspace, HistoryPanel and App
+     for the colour of a selected state -- a dashed placement outline, a resize
+     handle, a focus ring, a checkbox's `accent-color`. The token was never
+     defined. An undefined custom property makes the whole declaration
+     invalid at computed-value time, so each of those properties silently fell
+     back to its inherited or initial value: dashed borders drawn in
+     `currentColor`, handles with a transparent background, a checkbox with no
+     accent. Every one of them LOOKED like a missing feature rather than a
+     missing colour, which is why several were reported as "the handles are not
+     visible" instead of as a styling bug.
+
+     Defined as an alias rather than fixed at each call site: the name reads
+     correctly where it is used, and one definition cannot be half-applied. */
+  --accent: var(--emphasis);
+  --dropzone-border: var(--neutral-300);
+
+  /* THE LOGO, and the two of its five colours that follow the theme.
+
+     The master in `brand/logo/` paints its own off-white ground and draws the
+     mole in near-black. That is right for an app icon, which sits on a desktop
+     we do not control, and wrong inside a window with a dark mode — the mark
+     would be a white card with black lines on a near-black surface.
+
+     `--logo-ink` is the outline; `--logo-paper` is the paws and the eye's
+     highlight, which are holes punched in the ink and must match whatever is
+     behind them. The folder and snout greens do NOT move: they carry the
+     brand, they read on both surfaces, and a logo whose every colour changes
+     is a different logo. */
+  --logo-ink: #1d1d1f;
+  --logo-paper: #fcfcfb;
+  --logo-folder: #5b7e7b;
+  --logo-snout: #668985;
+
+  --row-h: 36px;
+  --content-max: 720px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces are real dark values, not ramp steps.
+
+     The previous palette mapped `--surface-base` to `--neutral-50` (#fafafa)
+     while setting `--text-primary` to near-white — white text on a white
+     page. The ramp is a fixed light-to-dark scale shared by both themes, so
+     dark mode has to name its own surfaces rather than borrow the top of it. */
+  --surface-base: #17171a;
+  --surface-raised: #1f1f23;
+
+  /* The logo inverts its ink and its paper, and keeps its greens. See the
+     light block for why only these two move. `--logo-paper` tracks the raised
+     surface rather than pure black, because the paws sit on panels and a hole
+     punched to #000 would read as a shadow. */
+  --logo-ink: #f2f2f0;
+  --logo-paper: #1f1f23;
+
+  --surface-sunken: #131316;
+
+  --text-primary: rgba(237, 237, 237, 1);
+  --text-secondary: rgba(237, 237, 237, 0.64);
+  --text-tertiary: rgba(237, 237, 237, 0.42);
+  --text-disabled: rgba(237, 237, 237, 0.26);
+
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-strong: rgba(255, 255, 255, 0.2);
+
+  /* Both accents are lifted for contrast against a dark ground. */
+  --accent-attention: #e0a458;
+  --accent-critical: #e5766a;
+  --accent-positive: #4cc466;
+  --banner-bg: #4a2320;
+  --banner-ink: #f4f4f5;
+
+  --focus-ring: rgba(255, 255, 255, 0.9);
+
+  --material-thin: rgba(28, 28, 32, 0.62);
+  --material-regular: rgba(28, 28, 32, 0.78);
+  --material-thick: rgba(28, 28, 32, 0.92);
+
+  /* The strong end flips: on a dark ground, emphasis is light. */
+  --control-track: rgba(255, 255, 255, 0.16);
+  --control-track-on: #e8e8ea;
+  --control-knob: #17171a;
+  --on-accent: #1d1d1f;
+  --emphasis: #e8e8ea;
+  --accent: var(--emphasis);
+  --dropzone-border: rgba(255, 255, 255, 0.22);
+
+  /* Elevation in dark is lighter, never shadowed harder (07 §4). */
+  --shadow-card: 0 0 0 0.5px var(--hairline), 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-float: 0 0 0 0.5px var(--hairline-strong),
+    0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+

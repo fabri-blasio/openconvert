@@ -1,0 +1,225 @@
+---
+/**
+ * Contact — the one page with a server behind it.
+ *
+ * The form posts to `/api/contact` on this same origin, which calls Resend
+ * with a key that never leaves the server. No third-party form endpoint
+ * appears in the network panel: on a site whose whole argument is that your
+ * files never leave your machine, a form that shipped your message straight to
+ * somebody else's domain would be the one page contradicting the product.
+ *
+ * `form-action` and `connect-src` are `'self'` here and nowhere else, and
+ * every address is still printed as a plain link for anyone who would rather
+ * write directly.
+ */
+import Base from '../layouts/Base.astro';
+
+const INBOX = 'hello@openconvert.dev';
+
+const topics = [
+  'A question about OpenConvert',
+  'Something converted wrong',
+  'Enterprise or integration',
+  'Press',
+  'Something else',
+];
+
+const elsewhere = [
+  { label: 'Formal notices', value: 'clura@legalmail.it', href: 'mailto:clura@legalmail.it', note: 'PEC — legal mail, recognised delivery' },
+  { label: 'Security', value: '/.well-known/security.txt', href: '/.well-known/security.txt', note: 'Coordinated disclosure, response within seven days' },
+];
+---
+<Base
+  title="Contact — OpenConvert"
+  description="Write to us about OpenConvert, a conversion that went wrong, or an enterprise integration. The form opens your own mail client; nothing is posted anywhere."
+  path="/contact"
+  contact>
+
+  <section class="head">
+    <div class="wrap stack stack-4 head-inner">
+      <h1 class="hero-title">Say hello.</h1>
+      <p class="lede hero-lede">
+        Questions, bugs, integrations. Answered within two business days, CET.
+      </p>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="split">
+        <form
+          class="form stack stack-5"
+          method="POST"
+          action="/api/contact"
+          data-contact-form>
+          <label class="field">
+            <span class="f-label">What is it about?</span>
+            <select name="topic">
+              {topics.map((t) => <option value={t}>{t}</option>)}
+            </select>
+          </label>
+
+          <div class="pair">
+            <label class="field">
+              <span class="f-label">Your name</span>
+              <input type="text" name="name" autocomplete="name" />
+            </label>
+            <label class="field">
+              <span class="f-label">Your email</span>
+              <input type="email" name="email" autocomplete="email" required />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="f-label">Company <span class="opt">optional</span></span>
+            <input type="text" name="org" autocomplete="organization" />
+          </label>
+
+          <label class="field">
+            <span class="f-label">Message</span>
+            <textarea name="message" rows="6" required></textarea>
+          </label>
+
+          <!-- Not a real field. Hidden from sight and from screen readers, and
+               skipped by the tab key, so no person ever meets it; a bot that
+               fills every input gives itself away and the server drops the
+               message. It replaces a CAPTCHA, which would mean a third-party
+               script on the one page that must not have one. -->
+          <div class="trap" aria-hidden="true">
+            <label>
+              Website
+              <input type="text" name="website" tabindex="-1" autocomplete="off" />
+            </label>
+          </div>
+
+          <div class="row submit-row">
+            <button type="submit" class="btn btn-primary">Send</button>
+            <span class="caption">Goes straight to our inbox. No third party sees it.</span>
+          </div>
+
+          <p class="note" data-status role="status" hidden></p>
+        </form>
+
+        <aside class="stack stack-6 aside">
+          <div class="stack stack-2">
+            <span class="eyebrow">or just write to</span>
+            <a href={`mailto:${INBOX}`} class="inbox">{INBOX}</a>
+            <span class="caption">Support, press, whatever — the same inbox.</span>
+          </div>
+
+          {elsewhere.map((row) => (
+            <div class="stack stack-2">
+              <span class="eyebrow">{row.label}</span>
+              <a href={row.href}>{row.value}</a>
+              <span class="caption">{row.note}</span>
+            </div>
+          ))}
+
+          <div class="stack stack-2">
+            <span class="eyebrow">in public</span>
+            <p class="small">
+              <a href="/community">Discord and the feature board →</a>
+            </p>
+            <span class="caption">
+              Bugs and ideas are better in the open, where the next person finds them.
+            </span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  section { border-top: 0; }
+  .head { padding-block: clamp(var(--s-7), 6vw, var(--s-9)) var(--s-8); }
+  .head-inner { align-items: center; text-align: center; }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(var(--s-6), 5vw, var(--s-8));
+    align-items: start;
+  }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+
+  .form {
+    padding: clamp(var(--s-5), 3vw, var(--s-6));
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    background: var(--surface-base);
+  }
+  .field { display: grid; gap: var(--s-2); }
+  .f-label { font-size: var(--fs-small); font-weight: var(--fw-strong); letter-spacing: -0.01em; }
+  .opt { font-weight: var(--fw-normal); color: var(--text-tertiary); }
+
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+  @media (max-width: 620px) { .pair { grid-template-columns: 1fr; } }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: var(--fs-small);
+    color: var(--text-primary);
+    background: var(--surface-raised);
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--r-sm);
+  }
+
+  /* THE SELECT, MADE TO MATCH THE INPUTS BESIDE IT.
+  
+     Left alone, a <select> ignores most of the rule above and renders with the
+     operating system's own control: a different height, a different font, a
+     grey system background and a native arrow, sitting in a row with two text
+     inputs that look nothing like it. `appearance: none` is what hands the box
+     back to the stylesheet, and the arrow then has to be drawn, because
+     removing the appearance removes that too.
+  
+     The arrow is an inline SVG in a data: URI — `img-src 'self' data:` already
+     allows it, and it costs no request. Its colour is baked per theme rather
+     than inherited, since a background image cannot read `currentColor`. */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%236B6B70' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 8px;
+    cursor: pointer;
+  }
+  :global(:root[data-theme='dark']) select,
+  :global(:root:not([data-theme='light'])) select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23A0A0A6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+  select:hover { border-color: var(--text-tertiary); }
+  /* The dropdown list itself is drawn by the OS, so the only thing a
+     stylesheet can reach is the option text. Naming both stops a dark-mode
+     browser painting white text on a white list. */
+  select option { color: var(--text-primary); background: var(--surface-base); }
+
+  /* The honeypot. `display: none` is skipped by some bots precisely because it
+     is the obvious tell, so it is taken out of flow and hidden from assistive
+     tech instead. */
+  .trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .note[data-tone='ok'] { color: var(--brand); }
+  .note[data-tone='bad'] { color: var(--danger, #B3261E); }
+  textarea { resize: vertical; min-height: 8em; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+  }
+
+  .submit-row { justify-content: space-between; gap: var(--s-4); }
+  .submit-row .caption { max-width: 30ch; }
+
+  .aside .inbox { font-size: var(--fs-title); font-weight: var(--fw-strong); letter-spacing: -0.015em; }
+</style>

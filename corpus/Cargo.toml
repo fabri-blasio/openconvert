@@ -1,0 +1,13 @@
+[package]
+name = "corpus"
+description = "Hostile and benign test inputs, generated from checked-in code."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+publish = false
+
+[lints.clippy]
+# Test data, not the core.
+disallowed_types   = "allow"
+disallowed_methods = "allow"

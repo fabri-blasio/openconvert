@@ -1,0 +1,54 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base
+  title="Terms — OpenConvert"
+  description="Website terms of use. The software itself is governed by the Apache-2.0 licence."
+  path="/terms">
+
+  <div class="wrap narrow">
+    <section>
+      <span class="eyebrow">terms</span>
+      <h1>Terms of use.</h1>
+      <p class="caption">Last revised — · Clura srls · PI 18314321003</p>
+
+      <div class="prose">
+        <h2>Software vs website</h2>
+        <p>
+          The OpenConvert software is licensed under Apache-2.0; its warranties and liability terms
+          are those of that licence, and this page does not change them.
+          This page covers the website only: it is provided as is, with no availability guarantee,
+          and its content may change without notice.
+        </p>
+
+        <h2>Intellectual property</h2>
+        <p>
+          Site text and layout © Clura srls. The name OpenConvert and the mark are ours; community
+          use that does not suggest endorsement is welcome. External links are references, not
+          endorsements.
+        </p>
+
+        <h2>Law and venue</h2>
+        <p>
+          These terms are governed by Italian law. Any dispute goes to the court of —,
+          without prejudice to mandatory consumer protections where you have them.
+        </p>
+
+        <h2>Notices</h2>
+        <p>
+          Formal notices: PEC <a href="mailto:clura@legalmail.it" class="mono">clura@legalmail.it</a>.
+          Anything else: <a href="/contact">contact</a>. Company details:
+          <a href="/imprint">imprint</a>.
+        </p>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .narrow { max-width: 720px; }
+  section { padding-block: var(--section-y-tight); }
+  h1 { font-size: clamp(1.9rem, 4vw, 2.5rem); font-weight: var(--fw-normal); }
+  h2 { font-size: 1.05rem; font-weight: var(--fw-strong); margin-block: var(--s-6) var(--s-2); }
+  .prose p { font-size: var(--fs-small); line-height: 1.65; color: var(--text-secondary); margin: 0; }
+</style>

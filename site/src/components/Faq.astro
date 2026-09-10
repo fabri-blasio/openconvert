@@ -1,0 +1,84 @@
+---
+/**
+ * The awkward questions, answered where they are asked — at a constant height.
+ *
+ * `<details>` was the obvious build and the wrong one: every open and close
+ * resized the section, so the page jumped under the reader each time they
+ * asked something. Two changes fix that without a line of script:
+ *
+ *   1. One radio group, so exactly one answer is open at a time.
+ *   2. The answer area reserves the space of the longest answer, so opening a
+ *      short one leaves the block exactly as tall as opening a long one.
+ *
+ * The cost is some white space under the shorter answers. That is the trade —
+ * a still page is worth more than tight boxes.
+ */
+export interface Props {
+  items: { q: string; a: string }[];
+}
+const { items } = Astro.props as Props;
+---
+<div class="faq">
+  {items.map((item, i) => (
+    <div class="q">
+      <input type="radio" name="faq" id={`faq-${i}`} class="q-in" checked={i === 0} />
+      <label class="q-label" for={`faq-${i}`}>
+        <span class="q-text">{item.q}</span>
+        <span class="q-mark" aria-hidden="true">
+          <svg viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor"
+            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </span>
+      </label>
+      <div class="q-answer">
+        <p set:html={item.a} />
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .faq { max-width: 74ch; margin-inline: auto; }
+
+  .q { border-bottom: 1px solid var(--hairline); }
+  .q:first-child { border-top: 1px solid var(--hairline); }
+
+  /* Off-screen, never `display: none` — the control has to keep its place in
+     the tab order and in the accessibility tree. */
+  .q-in {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  .q-label {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-5) 0;
+    cursor: pointer; user-select: none;
+    font-weight: var(--fw-strong);
+    letter-spacing: -0.012em;
+  }
+  .q-label:hover { color: var(--brand); }
+  .q-mark { color: var(--text-tertiary); display: grid; place-items: center; }
+  .q-mark svg { width: 18px; height: 18px; transition: rotate var(--m-standard) var(--curve); }
+  .q-in:focus-visible + .q-label { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: var(--r-sm); }
+
+  .q-in:checked + .q-label { color: var(--brand); }
+  .q-in:checked + .q-label .q-mark svg { rotate: 180deg; }
+
+  .q-answer { display: none; }
+  .q-in:checked ~ .q-answer {
+    display: block;
+    /* The reserved height: enough for the longest answer in the set, so the
+       block is the same size whichever question is open. */
+    min-height: 8.5em;
+    padding-bottom: var(--s-5);
+    color: var(--text-secondary);
+    max-width: 66ch;
+  }
+  @media (max-width: 620px) {
+    /* Reserving four lines of desktop text on a phone reserves eight. Let it
+       size to the answer there; the whole page is one column anyway. */
+    .q-in:checked ~ .q-answer { min-height: 0; }
+  }
+</style>

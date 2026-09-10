@@ -1,0 +1,6 @@
+{
+  "identifier": "main",
+  "description": "NEGATIVE FIXTURE. Every permission is allowed and `windows` is present, so a presence-only check passes. The glob is the defect: it scopes to every window the app ever opens, which is what someone writes when a second window stops working.",
+  "windows": ["*"],
+  "permissions": ["core:default"]
+}

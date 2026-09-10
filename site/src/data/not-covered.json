@@ -1,0 +1,62 @@
+{
+  "_comment": "VERBATIM from 09-THREAT-MODEL.md §8, extracted by scripts/export-threats.mjs. 10-WEBSITE §5 says this section is published unsoftened, and the way to keep that true is to never retype it.",
+  "source": "09-THREAT-MODEL.md §8",
+  "rows": [
+    {
+      "item": "**A full exploit chain through the sandbox stack**",
+      "why": "A memory-corruption bug plus a working kernel or AppContainer escape defeats us. We reduce the odds — four workers, memory-safe fast paths, no Ghostscript, per-adapter fuzzing, a kill switch — but we do not claim immunity"
+    },
+    {
+      "item": "**A compromised operating system**",
+      "why": "If the OS or a kernel driver is already hostile, nothing in user space helps"
+    },
+    {
+      "item": "**Hardware side channels**",
+      "why": "Spectre-class attacks across the sandbox boundary are out of scope"
+    },
+    {
+      "item": "**Internet-provenance detection**",
+      "why": "Mark-of-the-web and the macOS quarantine xattr **fail open.** A file that reached the disk via sync, a non-NTFS volume, a USB stick, an archive extracted by another tool, or a copy operation that drops the attribute looks local — because the OS has told us nothing else. The automatic floor raise is a useful signal, not a guarantee, and a user who knows a file is untrusted should set the floor themselves"
+    },
+    {
+      "item": "**Data carried between files in one batch by a compromised worker**",
+      "why": "Under the default `worker_reuse: Balanced` ([03 §8.4](03-ARCHITECTURE.md#84-the-worker-session-and-how-many-files-one-worker-sees)) one worker process serves several files that share a trusted provenance. A capability is revoked between files — verified, including inside an AppContainer — but **revocation removes the handle, not the memory.** An engine compromised by file A can retain A's bytes and write them into the output of file B in the same batch. Files of *untrusted* provenance never share a worker — **asserted by SR-20, because a mitigation named in this table and tested nowhere is not a mitigation** — and `worker_reuse: Isolated` removes the residual entirely at ~38 ms per file on Windows. **The receipt records which files shared a worker**, so this is disclosed per conversion and not only here"
+    },
+    {
+      "item": "**Our own copy not preserving mark-of-the-web**",
+      "why": "Untrusted-provenance inputs are copied before routing, and the mandated `create_new` path **strips `Zone.Identifier`** (S26). `Provenance` is therefore captured at `detect()` before any copy exists and never re-derived from the copy ([03 §11.3](03-ARCHITECTURE.md#113-input-identity)). Any future code path that re-reads provenance from a job-dir copy would silently see a local file"
+    },
+    {
+      "item": "**One archive extracting to different files on different platforms**",
+      "why": "**NTFS does not fold NFC/NFD; APFS does; ext4 does not** (S13, S24). The same archive containing both forms of one name yields two files on Windows and Linux and one on macOS. We preserve names byte-for-byte and treat NFC-equal names as a collision, which is the best available behaviour — it does not make the outcome identical across platforms, and for a product whose second pillar is telling you what happened, that is worth stating"
+    },
+    {
+      "item": "**In-place modification of an input we are reading**",
+      "why": "We hold one read handle per input, which defeats replace-by-rename. A process that already has write access to the same inode can still modify it underneath us. Untrusted-provenance and volatile-volume inputs are copied first; local trusted inputs are not, because copying every byte of every conversion is a real cost"
+    },
+    {
+      "item": "**Semantically harmful but structurally valid content**",
+      "why": "A perfectly well-formed PDF containing a fraudulent invoice converts cleanly. We check structure, not truth"
+    },
+    {
+      "item": "**The user's own destination choices**",
+      "why": "Converting to a network share or a synced folder sends the output there. We refuse to overwrite; we do not refuse to write"
+    },
+    {
+      "item": "**Malicious models the user fetches deliberately**",
+      "why": "A hostile ONNX graph from an untrusted source is a risk the user has chosen. The persistent indicator says so"
+    },
+    {
+      "item": "**Correctness of third-party engines**",
+      "why": "libvips can produce a wrong image without being compromised. The receipt records what ran; it does not certify the result"
+    },
+    {
+      "item": "**A user who has already lost their account**",
+      "why": "Every file in [03 §12](03-ARCHITECTURE.md#12-state-on-disk) is writable by the user, so an attacker who is the user can edit them. A16's controls stop those files being an *escalation* path, not an access path"
+    },
+    {
+      "item": "**Physical access and shoulder-surfing**",
+      "why": "Out of scope"
+    }
+  ]
+}

@@ -1,0 +1,607 @@
+---
+/**
+ * The hero's window — the app's chrome with working controls, and no script.
+ *
+ * The reproduction on other pages (`AppWindow.astro`) is a picture: its
+ * controls are inert because a button that does nothing is a promise the page
+ * cannot keep. This one is the opposite bargain. It is the first thing a
+ * visitor sees, they will click Tools, and "nothing happens" reads as a broken
+ * product rather than as a screenshot.
+ *
+ * **The other screens are markup, not screenshots.** The first build dropped a
+ * capture of the Tools menu into the stage, which put a second title bar
+ * inside the first — the window appeared to open another copy of itself, and
+ * nothing in it could be clicked or scrolled. So the menu and the settings
+ * sheet are rebuilt here from `ToolsMenu.svelte` and `SettingsView.svelte`,
+ * with the same tokens, the same rows and the same scroll behaviour.
+ *
+ * The state is one radio group and one checkbox, read with `:has()`: Tools and
+ * Settings switch the stage, the brand returns to the convert view, and the
+ * sun/moon flips the WINDOW between light and dark independently of the page
+ * by redefining the tokens `app-ui.css` reads inside this element.
+ */
+import '../styles/app-ui.css';
+import toolData from '../data/tools.json';
+
+export interface Props {
+  class?: string;
+}
+const { class: cls = '' } = Astro.props as Props;
+
+/**
+ * The Tools menu, grouped exactly as the app groups it — and every entry opens.
+ *
+ * The entries are not typed here. They come from `all_tools()` through
+ * scripts/export-tools.mjs, because a hand-written copy of a menu is a copy
+ * that drifts: this one said five image tools and three PDF ones for a release
+ * in which the product shipped seven and eleven.
+ *
+ * Picking one opens that tool's WORKSPACE in the window, which is what the
+ * desktop app does: the rail on the left, the tool's name in the header, and a
+ * stage waiting for a file. It is the app's real empty state rather than a
+ * screenshot of somebody else's file, so it costs no image and cannot go stale.
+ */
+const CATEGORIES = [
+  { id: 'image', category: 'Image', article: 'an' },
+  { id: 'pdf', category: 'PDF', article: 'a' },
+  { id: 'audio', category: 'Audio', article: 'an' },
+  { id: 'video', category: 'Video', article: 'a' },
+];
+
+type Tool = { id: string; category: string; title: string; advertised: boolean };
+const advertised = (toolData.tools as Tool[]).filter((t) => t.advertised);
+
+/* Same order the app's menu uses (ToolsMenu.svelte's ORDER), and only the
+   categories that actually have an advertised tool — video's trim and join are
+   dispatchable but unlisted, so the app shows no Video heading and neither
+   does this. */
+/**
+ * WHICH TOOLS A BROWSER TAB CAN ACTUALLY RUN.
+ *
+ * Rendered into the markup as `data-capable` so it is decided ONCE, on the
+ * server, from this list — the menu, the rail and the runner all read the same
+ * attribute rather than each holding an opinion. `island.js` keys off it too,
+ * so there is no second copy of this table in the script.
+ *
+ * The four image tools are canvas passes. The seven PDF tools are page-tree
+ * edits `pdf-lib` performs, and it is fetched only when one of them is opened.
+ * Everything absent from this list is offered and REFUSED, with the reason
+ * below shown in the menu, because a greyed-out entry that does not say why is
+ * indistinguishable from a broken one.
+ */
+const BROWSER_TOOLS = new Set([
+  'image-invert',
+  'image-greyscale',
+  'image-compress',
+  'image-pick',
+  'pdf-merge',
+  'pdf-split',
+  'pdf-extract',
+  'pdf-remove',
+  'pdf-reorder',
+  'pdf-rotate',
+  'pdf-crop',
+]);
+
+/** Why the rest cannot, in the words a visitor can check. */
+const WHY_NOT: Record<string, string> = {
+  'image-remove-background': 'needs the 11 MB matting model',
+  'image-upscale': 'needs the 64 MB Real-ESRGAN model',
+  'image-ocr': 'needs the three PP-OCRv6 models',
+  'audio-denoise': 'needs the 8 MB DeepFilterNet model',
+  'audio-transcribe': 'needs the 78 MB Whisper models',
+  'pdf-unlock': 'needs AES decryption a tab does not have',
+  'pdf-protect': 'needs AES encryption a tab does not have',
+  'pdf-compress': 'needs stream-level rewriting, not a page edit',
+  'pdf-stamp': 'needs a signature image kept on your machine',
+};
+
+const groups = CATEGORIES.map((c) => ({
+  category: c.category,
+  article: c.article,
+  /* The engine's own id, not a slug of the title: "Compress" is both an image
+     tool and a PDF one, and two radios cannot share a name. */
+  items: advertised
+    .filter((t) => t.category === c.id)
+    .map((t) => ({
+      id: t.id,
+      name: t.title,
+      capable: BROWSER_TOOLS.has(t.id),
+      why: WHY_NOT[t.id] ?? 'runs in the desktop app',
+    })),
+})).filter((g) => g.items.length > 0);
+
+/** One flat list, because the radios and the generated CSS are indexed. */
+const tools = groups.flatMap((g) =>
+  g.items.map((t) => ({
+    id: t.id,
+    name: t.name,
+    category: g.category,
+    article: g.article,
+    capable: t.capable,
+    why: t.why,
+  })),
+);
+
+/**
+ * Which tool's header and rail entry is showing.
+ *
+ * Eleven pairs of `:has()` rules, generated rather than typed: a stylesheet
+ * cannot ask "which radio is checked" without naming it, and naming eleven of
+ * them twice is exactly the list that goes stale the first time a tool is
+ * renamed. Built from the same array the menu renders from, so the two cannot
+ * disagree.
+ */
+/**
+ * The settings gear: a cog outline with eight teeth.
+ *
+ * Generated, and it took two attempts. The first was a hand-typed arc that
+ * rendered as a blob; the second drew eight radial spokes, which is a SUN —
+ * so the title bar showed the theme icon twice. A cog is a closed silhouette
+ * that steps between two radii, and writing it out is the only way to be sure
+ * it is one.
+ */
+const gearPath = (() => {
+  const step = (Math.PI * 2) / 8;
+  const R_OUT = 10;
+  const R_IN = 7.1;
+  const pt = (r: number, a: number) =>
+    `${(12 + r * Math.cos(a)).toFixed(2)} ${(12 + r * Math.sin(a)).toFixed(2)}`;
+
+  const points: string[] = [];
+  for (let i = 0; i < 8; i++) {
+    const a = i * step;
+    points.push(pt(R_IN, a - step * 0.3));
+    points.push(pt(R_OUT, a - step * 0.16));
+    points.push(pt(R_OUT, a + step * 0.16));
+    points.push(pt(R_IN, a + step * 0.3));
+  }
+  return `M${points[0]}L${points.slice(1).join('L')}Z`;
+})();
+
+const toolRules = tools
+  .map(
+    (t) =>
+      `.demo:has(#dv-t-${t.id}:checked) .t-${t.id}{display:inline}` +
+      `.demo:has(#dv-t-${t.id}:checked) .rail-${t.category.toLowerCase()}{display:block}` +
+      `.demo:has(#dv-t-${t.id}:checked) .r-${t.id}{background:var(--surface-base);` +
+      `box-shadow:0 0 0 0.5px var(--hairline-strong);color:var(--text-primary)}`,
+  )
+  .join('\n');
+
+/**
+ * Settings, in the app's own order. Values are the shipped defaults.
+ *
+ * A line carries exactly one control: a segmented choice, a switch, or a read
+ * only value. The union says so, which is why the markup below can ask which
+ * one it is instead of guessing from `undefined`.
+ */
+type Line =
+  | { label: string; hint?: string; seg: string[]; on: number }
+  | { label: string; hint?: string; toggle: boolean }
+  | { label: string; hint?: string; value: string };
+
+const settings: { title: string; lines: Line[] }[] = [
+  {
+    title: 'Sandbox',
+    lines: [
+      { label: 'Worker reuse', hint: 'Untrusted files always get their own', seg: ['Share when trusted', 'One per file'], on: 0 },
+      { label: 'Sandbox everything possible', hint: 'Confines the in-process routes too', toggle: false },
+    ],
+  },
+  {
+    title: 'Output',
+    lines: [
+      { label: 'Where outputs go', seg: ['Same folder', 'Downloads', 'Ask'], on: 0 },
+      { label: 'Naming template', value: '{name}.{ext}' },
+      { label: 'Keep original metadata', hint: 'GPS and camera serial are dropped either way', toggle: false },
+    ],
+  },
+  {
+    title: 'History',
+    lines: [
+      { label: 'Write a receipt for every job', toggle: true },
+      { label: 'Receipts stored', value: '0 stored · 0 MB' },
+    ],
+  },
+  {
+    title: 'Local AI models',
+    lines: [
+      { label: 'Remove image backgrounds', hint: '10.7 MB on disk · MIT', toggle: true },
+      { label: 'Clean up noisy audio', hint: '8.3 MB on disk · MIT', toggle: false },
+      { label: 'Transcribe speech', hint: '77.6 MB on disk · MIT', toggle: false },
+      { label: 'Enlarge images', hint: '63.9 MB on disk · BSD-3-Clause', toggle: false },
+    ],
+  },
+  {
+    title: 'Appearance',
+    lines: [{ label: 'Theme', seg: ['System', 'Light', 'Dark'], on: 0 }],
+  },
+  {
+    title: 'Advanced',
+    lines: [
+      { label: 'Weekly engine revocation list', hint: 'The only network call in the program', toggle: true },
+      { label: 'Panic stop', value: 'Ctrl+Shift+.' },
+    ],
+  },
+];
+---
+<div class:list={['tw', 'tw-hero', 'demo', cls]}>
+  <!-- The state. Off-screen but focusable, so the whole window is operable
+       from the keyboard and each control announces what it does. -->
+  <input type="radio" name="demoview" id="dv-convert" class="dv" checked aria-label="Convert files" />
+  <input type="radio" name="demoview" id="dv-tools" class="dv" aria-label="Open the Tools menu" />
+  <input type="radio" name="demoview" id="dv-settings" class="dv" aria-label="Open Settings" />
+  <input type="checkbox" id="dv-dark" class="dv" aria-label="Dark appearance" />
+  {tools.map((t) => (
+    <input type="radio" name="demoview" id={`dv-t-${t.id}`} class="dv dv-tool" aria-label={`Open ${t.name}`} />
+  ))}
+
+  <div class="tw-bar">
+    <label class="tw-brand demo-hit" for="dv-convert">OpenConvert</label>
+
+    <span class="tools-anchor">
+      <label class="tw-tools demo-hit" for="dv-tools">Tools <span class="caret" aria-hidden="true">▾</span></label>
+
+      <div class="tw-menu" role="menu" aria-label="Tools">
+        {groups.map((group) => (
+          <>
+            <p class="cat">{group.category}</p>
+            <ul>
+              {group.items.map((item) => (
+                <li>
+                  <label
+                    class="m-item"
+                    for={`dv-t-${item.id}`}
+                    data-capable={item.capable ? 'yes' : 'no'}
+                    title={item.capable ? undefined : `In this preview: ${item.why}`}>
+                    {item.name}
+                    {!item.capable && <span class="m-why">desktop</span>}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </>
+        ))}
+      </div>
+    </span>
+
+    <label class="tw-ctl demo-hit demo-theme" for="dv-dark">
+      <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2" />
+        <path d="M12 2.6v2.2M12 19.2v2.2M4.3 4.3l1.6 1.6M18.1 18.1l1.6 1.6M2.6 12h2.2M19.2 12h2.2M4.3 19.7l1.6-1.6M18.1 5.9l1.6-1.6"
+          stroke-linecap="round" />
+      </svg>
+      <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z" stroke-linejoin="round" />
+      </svg>
+    </label>
+
+    <label class="tw-ctl demo-hit" for="dv-settings">
+      <!-- A cog outline, generated: see `gearPath`. -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d={gearPath} />
+        <circle cx="12" cy="12" r="3.4" />
+      </svg>
+    </label>
+
+    <span class="tw-spacer"></span>
+
+    <span class="tw-caps" aria-hidden="true">
+      <span class="tw-cap"><svg viewBox="0 0 10 10"><path d="M0 5h10" stroke="currentColor" stroke-width="1" /></svg></span>
+      <span class="tw-cap"><svg viewBox="0 0 10 10"><path d="M0.5 0.5h9v9h-9z" fill="none" stroke="currentColor" stroke-width="1" /></svg></span>
+      <span class="tw-cap"><svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1" /></svg></span>
+    </span>
+  </div>
+
+  <!-- Anywhere outside the menu returns to the convert view, which is how a
+       dropdown closes. It covers the WINDOW, not the button: inside the Tools
+       anchor its `inset: 0` was the button's own 28 pixels, so a click on the
+       stage went straight through to the drop zone. -->
+  <label class="menu-scrim" for="dv-convert" aria-hidden="true"></label>
+
+  <div class="demo-stage">
+    <div class="view v-convert"><slot /></div>
+
+    <!-- One workspace, eleven headers and eleven rail states. The app opens a
+         tool on an empty stage and waits for a file; so does this. -->
+    <div class="view v-work">
+      <div class="tw-work">
+        <div class="w-head">
+          <span class="w-title">
+            {tools.map((t) => (
+              <span class={`t-${t.id}`}>{t.category} &middot; <strong>{t.name}</strong></span>
+            ))}
+          </span>
+          <label class="tw-btn demo-hit" for="dv-convert">Close <span class="key" aria-hidden="true">Esc</span></label>
+        </div>
+
+        <div class="w-body">
+          <!-- One rail per category, and only the current one is shown. The
+               app scopes the rail to the tool you opened: Remove background
+               offers the four other Image tools, not the PDF ones. -->
+          {groups.map((g) => (
+            <aside class={`w-rail rail-${g.category.toLowerCase()}`} aria-label={`${g.category} tools`}>
+              <p class="cat">{g.category}</p>
+              {g.items.map((item) => (
+                <label
+                  class={`r-item r-${item.id}`}
+                  for={`dv-t-${item.id}`}
+                  data-capable={item.capable ? 'yes' : 'no'}
+                  title={item.capable ? undefined : `In this preview: ${item.why}`}>{item.name}</label>
+              ))}
+            </aside>
+          ))}
+
+          <div class="w-stage">
+            <span class="drop-glyph" aria-hidden="true">&#8682;</span>
+            <span class="drop-title">
+              {tools.map((t) => (
+                <span class={`t-${t.id}`}>Open {t.article} {t.category.toLowerCase()} file</span>
+              ))}
+            </span>
+
+            <!-- THE RUNNER. Every tool marked capable above actually executes
+                 here, in this tab, on a file you choose; `island.js` reads
+                 `data-capable` off the checked radio's menu entry rather than
+                 keeping its own list. The tools that cannot run show the
+                 reason instead of a file picker. -->
+            <div class="w-run" data-tool-run>
+              <p class="w-why" data-tool-why hidden></p>
+              <label class="w-pick" data-tool-pick hidden>
+                <input type="file" data-tool-file />
+                <span data-tool-picklabel>Choose a file</span>
+              </label>
+              <div class="w-params" data-tool-params></div>
+              <button type="button" class="w-go" data-tool-go hidden>Run here</button>
+              <p class="caption w-status" data-tool-status role="status"></p>
+              <div class="w-result" data-tool-result hidden></div>
+            </div>
+
+            <span class="drop-hint" data-tool-hint>Runs on your machine in the desktop app</span>
+            <a class="w-more" href="/features#tools">See what it does &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="view v-settings">
+      <div class="tw-sheet">
+        <div class="s-head">
+          <h3>Settings</h3>
+          <label class="tw-btn demo-hit" for="dv-convert">Close <span class="key" aria-hidden="true">Esc</span></label>
+        </div>
+
+        {settings.map((section) => (
+          <>
+            <h4>{section.title}</h4>
+            <div class="tw-panel">
+              {section.lines.map((line) => (
+                <div class="tw-line">
+                  <span class="lbl">
+                    <span>{line.label}</span>
+                    {'hint' in line && line.hint && <span class="hint">{line.hint}</span>}
+                  </span>
+                  {'seg' in line && line.seg && (
+                    <span class="tw-seg" aria-hidden="true">
+                      {line.seg.map((opt, i) => <span data-on={i === line.on ? '' : undefined}>{opt}</span>)}
+                    </span>
+                  )}
+                  {'toggle' in line && (
+                    <span class="tw-switch" data-on={line.toggle ? '' : undefined} aria-hidden="true"></span>
+                  )}
+                  {'value' in line && line.value && <span class="val mono">{line.value}</span>}
+                </div>
+              ))}
+            </div>
+          </>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Off-screen, never `display: none` — that would take the control out of the
+     tab order and out of the accessibility tree along with it. */
+  .dv {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  /* The scrim positions against the window. */
+  .demo { position: relative; }
+
+  .demo-hit { cursor: pointer; user-select: none; }
+  .demo :global(.tw-brand.demo-hit):hover,
+  .demo :global(.tw-tools.demo-hit):hover,
+  .demo :global(.tw-ctl.demo-hit):hover { color: var(--brand); }
+  .demo :global(.demo-hit:focus-within) { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  /* The control that owns the current view is marked, the way the app's own
+     chrome marks it. */
+  .demo:has(#dv-tools:checked) :global(.tw-tools) { color: var(--brand); border-color: var(--brand-line); }
+  .demo:has(#dv-settings:checked) :global(.tw-ctl:last-of-type) { color: var(--brand); }
+
+  /* ---- the Tools menu: a popover over the stage, not another screen ------
+     It hangs off the button, so it opens where the app's does and the drop
+     zone stays visible behind it. */
+  .tools-anchor { position: relative; display: inline-flex; }
+  .demo :global(.tw-menu) { display: none; }
+  .demo:has(#dv-tools:checked) :global(.tw-menu) { display: grid; }
+
+  /* The scrim sits under the menu and over everything else, so a click that
+     misses the menu lands on it and returns to the convert view. */
+  .menu-scrim { display: none; }
+  .demo:has(#dv-tools:checked) .menu-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    cursor: default;
+  }
+
+  /* ---- the stage: two views in one cell, so switching never resizes ---- */
+  .demo-stage { display: grid; min-height: 0; }
+  .view { grid-area: 1 / 1; min-height: 0; overflow: hidden; }
+  .v-settings, .v-work { display: none; }
+  .demo:has(#dv-settings:checked) .v-convert,
+  .demo:has(.dv-tool:checked) .v-convert { display: none; }
+  .demo:has(#dv-settings:checked) .v-settings { display: block; }
+  .demo:has(.dv-tool:checked) .v-work { display: block; }
+
+  /* ---- the tool workspace ---- */
+  .tw-work { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); text-align: left; }
+  .w-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-6) var(--space-4);
+  }
+  .w-title { font-size: var(--text-title-size); color: var(--text-secondary); }
+  .w-title strong { color: var(--text-primary); font-weight: var(--weight-semibold); }
+  /* Every header and every stage prompt is rendered; the generated rules
+     underneath reveal exactly one of each. */
+  .w-title > span, .drop-title > span { display: none; }
+
+  .w-body {
+    display: grid; grid-template-columns: 210px minmax(0, 1fr);
+    gap: var(--space-5);
+    padding: 0 var(--space-6) var(--space-6);
+    min-height: 0;
+  }
+  @media (max-width: 620px) { .w-body { grid-template-columns: 1fr; } }
+
+  .w-rail {
+    display: none;
+    background: var(--surface-raised);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-3);
+    overflow-y: auto;
+    align-content: start;
+  }
+  .w-rail .cat {
+    margin: var(--space-3) var(--space-3) var(--space-2);
+    font-size: var(--text-caption-size);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+  }
+  .r-item {
+    display: block;
+    padding: 7px var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-body-size);
+    color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+  }
+  .r-item:hover { color: var(--text-primary); }
+
+  /* ---- what this tab cannot do, said rather than hidden ----------------
+     A tool the preview cannot run stays VISIBLE and stops being selectable.
+     Removing it would misrepresent the product — the desktop app has all
+     twenty — and leaving it live would break on click. Dimmed, not clickable,
+     with the reason on hover and the word "desktop" beside it. */
+  .m-item[data-capable='no'],
+  .r-item[data-capable='no'] {
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .m-item[data-capable='no'] { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+  .m-why {
+    font-size: var(--text-caption-size);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    opacity: 0.75;
+  }
+
+  /* ---- the runner ------------------------------------------------------ */
+  .w-run { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); width: 100%; }
+  .w-why { margin: 0; font-size: var(--text-small-size); color: var(--text-secondary); max-width: 42ch; }
+  .w-pick {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    padding: 7px var(--space-4);
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-full);
+    font-size: var(--text-small-size);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+  .w-pick:hover { background: var(--surface-sunken); }
+  .w-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .w-params { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center; }
+  .w-params label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-small-size); color: var(--text-secondary); }
+  .w-params input, .w-params select {
+    font: inherit; font-size: var(--text-small-size);
+    padding: 4px 8px; border-radius: var(--radius-sm);
+    border: 1px solid var(--hairline-strong);
+    background: var(--surface-base); color: var(--text-primary);
+    max-width: 150px;
+  }
+  .w-go {
+    padding: 7px var(--space-5);
+    border-radius: var(--radius-full);
+    border: 0;
+    background: var(--brand); color: var(--brand-ink);
+    font-size: var(--text-small-size); font-weight: var(--weight-semibold);
+    cursor: pointer;
+  }
+  .w-go[disabled] { opacity: 0.5; cursor: progress; }
+  .w-status { margin: 0; min-height: 1em; }
+  .w-result { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: var(--text-small-size); }
+  .w-result a { color: var(--brand); }
+  .w-swatch { width: 34px; height: 34px; border-radius: var(--radius-sm); border: 1px solid var(--hairline-strong); }
+
+  .w-stage {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--space-3);
+    border: 1.5px dashed var(--hairline-strong);
+    border-radius: var(--radius-xl);
+    min-height: 0;
+    text-align: center;
+    padding: var(--space-6);
+  }
+  .w-stage .drop-glyph { font-size: 34px; line-height: 1; color: var(--text-secondary); }
+  .w-stage .drop-title {
+    font-size: var(--text-title-size);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+  }
+  .w-stage .drop-hint { font-size: var(--text-small-size); color: var(--text-secondary); }
+  .w-more { font-size: var(--text-small-size); border-bottom: 0; color: var(--brand); }
+
+  /* ---- the window's own appearance -------------------------------------
+     `app-ui.css` reads the site's tokens, so redefining them HERE turns this
+     window dark while the page around it stays as the reader set it. The
+     values are the dark palette from tokens.css, not new colours. */
+  .i-moon { display: none; }
+  .demo:has(#dv-dark:checked) .i-sun { display: none; }
+  .demo:has(#dv-dark:checked) .i-moon { display: block; }
+
+  .demo:has(#dv-dark:checked) {
+    --surface-base:   #0A0A0A;
+    --surface-raised: #141414;
+    --surface-sunken: #1F1F1F;
+    --text-primary:   #EDEDED;
+    --text-secondary: rgba(237, 237, 237, 0.64);
+    --text-tertiary:  rgba(237, 237, 237, 0.40);
+    --text-disabled:  rgba(237, 237, 237, 0.24);
+    --hairline:        rgba(255, 255, 255, 0.13);
+    --hairline-strong: rgba(255, 255, 255, 0.24);
+    --brand:      #6FB3AC;
+    --brand-soft: rgba(111, 179, 172, 0.12);
+    --brand-line: rgba(111, 179, 172, 0.34);
+    --brand-ink:  #0A0A0A;
+    background: #0A0A0A;
+    color-scheme: dark;
+  }
+</style>
+
+<!-- Eleven pairs of rules, generated from the tools array in the frontmatter.
+     Inline because they are data rather than design: a scoped <style> block
+     cannot be built from a list. -->
+<style is:inline set:html={toolRules}></style>

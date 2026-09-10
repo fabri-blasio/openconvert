@@ -1,0 +1,381 @@
+{
+  "_": "AUTHORED. The facts on every /formats page come from the binary via scripts/export-data.mjs; these three fields do not, because no table holds them. Keyed by the format id the binary prints. A format with no entry here still gets a page â€” it gets facts and no prose, which is the correct failure.",
+  "m4a": {
+    "name": "M4A / AAC",
+    "tagline": "The phone-recording container, decoded locally.",
+    "body": "M4A wraps AAC or ALAC audio in the same ISO-BMFF box structure MP4 uses; the brand at offset 4 tells them apart. OpenConvert decodes both codecs through symphonia inside the confined worker and writes WAV, FLAC, MP3 or Opus. Tags do not survive the trip, and every receipt says so.",
+    "see_also": [
+      "wav",
+      "flac",
+      "mp3",
+      "ogg"
+    ]
+  },
+  "txt": {
+    "name": "Plain text",
+    "tagline": "What OCR and transcription produce.",
+    "body": "Plain UTF-8 text is the output side of two model-powered routes: OCR from images and transcription from audio. Both run in the oc-ai worker behind models you download explicitly; with no model present the routes refuse honestly rather than guessing.",
+    "see_also": [
+      "png",
+      "jpeg",
+      "wav",
+      "mp3"
+    ]
+  },
+  "png": {
+    "name": "PNG",
+    "magic": "89 50 4E 47 0D 0A 1A 0A",
+    "summary": "Lossless raster with an alpha channel, published in 1996 as an unencumbered replacement for GIF. Decoded by pure Rust in our own process.",
+    "loses": "Nothing on the way in. Leaving PNG for JPEG discards the alpha channel and recompresses every pixel; leaving it for WebP recompresses but keeps alpha."
+  },
+  "jpeg": {
+    "name": "JPEG",
+    "magic": "FF D8 FF",
+    "summary": "The 1992 lossy photographic format that every camera and every browser reads. Eight-bit, no alpha, and already recompressed at least once by the time you have it.",
+    "loses": "Quality, every time it is written. Re-encoding a JPEG is generational loss â€” the receipt records the quality parameter so you can see what was applied."
+  },
+  "webp": {
+    "name": "WebP",
+    "magic": "RIFF....WEBP",
+    "summary": "Google's 2010 web image format, lossy and lossless in one container, with alpha in both modes. Roughly 25% smaller than JPEG at matched quality.",
+    "loses": "Colour profiles and most EXIF on the way out. Animation survives only to formats that have it."
+  },
+  "gif": {
+    "name": "GIF",
+    "magic": "47 49 46 38 (GIF8)",
+    "summary": "256 colours, one-bit transparency and frame animation, unchanged since 1989. Still the only animation format some tools accept.",
+    "loses": "Everything above 256 colours, already, before you arrive. Converting out recovers nothing that was quantised away."
+  },
+  "bmp": {
+    "name": "BMP",
+    "magic": "42 4D (BM)",
+    "summary": "Windows' uncompressed raster container. Large, simple, and the format most often produced by tools with no encoder.",
+    "loses": "Nothing â€” it holds raw pixels. Its BMP encoder is also the source of CVE-2025-57803 in ImageMagick, which is why ours is pure Rust."
+  },
+  "tiff": {
+    "name": "TIFF",
+    "magic": "49 49 2A 00 or 4D 4D 00 2A",
+    "summary": "A container rather than a format: tiled or stripped, one of a dozen compressions, any bit depth, many pages. Every camera RAW is a TIFF underneath.",
+    "loses": "Multi-page structure, when the destination holds one image. Extra pages are named in the plan before the conversion starts."
+  },
+  "heic": {
+    "name": "HEIC / HEIF",
+    "magic": "ftypheic / ftypmif1 at offset 4",
+    "summary": "Apple's ISO-BMFF container for HEVC-compressed stills, default on iPhone since iOS 11. Half the size of JPEG and unreadable by much of Windows.",
+    "loses": "Nothing on the way in. Leaving it for JPEG is a decode and a re-encode: libde265 decodes the HEVC, and the pixels are compressed again."
+  },
+  "avif": {
+    "name": "AVIF",
+    "magic": "ftypavif at offset 4",
+    "summary": "AV1 intra-frame stills in an ISO-BMFF container, royalty-free, with 10- and 12-bit colour and alpha. Supported by every current browser.",
+    "loses": "High dynamic range on the way out to any 8-bit format. The class is B and the plan says so first."
+  },
+  "jxl": {
+    "name": "JPEG XL",
+    "magic": "FF 0A or ISO-BMFF ftypjxl ",
+    "summary": "A 2022 format with a lossless JPEG recompression mode: an existing JPEG goes in, comes out ~20% smaller, and reconstructs bit-for-bit.",
+    "loses": "Nothing in that recompression mode. Leaving JPEG XL for anything else is an ordinary re-encode."
+  },
+  "svg": {
+    "name": "SVG",
+    "magic": "XML with an <svg> root element",
+    "summary": "Vector graphics as XML. It can reference remote images, embed scripts and declare XML entities â€” which makes it a parser problem, not an image problem.",
+    "loses": "Its resolution independence, permanently, on the way to any raster format. Scripts and external references are stripped on ingest, never resolved."
+  },
+  "wav": {
+    "name": "WAV",
+    "magic": "RIFF....WAVE",
+    "summary": "Uncompressed PCM in a RIFF container. The lossless interchange format every audio tool reads, at about 10 MB per stereo minute.",
+    "loses": "Nothing to FLAC â€” the samples transfer at their own width. Anything lossy discards audio permanently, and the class says which."
+  },
+  "flac": {
+    "name": "FLAC",
+    "magic": "66 4C 61 43 (fLaC)",
+    "summary": "Free Lossless Audio Codec: about half the size of WAV, decoding to bit-identical samples. Integer sources only.",
+    "loses": "Nothing to WAV. A float source is refused rather than quietly re-quantised into an integer format."
+  },
+  "mp3": {
+    "name": "MP3",
+    "magic": "FF FB / FF F3 or an ID3 header",
+    "summary": "The 1993 lossy format that outlived its patents and every attempt to replace it. Plays on hardware nothing else reaches.",
+    "loses": "Audio, on the way in, before you had the file. Converting MP3 to FLAC produces a lossless copy of a lossy recording and recovers nothing."
+  },
+  "ogg": {
+    "name": "Ogg",
+    "magic": "4F 67 67 53 (OggS)",
+    "summary": "Xiph's royalty-free container, usually carrying Vorbis or Opus. Streaming-oriented, with page-level framing.",
+    "loses": "Chapter and cue metadata on the way to containers that have no field for it. The receipt lists what was dropped."
+  },
+  "mp4": {
+    "name": "MP4",
+    "magic": "ftyp at offset 4 Â· brand distinguishes MP4 from MOV, M4A and 3GP",
+    "summary": "ISO base media format, the video container everything plays. Holds H.264, H.265 and AV1 video with AAC audio.",
+    "loses": "Nothing when the codecs already fit: the streams are copied byte-for-byte and the class is A. When they do not, it is a full re-encode and you are told before it starts."
+  },
+  "mkv": {
+    "name": "Matroska",
+    "magic": "1A 45 DF A3 (EBML) Â· DocType distinguishes MKV from WebM",
+    "summary": "An EBML container with no codec restrictions: any video, any audio, any number of subtitle and chapter tracks.",
+    "loses": "Subtitle and chapter tracks MP4 cannot hold. The plan lists each dropped track by name rather than discovering it afterwards."
+  },
+  "webm": {
+    "name": "WebM",
+    "magic": "1A 45 DF A3 with DocType webm",
+    "summary": "Matroska restricted to royalty-free codecs â€” VP8, VP9 or AV1 with Vorbis or Opus. Structurally the same file with a different DocType.",
+    "loses": "Nothing to MKV: the elements splice through verbatim, which is why the conversion is class A and finishes in seconds."
+  },
+  "mka": {
+    "name": "Matroska audio",
+    "magic": "1A 45 DF A3 with audio tracks only",
+    "summary": "Matroska carrying audio alone. The container answer for multi-track or chaptered audio that no audio-only format holds.",
+    "loses": "Video, deliberately â€” that is what the conversion is. Whether the audio codec carries is checked before anything runs."
+  },
+  "pdf": {
+    "name": "PDF",
+    "magic": "%PDF-",
+    "summary": "A 1993 page-description format that grew JavaScript, embedded files, forms and remote resources. The most attacked document format there is.",
+    "loses": "Its text layer, when rendered to an image. Active content is stripped on ingest and never executed â€” the receipt lists every object removed."
+  },
+  "docx": {
+    "name": "DOCX",
+    "magic": "50 4B 03 04 with word/document.xml",
+    "summary": "A ZIP of XML parts. Carries macros, external entity references, revision history and author metadata in fields most tools never show you.",
+    "loses": "Macros and tracked-change history on the way out, always. Author and company fields are removed under the Share profile and listed in the receipt."
+  },
+  "odt": {
+    "name": "ODT",
+    "magic": "50 4B 03 04 with mimetype opendocument.text",
+    "summary": "OpenDocument text: a ZIP of XML parts, ISO-standardised, and the native format of LibreOffice.",
+    "loses": "Layout fidelity against Word's own renderer, which is a rendering difference rather than data loss. Macros are stripped."
+  },
+  "postscript": {
+    "name": "PostScript",
+    "magic": "%!PS-Adobe",
+    "summary": "A complete programming language that happens to describe pages. Interpreting it means executing an untrusted program.",
+    "loses": "Nothing structural. What matters here is the interpreter: Ghostscript's CVE-2024-29510 escaped its own -dSAFER sandbox, so Ghostscript is excluded from the core entirely."
+  },
+  "zip": {
+    "name": "ZIP",
+    "magic": "50 4B 03 04",
+    "summary": "The archive format everything reads. Member names are arbitrary bytes chosen by whoever built the archive, which is the whole security story.",
+    "loses": "Member timestamps and permission bits on the way to TAR, listed in the receipt. Names transfer byte-for-byte."
+  },
+  "tar": {
+    "name": "TAR",
+    "magic": "ustar at offset 257",
+    "summary": "A 1979 stream of headers and payloads with no compression and no central directory. Preserves POSIX permissions and ownership.",
+    "loses": "Nothing to ZIP except the permission bits ZIP has no field for. Device nodes, FIFOs and symlinks are refused rather than recreated."
+  },
+  "gzip": {
+    "name": "gzip",
+    "magic": "1F 8B",
+    "summary": "DEFLATE with a small header: one compressed stream, not an archive. A .tar.gz is a TAR inside one of these.",
+    "loses": "Nothing. It carries a single stream and the original filename, both of which transfer."
+  },
+  "7z": {
+    "name": "7z",
+    "magic": "37 7A BC AF 27 1C",
+    "summary": "LZMA-compressed archive with a compressed header, solid blocks and optional AES-256. Smaller than ZIP and slower to build.",
+    "loses": "Solid-block compression on the way to ZIP, so the output is larger. The plan states the expected size before it runs."
+  },
+  "cr3": {
+    "name": "Canon CR3",
+    "magic": "ISO-BMFF ftypcrx ",
+    "summary": "Canon's current RAW format: sensor data in an ISO-BMFF container, unprocessed, with the camera's own rendering held separately.",
+    "loses": "The RAW latitude, on the way to any 8-bit format. Highlight recovery and white-balance choice are gone once it is a JPEG."
+  },
+  "cr2": {
+    "name": "Canon CR2",
+    "magic": "TIFF header with a CR2 magic at offset 8",
+    "summary": "Canon's previous RAW format, a TIFF derivative. It shares its first four bytes with every other TIFF-based RAW.",
+    "loses": "The same RAW latitude as CR3. Detection here is by content and by maker note, never by extension â€” the magic bytes alone cannot tell these apart."
+  },
+  "nef": {
+    "name": "Nikon NEF",
+    "magic": "TIFF header Â· maker note distinguishes it",
+    "summary": "Nikon's RAW format, TIFF-derived, sometimes lossy-compressed at the camera's option.",
+    "loses": "RAW latitude on the way out. Which compression the camera used is reported by the plan rather than assumed."
+  },
+  "arw": {
+    "name": "Sony ARW",
+    "magic": "TIFF header Â· maker note distinguishes it",
+    "summary": "Sony's RAW format, TIFF-derived, with an 11-bit compressed variant that is not visually lossless at the extremes.",
+    "loses": "RAW latitude on the way out, and whatever the in-camera compression already discarded."
+  },
+  "dng": {
+    "name": "DNG",
+    "magic": "TIFF header with a DNGVersion tag",
+    "summary": "Adobe's documented RAW container, TIFF-based, designed so a decoder written today still opens a file from 2004.",
+    "loses": "Nothing that a proprietary RAW holds and DNG does not, which is the point of it existing. Leaving it for a rendered format loses the latitude."
+  },
+  "csv": {
+    "name": "CSV",
+    "magic": "no signature Â· detected by structure",
+    "summary": "Delimiter-separated text with no type system, no encoding declaration and no agreed quoting rule. RFC 4180 describes one common dialect of several.",
+    "loses": "Nothing to JSON, because values stay literal text: 1.50 arrives as \"1.50\" rather than as the number 1.5. That is what makes the conversion class A."
+  },
+  "json": {
+    "name": "JSON",
+    "magic": "no signature Â· detected by structure",
+    "summary": "Typed, nested and unambiguous, which is exactly what CSV is not. Every value carries its own type.",
+    "loses": "Nesting, on the way to CSV. A nested document is refused rather than flattened by guesswork about what the columns should be called."
+  },
+  "markdown": {
+    "name": "Markdown",
+    "tagline": "What a PDF becomes when you want to edit it again.",
+    "body": "Markdown is plain text with a handful of conventions, which is why it is the honest destination for a document you intend to keep working on: there is no layout to lose, because there was never any layout to begin with. OpenConvert reaches it through Pandoc in a separate process, from PDF, DOCX, ODT, HTML, notebooks and plain text. Page geometry, fonts and absolute positioning do not survive, and the receipt records the conversion as rebuilt rather than lossless.",
+    "see_also": [
+      "pdf",
+      "docx",
+      "html",
+      "txt"
+    ]
+  },
+  "html": {
+    "name": "HTML",
+    "tagline": "A document you can open without installing anything.",
+    "body": "HTML is the one document format every machine already reads. OpenConvert converts to it from PDF, DOCX, ODT, notebooks, Markdown and text, and back out of it to PDF, DOCX, ODT, Markdown and text, through Pandoc in a confined process. Scripts and remote references in an input are not fetched — nothing in this program opens a socket to render a file — so an HTML document is converted as the text it is rather than as the page it would have become in a browser.",
+    "see_also": [
+      "pdf",
+      "markdown",
+      "docx",
+      "odt"
+    ]
+  },
+  "notebook": {
+    "name": "Jupyter notebook",
+    "tagline": "Cells, output and all, turned into something you can send someone.",
+    "body": "An .ipynb file is JSON holding source cells and whatever they last printed. OpenConvert renders one to PDF, HTML, Markdown, DOCX, ODT, plain text or an image through Pandoc, so a notebook can be read by somebody who does not have Jupyter. Stored output is carried across as it was found; nothing is re-executed, because running a notebook to convert it would mean running somebody else's code.",
+    "see_also": [
+      "pdf",
+      "markdown",
+      "html",
+      "docx"
+    ]
+  },
+  "mov": {
+    "name": "QuickTime (MOV)",
+    "tagline": "Apples container, unwrapped without re-encoding.",
+    "body": "MOV is ISO base media, the same box structure MP4 uses, which is why a MOV and an MP4 holding the same H.264 track are a rewrap apart rather than a re-encode apart. OpenConvert reads the boxes in-process and can lift the audio out or move the streams into another container untouched. Nothing is written back to MOV: the routes run out of it, not into it.",
+    "see_also": [
+      "mp4",
+      "mkv",
+      "webm",
+      "wav"
+    ]
+  },
+  "avi": {
+    "name": "AVI",
+    "tagline": "A 1992 container still turning up in camera exports.",
+    "body": "AVI is a RIFF file from the Video for Windows era, with no modern indexing and no standard way to carry the metadata later containers take for granted. OpenConvert reads it in-process and moves what is inside somewhere better; it never writes AVI, because producing a file in a format this old would be doing the reader a disservice.",
+    "see_also": [
+      "mp4",
+      "mkv",
+      "wav",
+      "mp3"
+    ]
+  },
+  "pptx": {
+    "name": "PowerPoint (PPTX)",
+    "tagline": "Slides, rendered by LibreOffice in a confined process.",
+    "body": "A PPTX is a ZIP of XML parts, and like every Office format it can carry macros, external references and revision history that no viewer shows you. OpenConvert converts it through headless LibreOffice in a sandboxed worker, out to PDF, images or text. Animations, transitions and embedded media do not survive; the receipt records the conversion as rebuilt rather than translated.",
+    "see_also": [
+      "pdf",
+      "odp",
+      "png",
+      "txt"
+    ]
+  },
+  "odp": {
+    "name": "OpenDocument Presentation",
+    "tagline": "The open counterpart to PPTX, same engine.",
+    "body": "ODP is the OASIS presentation format: a ZIP of XML, openly specified, and the native output of LibreOffice Impress. OpenConvert renders it to PDF, to images or to text through the same sandboxed LibreOffice worker that reads PPTX. Layout is preserved as far as a page can preserve a slide; animation is not a thing a PDF has.",
+    "see_also": [
+      "pdf",
+      "pptx",
+      "png",
+      "txt"
+    ]
+  },
+  "epub": {
+    "name": "EPUB",
+    "tagline": "A book, taken apart into something you can edit.",
+    "body": "An EPUB is a ZIP of XHTML, CSS and images with a spine that orders them. OpenConvert converts it out through Calibre in a separate process, to PDF, HTML, Markdown or plain text. Reflowable text becomes fixed pages on the way to PDF, and DRM-protected books are refused rather than attempted: circumventing that is not a feature this program has.",
+    "see_also": [
+      "pdf",
+      "html",
+      "markdown",
+      "txt"
+    ]
+  },
+  "xlsx": {
+    "name": "Excel (XLSX)",
+    "tagline": "A spreadsheet, read for its values.",
+    "body": "XLSX is a ZIP of XML sheets. OpenConvert reads it with calamine in a sandboxed worker and writes CSV, or takes CSV back in. Formulas are read as their last computed value, because a formula is a program and running somebody else's program to convert their file is exactly what this product exists to avoid. Charts, macros and formatting do not cross.",
+    "see_also": [
+      "csv",
+      "ods",
+      "json"
+    ]
+  },
+  "ods": {
+    "name": "OpenDocument Spreadsheet",
+    "tagline": "The open counterpart to XLSX.",
+    "body": "ODS is the OASIS spreadsheet format, openly specified and readable without a licence. OpenConvert reads it in a sandboxed worker and writes out the values as CSV. As with XLSX, formulas come across as the values they last held, and nothing in the file is executed to find out what they would say now.",
+    "see_also": [
+      "csv",
+      "xlsx",
+      "json"
+    ]
+  },
+  "dxf": {
+    "name": "DXF",
+    "tagline": "CAD geometry, read as vectors rather than as a drawing.",
+    "body": "DXF is AutoCAD's interchange format: a plain-text tagged listing of entities, published rather than reverse-engineered. OpenConvert parses it in-process and writes the geometry out as SVG. Layers, blocks and text are carried across as shapes; anything that depends on a CAD application to mean something — constraints, parametrics, external references — does not survive, and the receipt says the result was rebuilt.",
+    "see_also": [
+      "svg",
+      "png",
+      "pdf"
+    ]
+  },
+  "ttf": {
+    "name": "TrueType (TTF)",
+    "tagline": "A font, repacked for the web without touching a glyph.",
+    "body": "TrueType, Apples outline format from 1991 and still the most widely supported one. OpenConvert repacks it to WOFF or WOFF2 in a sandboxed worker. Repacking is a compression change and nothing else: every glyph outline, hinting instruction and layout table is carried across byte for byte, so the route is lossless and the receipt says so. Licensing is yours to check — a font you may not redistribute is still a font you may not redistribute after conversion.",
+    "see_also": [
+      "woff",
+      "woff2",
+      "otf"
+    ]
+  },
+  "otf": {
+    "name": "OpenType (OTF)",
+    "tagline": "A font, repacked for the web without touching a glyph.",
+    "body": "OpenType, which wraps either TrueType or PostScript outlines and adds the layout tables that make ligatures and kerning work. OpenConvert repacks it to WOFF or WOFF2 in a sandboxed worker. Repacking is a compression change and nothing else: every glyph outline, hinting instruction and layout table is carried across byte for byte, so the route is lossless and the receipt says so. Licensing is yours to check — a font you may not redistribute is still a font you may not redistribute after conversion.",
+    "see_also": [
+      "woff",
+      "woff2",
+      "ttf"
+    ]
+  },
+  "woff": {
+    "name": "WOFF",
+    "tagline": "The first web font wrapper.",
+    "body": "WOFF is a TrueType or OpenType font wrapped in zlib compression with a small metadata block, standardised in 2012. OpenConvert unwraps it back to TTF or OTF, or repacks it as WOFF2, in a sandboxed worker. Every one of those steps is lossless: the outlines inside are untouched and only the container changes.",
+    "see_also": [
+      "woff2",
+      "ttf",
+      "otf"
+    ]
+  },
+  "woff2": {
+    "name": "WOFF2",
+    "tagline": "The one to actually serve.",
+    "body": "WOFF2 replaces WOFF's zlib with Brotli and a transform that understands font tables, which is worth roughly a third of the file over WOFF. OpenConvert writes it from TTF, OTF or WOFF in a sandboxed worker. It is a destination and not a source here: the routes run into WOFF2, not out of it.",
+    "see_also": [
+      "woff",
+      "ttf",
+      "otf"
+    ]
+  }
+}

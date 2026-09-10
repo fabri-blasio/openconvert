@@ -1,0 +1,185 @@
+---
+/**
+ * "Can it do the conversion I came for?" — answered without a search box.
+ *
+ * Pick a source format and its targets appear. **No JavaScript**: 35 formats is
+ * one radio group, and `:has()` reveals the matching panel. A text search over
+ * 1,225 pairs would need a script, a page that budgets none, and an index — and
+ * it would answer the same question worse, because a visitor who types "heic"
+ * wants to see all six things it becomes, not to guess the second word.
+ *
+ * The panel says both halves of the answer: what this format converts to, and
+ * — when a target exists elsewhere on the list but not from here — that it
+ * does not. A converter that only ever shows what it can do is a converter you
+ * have to test to trust.
+ */
+import data from '../data/formats.json';
+
+type Route = { to: string; options?: { class?: string; requires?: string }[] };
+type Fmt = { id: string; kind: string; routes: Route[] };
+
+const formats = (data.formats as Fmt[]).filter((f) => f.routes.length > 0);
+
+/** Group the picker by media kind, in the order the app groups its tools. */
+const ORDER = ['image', 'document', 'audio', 'video', 'archive', 'tabular'] as const;
+const KIND_LABEL: Record<string, string> = {
+  image: 'Images',
+  document: 'Documents',
+  audio: 'Audio',
+  video: 'Video',
+  archive: 'Archives',
+  tabular: 'Data',
+};
+
+const groups = ORDER.map((kind) => ({
+  kind,
+  label: KIND_LABEL[kind],
+  formats: formats.filter((f) => f.kind === kind),
+})).filter((g) => g.formats.length > 0);
+
+const CLASS_NAME: Record<string, string> = {
+  A: 'lossless',
+  B: 'lossy',
+  C: 'rebuilt',
+  D: 'generated',
+};
+
+/**
+ * Which pill is lit, and which panel is showing.
+ *
+ * One rule per format, generated from the same list the picker renders. A
+ * stylesheet cannot ask which radio is checked without naming it, and 35 names
+ * typed twice is a list that goes stale the first time a format is added.
+ */
+const pickerRules = formats
+  .map(
+    (f) =>
+      `.picker:has(#rp-${f.id}:checked) .p-${f.id}` +
+      `{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}` +
+      `.picker:has(#rp-${f.id}:checked) .n-${f.id}{display:block}`,
+  )
+  .join('\n');
+
+---
+<div class="picker">
+  {formats.map((f, i) => (
+    <input type="radio" name="route-from" id={`rp-${f.id}`} class="rp-in" checked={i === 0}
+      aria-label={`Show what ${f.id.toUpperCase()} converts to`} />
+  ))}
+
+  <div class="picker-grid">
+    <div class="from">
+      <p class="eyebrow">1 · I have a</p>
+      <div class="from-scroll">
+        {groups.map((g) => (
+          <div class="from-group">
+            <p class="caption g-label">{g.label}</p>
+            <div class="from-list">
+              {g.formats.map((f) => (
+                <label class={`f-pill p-${f.id}`} for={`rp-${f.id}`}>{f.id.toUpperCase()}</label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="to">
+      <p class="eyebrow">2 · and I want a</p>
+      {formats.map((f) => (
+        <div class={`to-panel n-${f.id}`}>
+          <ul class="to-list">
+            {f.routes.map((r) => (
+              <li>
+                <span class="t-name">{r.to.toUpperCase()}</span>
+                <span class="t-class caption">
+                  {CLASS_NAME[r.options?.[0]?.class ?? ''] ?? 'classed'}
+                  {r.options?.[0]?.requires && r.options[0].requires !== 'nothing'
+                    ? ` · needs ${r.options[0].requires}`
+                    : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p class="caption to-note">
+            {f.routes.length} route{f.routes.length === 1 ? '' : 's'} from {f.id.toUpperCase()}.
+            Anything not listed here, the binary refuses rather than guesses.
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+
+
+<style>
+  .picker {
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    background: var(--surface-base);
+    overflow: hidden;
+  }
+
+  /* Focusable, announced, off-screen. Never `display: none` — that removes the
+     control from the tab order and the accessibility tree at once. */
+  .rp-in {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  .picker-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+  @media (max-width: 760px) { .picker-grid { grid-template-columns: 1fr; } }
+
+  .from, .to { padding: var(--s-5); }
+  .from { border-right: 1px solid var(--hairline); }
+  @media (max-width: 760px) {
+    .from { border-right: 0; border-bottom: 1px solid var(--hairline); }
+  }
+
+  .from-scroll { margin-top: var(--s-4); }
+  .from-group + .from-group { margin-top: var(--s-4); }
+  .g-label { margin-bottom: var(--s-2); }
+  .from-list { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+
+  .f-pill {
+    display: inline-block;
+    padding: 5px 11px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-full);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    transition: border-color var(--m-micro) ease-out, color var(--m-micro) ease-out;
+  }
+  .f-pill:hover { border-color: var(--brand-line); color: var(--text-primary); }
+  .rp-in:focus-visible + * .f-pill { outline: 2px solid var(--brand); }
+
+  .to-panel { display: none; }
+  .to-list {
+    list-style: none; margin: var(--s-4) 0 0; padding: 0;
+    display: grid; gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .to-list li {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: var(--s-4);
+    padding: 9px var(--s-4);
+    background: var(--surface-base);
+  }
+  .t-name { font-weight: var(--fw-strong); letter-spacing: -0.01em; }
+  .to-note { margin-top: var(--s-3); }
+</style>
+
+<!-- One rule per format, generated from the same list the picker renders:
+     which pill is lit, and which panel is showing. A stylesheet cannot ask
+     which radio is checked without naming it, and 35 names typed twice is a
+     list that goes stale the first time a format is added. -->
+<style is:inline set:html={pickerRules}></style>

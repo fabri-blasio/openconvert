@@ -1,0 +1,692 @@
+/* ============================================================================
+   APP-UI — the desktop app's own interface, reproduced for the web.
+
+   Everything inside `.tw` is copied from `apps/desktop/src`, value for value:
+   the 13px body scale, the 2/4/8/12/16/24/32/48 spacing steps, the 6/10/14/20
+   radii, the 46x32 caption buttons, the 56px file row, the 32px pill buttons.
+   Nothing here is a web designer's impression of the app. If a number differs
+   from the app's, that is a bug in this file.
+
+   **Why px, and not the site's scale.** The site sets 16px body; the app sets
+   13px. Rescaling the window to the site's type would draw an app that does not
+   exist — the proportion between a 34px file-row icon and its 13px filename is
+   what the product looks like. So the window keeps its own scale and sits in
+   the page as an object, the way a screenshot would, except that it is live
+   markup: it themes, it reflows, and a screen reader reads it.
+
+   Colour is the one thing NOT copied. App and site are the same design system
+   (07-DESIGN-SYSTEM), so the window inherits the site's tokens and follows the
+   site's light/dark state rather than carrying a second palette that can drift.
+   ============================================================================ */
+
+.tw {
+  /* ---- the app's scale, verbatim (apps/desktop/src/lib/styles/tokens.css) -- */
+  --space-1: 2px;  --space-2: 4px;  --space-3: 8px;  --space-4: 12px;
+  --space-5: 16px; --space-6: 24px; --space-7: 32px; --space-8: 48px;
+
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 20px;
+  --radius-full: 999px;
+
+  --text-caption-size: 11px; --text-caption-lh: 14px;
+  --text-small-size:   12px; --text-small-lh:   16px;
+  --text-body-size:    13px; --text-body-lh:    18px;
+  --text-title-size:   15px; --text-title-lh:   20px;
+  --text-display-size: 28px; --text-display-lh: 34px;
+
+  --weight-medium: 550;
+  --weight-semibold: 600;
+
+  --shadow-card: 0 0 0 0.5px var(--hairline), 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+
+  /* ---- the window itself ------------------------------------------------ */
+  max-width: 760px;
+  margin-inline: auto;
+  border-radius: var(--radius-lg);
+  background: var(--surface-base);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-lh);
+  color: var(--text-primary);
+  /* Reads as a window: one hairline all the way round and one soft shadow,
+     never a card border and a shadow fighting each other. */
+  box-shadow:
+    0 0 0 0.5px var(--hairline-strong),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 18px 44px rgba(0, 0, 0, 0.07);
+  /* Rounded corners have to clip what reaches them, exactly as the app's do. */
+  overflow: hidden;
+  /* Wherever the window is a grid or flex item — the walkthrough stacks four of
+     them in one cell — its automatic minimum size is its content's minimum,
+     which is how one screen came out 14px wider than the three it was stacked
+     over. A window is a fixed frame; content fits it, not the other way round. */
+  min-width: 0;
+
+  /* Title bar, then a content area that takes whatever is left. This is the
+     app's own layout (`App.svelte`: one auto row, one `minmax(0, 1fr)`), and it
+     is what makes the drop zone fill the window instead of sitting in the
+     middle of it at its own natural height. The explicit column is not
+     decoration either: an implicit `auto` column is sized from content, and a
+     single unbreakable string inside would widen the window. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: auto;
+}
+
+/* Elevation in dark is lighter, never shadowed harder (07 §4). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .tw {
+    --shadow-card: 0 0 0 0.5px var(--hairline), 0 1px 2px rgba(0, 0, 0, 0.4),
+      0 8px 24px rgba(0, 0, 0, 0.3);
+    box-shadow:
+      0 0 0 0.5px var(--hairline-strong),
+      0 18px 44px rgba(0, 0, 0, 0.45);
+  }
+}
+:root[data-theme="dark"] .tw {
+  --shadow-card: 0 0 0 0.5px var(--hairline), 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 0 0 0.5px var(--hairline-strong),
+    0 18px 44px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================================
+   TITLE BAR — apps/desktop/src/components/TitleBar.svelte
+
+   The app draws its own, because a white system strip above a dark application
+   reads as two programs stacked. Minimise, maximise, close: Windows order,
+   Windows metric (46x32), close reddening on hover. Tools, theme and settings
+   sit on the LEFT of the same strip — the app moved them there so the eye finds
+   them beside the brand instead of hunting the far corner.
+   ============================================================================ */
+.tw-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) 0 var(--space-3) var(--space-6);
+  user-select: none;
+}
+
+.tw-brand {
+  font-size: var(--text-title-size);
+  line-height: var(--text-title-lh);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.tw-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 28px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  border: 0.5px solid var(--hairline-strong);
+  background: transparent;
+  font-size: var(--text-small-size);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+.tw-tools .caret { font-size: 9px; color: var(--text-tertiary); }
+
+.tw-ctl {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  border-radius: var(--radius-full);
+  border: 0.5px solid var(--hairline);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tw-spacer { margin-left: auto; }
+
+/* The caption buttons cancel the bar's padding: a control that stops short of
+   the window's top edge is one users miss when the pointer is thrown at the
+   corner. */
+.tw-caps { display: flex; align-self: stretch; margin-block: -12px -8px; }
+.tw-cap {
+  width: 46px; min-height: 32px;
+  display: grid; place-items: center;
+  color: var(--text-secondary);
+  border: 0;
+  background: transparent;
+}
+.tw-cap svg { width: 10px; height: 10px; }
+
+/* A narrow window drops controls before it drops its caption buttons.
+
+   The real app has no 390px-wide state — the window's minimum is far wider —
+   so the reproduction has to decide what a phone shows. Measured at 390px, the
+   full strip needs 388px inside a 342px window and the close button hung 18px
+   off the right edge of the PAGE, taking the whole document into horizontal
+   scroll. What goes first is what a real window sheds first: the secondary
+   controls. Minimise, maximise and close stay, because they are the reason the
+   picture reads as a window at all. */
+@media (max-width: 560px) {
+  .tw-bar { gap: var(--space-3); padding-left: var(--space-4); }
+  .tw-ctl { display: none; }
+  .tw-tools { min-width: 0; }
+  .tw-cap { width: 38px; }
+}
+
+/* ============================================================================
+   CONTENT AREA
+   ============================================================================ */
+.tw-stage {
+  padding: 0 var(--space-6) var(--space-6);
+  display: grid;
+  gap: var(--space-4);
+  min-height: 0;
+}
+
+/* ---- the drop zone — DropZone.svelte ----------------------------------- */
+.tw-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 268px;
+  padding: var(--space-8) var(--space-6);
+  border: 1.5px dashed var(--hairline-strong);
+  border-radius: var(--radius-xl);
+  text-align: center;
+}
+/* The island wraps the idle state in one span so it can be swapped whole.
+   That span is the drop zone's ONLY flex child, so without a layout of its own
+   the arrow, the title, the hint and the shortcut all lay out inline — one long
+   sentence across the middle of the window instead of the app's stacked empty
+   state. It is invisible in the markup and obvious on the page. */
+.tw-zone .zone-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+/* The upload arrow. NOT `.glyph`: on this site that class is reserved for the
+   five state glyphs (= ≈ ⌇ ✦ ⛨), and a gate fails the build if anything else
+   claims it — the glyphs are load-bearing vocabulary, so the drop zone's
+   decoration does not get to borrow their name. */
+.tw-zone .up {
+  font-family: var(--mono);
+  font-size: 40px; line-height: 1;
+  color: var(--text-secondary);
+}
+.tw-zone .title {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+/* The zone's title swaps on drag. Both spans are in the markup so the swap
+   costs no layout thrash and no JavaScript beyond the attribute the island
+   already sets — and both of them rendered, side by side, until this existed:
+   "Drop files to convert Release to add files" on a live page. */
+.tw-zone .t-drag { display: none; }
+.tw-zone[data-over] .t-idle { display: none; }
+.tw-zone[data-over] .t-drag { display: inline; }
+.tw-zone[data-over] { border-color: var(--brand); }
+
+.tw-zone .choose {
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  font-size: var(--text-body-size);
+  color: var(--text-secondary);
+}
+.tw-zone .choose .key { font-size: var(--text-caption-size); color: var(--text-tertiary); }
+.tw-zone .hint {
+  margin-top: var(--space-5);
+  font-size: var(--text-small-size);
+  color: var(--text-secondary);
+}
+
+/* ---- the file list — App.svelte + FileRow.svelte ----------------------- */
+.tw-list {
+  display: flex; flex-direction: column;
+  background: var(--surface-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.tw-row {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  min-height: 56px;
+  flex-wrap: wrap;
+}
+.tw-row + .tw-row { border-top: 0.5px solid var(--hairline); }
+.tw-row .icon {
+  flex: none; width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-family: var(--mono); font-size: 15px;
+  color: var(--text-secondary);
+}
+.tw-row .ident { display: grid; gap: 1px; min-width: 0; flex: 1 1 160px; }
+.tw-row .name {
+  font-size: var(--text-body-size); line-height: var(--text-body-lh);
+  font-weight: var(--weight-medium);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tw-row .meta {
+  font-size: var(--text-caption-size); line-height: var(--text-small-lh);
+  color: var(--text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tw-row .controls {
+  display: flex; align-items: center; gap: var(--space-4);
+  flex: 0 1 auto; margin-left: auto;
+}
+.tw-row .convert {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  flex: none; font-size: var(--text-small-size);
+  color: var(--text-secondary); white-space: nowrap;
+}
+.tw-row .from {
+  flex: none; padding: 0 var(--space-3); min-height: 24px;
+  display: inline-flex; align-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-size: var(--text-caption-size);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+.tw-row .arrow { color: var(--text-tertiary); font-size: 12px; }
+
+/* the format picker's trigger — FormatPicker.svelte */
+.tw-pick {
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  min-height: 30px; min-width: 104px;
+  padding: 0 var(--space-3) 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--hairline-strong);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  font-size: var(--text-small-size);
+  font-weight: var(--weight-medium);
+}
+.tw-pick .value { margin-right: auto; letter-spacing: 0.02em; }
+.tw-pick .caret { color: var(--text-tertiary); font-size: 10px; }
+
+.tw-dots {
+  flex: none; width: 28px; height: 28px;
+  display: grid; place-items: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  border: 0; background: transparent;
+}
+.tw-dots svg { width: 16px; height: 16px; }
+
+/* ---- the action bar ---------------------------------------------------- */
+.tw-actions {
+  display: flex; align-items: center; gap: var(--space-4);
+  /* The app's bar never wraps because the window is never narrow enough to make
+     it. On a phone this reproduction is, and a bar that refuses to wrap sets a
+     minimum width the whole window then has to honour — which is how a 342px
+     window ended up 408px wide and took the page into horizontal scroll. */
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+}
+.tw-ready {
+  margin-right: auto;
+  font-size: var(--text-small-size);
+  color: var(--text-secondary);
+}
+.tw-btn {
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  height: 32px; padding: 0 var(--space-6);
+  border-radius: var(--radius-full);
+  font-size: var(--text-body-size);
+  font-weight: var(--weight-medium);
+  border: 0;
+}
+.tw-btn.primary { background: var(--text-primary); color: var(--surface-base); }
+.tw-btn.secondary {
+  border: 0.5px solid var(--hairline-strong);
+  color: var(--text-secondary);
+  background: transparent;
+}
+.tw-btn .key { opacity: 0.6; }
+
+/* ---- progress: one hairline bar across the content area (07 §10) -------- */
+.tw-progress {
+  height: 2px; border-radius: 999px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+.tw-progress > i {
+  display: block; height: 100%;
+  background: var(--text-primary);
+  transform-origin: left center;
+  transform: scaleX(var(--fraction, 0));
+}
+
+/* ---- a finished file, and its receipt ---------------------------------- */
+.tw-result {
+  display: grid; gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+}
+.tw-result .head {
+  display: flex; align-items: baseline; gap: var(--space-4); flex-wrap: wrap;
+  font-size: var(--text-body-size);
+}
+.tw-result .ok { color: var(--brand); font-family: var(--mono); }
+.tw-result .facts {
+  display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5);
+  font-size: var(--text-caption-size);
+  color: var(--text-tertiary);
+  font-family: var(--mono);
+}
+
+/* ---- keyboard strip: the app is keyboard-complete, so the page says so --- */
+.tw-keys {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-top: 0.5px solid var(--hairline);
+}
+.tw-keys kbd {
+  font-family: var(--mono); font-size: 10px;
+  padding: 1px 5px;
+  border: 1px solid var(--hairline); border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--surface-base); color: var(--text-tertiary);
+}
+
+/* A control in the reproduced chrome that is a real link. The sample on the
+   homepage is the app as far as a visitor is concerned, so Tools and Settings
+   go where they say they go — and every screen stays reachable by following
+   links, which is also the only way a crawler ever sees them. */
+.tw-link { border-bottom: 0; color: inherit; cursor: pointer; }
+.tw-link:hover { color: var(--brand); }
+.tw-bar .tw-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* ---- the homepage hero's window ---------------------------------------
+   The sample is the hero now, so it is sized like one: as wide as the column
+   allows rather than the 760px a figure gets, and held at a fixed 1:0.8 so the
+   page below it never moves while the stage inside settles.
+
+   `grid-template-rows: auto minmax(0, 1fr)` is the app's own layout — title bar,
+   then a content area that takes what is left — which is what makes the drop
+   zone fill the window instead of sitting at its own height in the middle. */
+.tw-hero {
+  max-width: none;
+  /* `width: 100%` is load-bearing, not tidiness. A flex item that has an
+     aspect ratio and no definite width takes its width FROM the ratio and its
+     content height rather than stretching — measured: 334px of content became
+     a 418px-wide window inside a 952px column. Making the width definite puts
+     the ratio back the way round it is written. */
+  width: 100%;
+  aspect-ratio: 1 / 0.8;
+  /* The ratio is what the window wants; the viewport gets the last word. At
+     1240px of column, 1:0.8 is a 992px-tall box — taller than most screens, so
+     the hero's own call to action would sit below the fold on the page whose
+     job is to be seen first. The cap only ever engages on a wide, short
+     screen; everywhere else the ratio stands. */
+  max-height: min(82vh, 900px);
+  /* A size container so the Tools menu can be capped against THIS window's
+     height rather than the viewport's. The window's size already comes from
+     the ratio and the column rather than from its contents, so containment
+     costs nothing here and `cqh` becomes a real measurement. */
+  container-type: size;
+  container-name: appwindow;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+/* The height chain, all the way down: the window is a two-row grid, the stage
+   takes the second row, and the drop zone fills the stage. Any link left at
+   `auto` collapses the zone back to its own 268px and leaves the window with a
+   band of empty surface under it. */
+/* Below the title bar, with room to breathe. Twenty tools overflow this at
+   every window size the hero uses, so the menu scrolls; the cap is what keeps
+   it inside the frame instead of hanging off the bottom of the picture. */
+.tw-hero .tw-menu { --tw-menu-max: 82cqh; }
+
+.tw-hero > .tw-stage,
+.tw-hero > .demo-stage { min-height: 0; height: 100%; }
+.tw-hero .view,
+.tw-hero .view > .tw-stage { min-height: 0; height: 100%; }
+.tw-hero .tw-zone { min-height: 0; height: 100%; }
+
+@media (max-width: 700px) {
+  /* Below this the fixed ratio makes the drop zone taller than the phone. Let
+     it find its own height instead. */
+  .tw-hero { aspect-ratio: auto; }
+  .tw-hero .tw-zone { min-height: 220px; }
+}
+
+/* ============================================================================
+   THE DEMO WINDOW'S OWN SCREENS — the Tools menu and Settings, in markup.
+
+   These were screenshots of the app dropped into the window, which put a
+   second title bar inside the first: the window appeared to open another copy
+   of itself. They are rebuilt here from the components they mirror
+   (`ToolsMenu.svelte`, `SettingsView.svelte`), using the same scale tokens the
+   rest of this file uses, so a control that looks pressable is pressable and
+   the settings sheet scrolls the way the real one does.
+   ============================================================================ */
+
+/* ---- the Tools menu ---------------------------------------------------- */
+/* The menu grew from thirteen entries to twenty when the PDF tools landed, and
+   twenty at 32px each is taller than this window. A real menu that cannot fit
+   its window scrolls rather than spilling past the frame, so this one does the
+   same: it is capped to the space below the title bar and scrolls inside that.
+   `--tw-menu-max` is set by the hero, which is the only place the window has a
+   height worth measuring against. */
+.tw-menu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 30;
+  min-width: 268px;
+  max-height: var(--tw-menu-max, none);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-3);
+  display: grid;
+  gap: 1px;
+  background: var(--surface-base);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 0 0 0.5px var(--hairline-strong),
+    0 12px 32px rgba(0, 0, 0, 0.14);
+  text-align: left;
+}
+.tw-menu .cat {
+  font-size: var(--text-caption-size);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  margin: 0;
+}
+.tw-menu ul { list-style: none; margin: 0; padding: 0; display: grid; }
+/* The item is a <label>, not a link — it drives the radio that opens the tool.
+   It carried a small square placeholder icon, which at menu size read as an
+   unchecked checkbox and made the menu look like a multi-select. The app's own
+   menu has no icons either. */
+.tw-menu li label {
+  display: flex; align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-body-size);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.tw-menu li label:hover { background: var(--surface-sunken); }
+
+/* ---- the Settings sheet ------------------------------------------------ */
+.tw-sheet {
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 var(--space-6) var(--space-8);
+  text-align: left;
+  /* Thin and quiet, but present: hiding it entirely removes the only signal
+     that there is more below, which is the same call the app makes. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline-strong) transparent;
+}
+.tw-sheet::-webkit-scrollbar { width: 8px; }
+.tw-sheet::-webkit-scrollbar-track { background: transparent; }
+.tw-sheet::-webkit-scrollbar-thumb {
+  background: var(--hairline-strong);
+  border-radius: var(--radius-full);
+}
+
+.tw-sheet .s-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) 0 var(--space-4);
+  position: sticky; top: 0; z-index: 2;
+  background: var(--surface-base);
+}
+.tw-sheet .s-head h3 {
+  margin: 0;
+  font-size: var(--text-title-size);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+.tw-sheet h4 {
+  margin: var(--space-6) 0 var(--space-3);
+  font-size: var(--text-body-size);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.tw-panel {
+  background: var(--surface-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-2) var(--space-5);
+}
+.tw-line {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-5);
+  min-height: 44px;
+  padding: var(--space-3) 0;
+  border-bottom: 0.5px solid var(--hairline);
+}
+.tw-line:last-child { border-bottom: 0; }
+.tw-line .lbl { display: grid; gap: 2px; min-width: 0; }
+.tw-line .lbl .hint {
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-lh);
+  color: var(--text-secondary);
+}
+.tw-line .val {
+  flex: none;
+  font-size: var(--text-small-size);
+  color: var(--text-secondary);
+}
+
+/* A segmented control, and a switch. Both are pictures of a control here —
+   the demo's job is to show the screen, not to hold settings nobody keeps. */
+.tw-seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 0.5px var(--hairline);
+}
+.tw-seg span {
+  padding: 4px var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-small-size);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.tw-seg span[data-on] {
+  background: var(--surface-base);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.5px var(--hairline-strong), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.tw-switch {
+  width: 38px; height: 22px; flex: none;
+  border-radius: var(--radius-full);
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
+  position: relative;
+}
+.tw-switch::after {
+  content: "";
+  position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--surface-base);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+.tw-switch[data-on] { background: var(--brand); box-shadow: none; }
+.tw-switch[data-on]::after { left: auto; right: 2px; }
+
+/* ---- the conversion island -------------------------------------------
+   `island.js` builds this markup at run time, so it cannot use Astro's
+   scoped styles — a runtime-injected child never gets the scope attribute.
+   These live here, in the stylesheet the window already imports, which is
+   also where the rest of the app chrome is defined.
+
+   Until now there were no rules at all: the target buttons rendered as raw
+   browser defaults, black on #f0f0f0, inside a carefully drawn window. That
+   was tolerable while they were decoration. It stopped being tolerable when
+   the disabled state became load-bearing — "greyed out" has to read as a
+   decision rather than as an unstyled control. */
+.il-targets { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.il-t {
+  display: inline-flex; align-items: center; gap: 5px;
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  border: 0.5px solid var(--hairline-strong);
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-size: var(--text-small-size);
+  cursor: pointer;
+}
+.il-t:hover:not([disabled]) { background: var(--surface-sunken); }
+.il-t[aria-pressed='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}
+/* WHAT THIS TAB CANNOT WRITE. Dimmed, not removed: the product has the route,
+   and hiding it here would misrepresent that. `title` carries the reason. */
+.il-t[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+/* A target the BROWSER can reach that the router did not plan. Marked so it is
+   never mistaken for one of the router's own answers. */
+.il-t-browser { border-style: dashed; }
+.il-t .glyph { color: var(--text-secondary); }
+.il-t[aria-pressed='true'] .glyph { color: var(--brand-ink); }
+
+.il-verdict { margin: 0; font-size: var(--text-small-size); color: var(--text-secondary); }
+.il-steps { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: 4px; }
+.il-step {
+  display: flex; flex-wrap: wrap; gap: var(--space-3);
+  font-size: var(--text-caption-size); color: var(--text-secondary);
+}
+.il-refuse { display: grid; gap: 4px; }
+.il-refuse-title { font-weight: var(--weight-semibold); color: var(--text-primary); font-size: var(--text-small-size); }
+.il-cmd { display: block; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--surface-sunken); font-size: var(--text-caption-size); }
+.il-done-head { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: baseline; }
+.il-rbtn { border: 0; background: none; color: var(--brand); cursor: pointer; font-size: var(--text-caption-size); padding: 0; }
+.il-receipt {
+  margin: 4px 0 0; padding: var(--space-3);
+  background: var(--surface-sunken); border-radius: var(--radius-sm);
+  font-size: var(--text-caption-size); max-height: 180px; overflow: auto;
+}

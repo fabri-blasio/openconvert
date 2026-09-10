@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">OpenConvert mole mark</title>
+  <desc id="desc">Minimal mole peeking through a circular passage.</desc>
+  <circle cx="64" cy="64" r="56" fill="#2F6F6A"/>
+  <circle cx="64" cy="64" r="45" fill="#FAFAFA"/>
+  <path d="M64 32c-20 0-36 16-36 37v23c0 13 11 24 24 24h24c13 0 24-11 24-24V69c0-21-16-37-36-37Z" fill="#1D1D1F"/>
+  <circle cx="51" cy="65" r="4" fill="#FAFAFA"/>
+  <circle cx="77" cy="65" r="4" fill="#FAFAFA"/>
+  <ellipse cx="55" cy="82" rx="16" ry="12" fill="#FAFAFA"/>
+  <ellipse cx="73" cy="82" rx="16" ry="12" fill="#FAFAFA"/>
+  <path d="M64 70c6 0 10 3 10 7 0 4-5 8-10 10-5-2-10-6-10-10 0-4 4-7 10-7Z" fill="#E78B8C"/>
+</svg>

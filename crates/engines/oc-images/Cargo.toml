@@ -1,0 +1,107 @@
+﻿[package]
+name = "oc-images"
+description = "Image conversion worker. Runs confined, speaks the host protocol."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+
+[[bin]]
+name = "oc-images"
+path = "src/main.rs"
+
+[dependencies]
+oc-image-codecs = { path = "../oc-image-codecs", version = "0.1.0" }
+serde = {version="1",features=["derive"]}
+serde_json="1"
+# SVG rasterisation. Apache-2.0 OR MIT, pure Rust, no C backend -- which is
+# why it lives in the worker's dependency list rather than engines.toml.
+#
+# `text` and the font features are DELIBERATELY OFF. A worker has no
+# filesystem (Landlock denies it outright on Linux), so `system-fonts` cannot
+# work here by construction, and a build that silently substitutes whatever
+# font it finds would make the same SVG render differently on two machines.
+# Text in an SVG is therefore not drawn, and the receipt says so.
+#
+# `raster-images` IS on: an SVG that embeds a PNG should show it, and the
+# decoder for that is `image`, which this crate already links.
+resvg = { version = "0.48", default-features = false, features = ["raster-images"] }
+
+# AVIF: an AV1 frame in an ISO-BMFF box. Two crates, both pure Rust and both
+# inside the licence allowlist, which is why neither needs an engines.toml row:
+#
+#   avif-parse (MPL-2.0)  -- pulls the primary item's OBUs out of the container
+#   rav1d      (BSD-2)    -- a Rust port of dav1d, so no C dependency and no
+#                            vcpkg build; the alternative crates all bind
+#                            libaom or libdav1d and would have needed both.
+avif-parse = "2"
+
+# The AVIF ENCODER, taken directly rather than through `image`'s feature -- see
+# the note on the `image` dependency for why that distinction is load-bearing.
+# Same crate `image` would have used, so the output is byte-for-byte what it was.
+# `default-features = false` drops rav1e's `asm` feature, which needs NASM on
+# the build machine. This is exactly what `image` does behind its own `avif`
+# feature, so the encoder is configured the way it always was -- taking it
+# directly must not quietly change the build's toolchain requirements.
+ravif = { version = "0.13", default-features = false }
+# `ravif` works in its own `Img` view over pixel buffers.
+rgb = "0.8"
+# Same-format TIFF compression, using the codec already linked by image-rs.
+tiff = "0.11.3"
+# 8-bit only: AVIF from phones and the web is 8-bit, and the 16-bit path
+# roughly doubles what a full AV1 decoder compiles to for a case this build
+# would refuse on pixel budget anyway.
+rav1d = { version = "1", default-features = false, features = ["bitdepth_8"] }
+openconvert-worker = { path = "../openconvert-worker", version = "0.1.0" }
+thiserror        = { workspace = true }
+
+# Pure Rust today for the common codecs; libvips, libraw and lcms2 arrive in
+# later weeks -- and when they do, THIS crate is where the FFI `unsafe` lives:
+# on the far side of the boundary, in a process that is already confined.
+# That is the whole reason engines are separate binaries (03 section 5).
+[dependencies.image]
+version          = "0.25"
+default-features = false
+# NO "avif" HERE, AND THE REASON IS A GATE, NOT A PREFERENCE.
+#
+# Cargo unifies features per package across one build, so enabling `image/avif`
+# in this worker compiled the single shared `image` rlib with AVIF -- and
+# `openconvert-run`, which links the same rlib, then carried `ravif` -> `rav1e`
+# -> `rayon-core` into the HOST binary. That is exactly what D7 forbids and
+# what `cargo xtask depcheck` is written to catch; it caught it.
+#
+# So the encoder is taken directly from `ravif` below instead. This crate is a
+# subprocess and may link whatever it needs; the host may not, and the only way
+# to keep that true through feature unification is for the shared crate's
+# feature list to stay identical everywhere.
+#
+# Decoding is unaffected: AVIF input is read by `avif-parse` in `src/avif.rs`,
+# which never went through `image` at all.
+features         = ["png", "jpeg", "webp", "gif", "bmp", "tiff"]
+
+[dependencies.jxl-oxide]
+version = "0.12"
+
+[target.'cfg(windows)'.build-dependencies]
+# Copies heif.dll / libde265.dll beside the worker so the loader finds them
+# and the AppContainer can be granted execute -- the packaging trap 03 §5.3
+# says costs a week when discovered late.
+
+[lints.clippy]
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+[dev-dependencies]
+openconvert-sandbox = { workspace = true }
+openconvert-core    = { workspace = true }
+serde_json        = "1"
+
+# The HOST, as a dev-dependency of the worker.
+#
+# Backwards-looking, and deliberately so. `CARGO_BIN_EXE_oc-images` is defined
+# only for tests inside this package, so this is the one place a test can drive
+# the real binary through the real host with no way to skip. `test-support`
+# exposes the path-taking constructor and is a test-build edge only -- no
+# shipped build enables it.
+openconvert-run = { workspace = true, features = ["test-support"] }

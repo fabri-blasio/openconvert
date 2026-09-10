@@ -1,0 +1,26 @@
+[package]
+name = "openconvert-core"
+description = "The pure core: types, tables, route(), predict. No I/O, no unsafe, no clock."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+
+[features]
+# Only openconvert-os and the WASM executor enable this. A CI gate asserts that,
+# over every Cargo.toml in the workspace (I11).
+attest = []
+# Lets integration tests build a SandboxProfile without the attest path.
+test-util = []
+
+[dev-dependencies]
+openconvert-core = { path = ".", features = ["test-util"] }
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.clippy]
+# THE PURITY GATE (03 section 4). Deny here, warn elsewhere.
+disallowed_types   = "deny"
+disallowed_methods = "deny"

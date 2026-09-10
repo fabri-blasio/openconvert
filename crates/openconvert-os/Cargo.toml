@@ -1,0 +1,44 @@
+[package]
+name = "openconvert-os"
+description = "Confinement syscalls, spawn(), read-back. The only host-side unsafe."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+
+[features]
+# I11: only this crate and the WASM executor may construct a SandboxProfile
+# that CLAIMS anything. Enabling it elsewhere is a visible manifest diff.
+attest = ["openconvert-core/attest"]
+
+[dependencies]
+openconvert-core = { workspace = true }
+thiserror      = { workspace = true }
+
+# Pure bindings, no `links` key -- verified by depcheck, and the reason a
+# boundary-adjacent crate may depend on it at all. Spike S2 noted that the
+# `-sys` naming convention is not the signal; the manifest key is.
+#
+# Each entry appears once: cargo would silently deduplicate repeats, and a
+# list that needs deduplication is a list nobody is reading.
+[target.'cfg(windows)'.dependencies.windows-sys]
+version  = "0.61"
+features = [
+    "Win32_Foundation",
+    "Win32_System_Registry",        # the display-adapter class, to name the graphics card
+    "Win32_System_Threading",
+    "Win32_System_JobObjects",
+    "Win32_System_IO",              # CreateIoCompletionPort / GetQueuedCompletionStatus
+    "Win32_System_Pipes",           # CreatePipe, for the worker's stdio
+    "Win32_System_Console",         # GetStdHandle, to pass our stderr through
+    "Win32_Security",               # SECURITY_ATTRIBUTES, needed by JobObjects/CreateProcessW
+    "Win32_Security_Isolation",     # CreateAppContainerProfile
+    "Win32_Security_Authorization", # SetEntriesInAclW / SetNamedSecurityInfoW
+    "Win32_Storage_FileSystem",     # FILE_GENERIC_* access masks
+]
+
+[lints.clippy]
+# Syscalls and process creation live here by design (03 section 5).
+disallowed_types   = "allow"
+disallowed_methods = "allow"

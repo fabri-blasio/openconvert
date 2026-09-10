@@ -1,0 +1,170 @@
+---
+/**
+ * Two things and no more: the Discord server, and the board.
+ *
+ * The board is a static snapshot of GitHub Discussions, written at build time
+ * by `scripts/export-board.mjs`. Voting is the 👍 and 👎 on the discussion
+ * itself, which is why this page holds no vote of its own and opens no
+ * connection when it loads.
+ */
+import Base from '../layouts/Base.astro';
+import board from '../data/board.json';
+
+type Idea = {
+  number: number; title: string; summary: string;
+  tier: string; up: number; down: number; url: string;
+};
+type Tier = { id: string; label: string; blurb: string };
+
+const tiers = board.tiers as Tier[];
+const ideas = board.ideas as Idea[];
+const byTier = (id: string) => ideas.filter((i) => i.tier === id);
+const discord = board.discord as { invite: string | null; purpose: string };
+---
+<Base
+  title="Community — OpenConvert"
+  description="The Discord server, and the board where anyone can add a feature request and everyone can vote on it."
+  path="/community">
+
+  <!-- ══════════ 1 · DISCORD ══════════ -->
+  <section class="head">
+    <div class="wrap stack stack-7 head-inner">
+      <div class="stack stack-4 head-copy">
+        <h1 class="hero-title">Come and build it with us.</h1>
+        <p class="lede hero-lede">{discord.purpose}</p>
+      </div>
+
+      <a
+        class="discord plain"
+        href={discord.invite ?? '/contact'}
+        rel={discord.invite ? 'noopener' : undefined}>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M20.32 4.37A19.8 19.8 0 0 0 15.44 2.9a.07.07 0 0 0-.08.04c-.21.37-.44.86-.6 1.25a18.27 18.27 0 0 0-5.5 0 12.6 12.6 0 0 0-.61-1.25.08.08 0 0 0-.08-.04c-.83.14-1.63.38-4.88 1.47a.07.07 0 0 0-.3.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .3.05 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.22-2a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13c.13-.9.25-.19.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .8.01c.12.1.24.2.37.29a.08.08 0 0 1-.1.13c-.6.35-1.22.64-1.87.88a.08.08 0 0 0-.4.12c.36.7.77 1.36 1.22 1.99a.08.08 0 0 0 .8.03 19.84 19.84 0 0 0 6.02-3.03.08.08 0 0 0 .03-.05c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Z" />
+        </svg>
+        <span class="d-text">
+          <span class="d-title">{discord.invite ? 'Join the Discord' : 'Ask for the Discord invite'}</span>
+          <span class="d-sub caption">
+            {discord.invite ? 'discord.gg' : 'The permanent invite is not published here yet'}
+          </span>
+        </span>
+        <span class="d-go" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ══════════ 2 · THE BOARD ══════════ -->
+  <section class="band">
+    <div class="wrap stack stack-6">
+      <div class="board-head">
+        <div class="stack stack-2">
+          <h2>The board</h2>
+          <p class="lede">Anyone can add one. Everyone can vote.</p>
+        </div>
+        <a href={board.new_url} class="btn" rel="noopener">Add an idea</a>
+      </div>
+
+      {ideas.length === 0 ? (
+        <div class="empty stack stack-3">
+          <p class="lede">Nobody has raised one yet.</p>
+          <p><a href={board.new_url} rel="noopener">Open the first idea →</a></p>
+        </div>
+      ) : (
+        tiers.map((tier) => {
+          const rows = byTier(tier.id);
+          return rows.length > 0 && (
+            <div class="tier stack stack-4">
+              <div class="tier-head">
+                <h3>{tier.label}</h3>
+                <span class="caption">{tier.blurb}</span>
+              </div>
+              <ul class="ideas">
+                {rows.map((idea) => (
+                  <li class="idea">
+                    <a class="vote plain" href={idea.url} rel="noopener"
+                      aria-label={`${idea.up} for, ${idea.down} against`}>
+                      <span class="arrow" aria-hidden="true">
+                        <svg viewBox="0 0 16 16"><path d="M8 3.5l5 6H3l5-6Z" fill="currentColor" /></svg>
+                      </span>
+                      <span class="score">{idea.up - idea.down}</span>
+                      <span class="arrow down" aria-hidden="true">
+                        <svg viewBox="0 0 16 16"><path d="M8 12.5l-5-6h10l-5 6Z" fill="currentColor" /></svg>
+                      </span>
+                    </a>
+                    <span class="idea-body stack stack-1">
+                      <a class="idea-title plain" href={idea.url} rel="noopener">{idea.title}</a>
+                      {idea.summary && <span class="caption">{idea.summary}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })
+      )}
+    </div>
+  </section>
+</Base>
+
+<style>
+  section { border-top: 0; }
+  .head { padding-block: clamp(var(--s-7), 6vw, var(--s-9)) var(--s-8); }
+  .head-inner { align-items: center; text-align: center; }
+  .head-copy { align-items: center; }
+  .head-copy .hero-lede { max-width: 46ch; }
+
+  .discord {
+    display: flex; align-items: center; gap: var(--s-5);
+    width: 100%; max-width: 520px;
+    padding: var(--s-5) var(--s-6);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    background: var(--surface-base);
+    text-align: left;
+    transition: border-color var(--m-standard) ease-out, transform var(--m-standard) var(--curve);
+  }
+  .discord:hover { border-color: var(--brand-line); transform: translateY(-2px); }
+  .discord svg { width: 30px; height: 30px; flex: none; color: var(--brand); }
+  .d-text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+  .d-title { font-weight: var(--fw-strong); letter-spacing: -0.012em; }
+  .d-go { color: var(--text-tertiary); flex: none; }
+
+  .board-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: var(--s-5); flex-wrap: wrap;
+  }
+
+  .empty {
+    border: 1px dashed var(--hairline-strong);
+    border-radius: var(--r-lg);
+    padding: var(--s-8) var(--s-5);
+    text-align: center; align-items: center;
+  }
+
+  .tier { margin-top: var(--s-6); }
+  .tier-head { display: flex; align-items: baseline; gap: var(--s-3); flex-wrap: wrap; }
+
+  .ideas {
+    list-style: none; margin: 0; padding: 0;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: var(--surface-base);
+  }
+  .idea {
+    display: grid; grid-template-columns: 56px minmax(0, 1fr);
+    align-items: center; gap: var(--s-4);
+    padding: var(--s-4) var(--s-5) var(--s-4) var(--s-3);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .idea:last-child { border-bottom: 0; }
+  .vote {
+    display: grid; justify-items: center; gap: 1px;
+    padding: var(--s-2) 0; border-radius: var(--r-sm);
+    color: var(--text-tertiary);
+  }
+  .vote:hover { background: var(--surface-sunken); }
+  .arrow svg { width: 15px; height: 15px; display: block; }
+  .score { font-size: 0.95rem; font-weight: var(--fw-strong); color: var(--text-primary); }
+  .idea-title { font-weight: var(--fw-strong); letter-spacing: -0.012em; }
+  .idea-title:hover { color: var(--brand); }
+</style>

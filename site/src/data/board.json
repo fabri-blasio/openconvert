@@ -1,0 +1,19 @@
+{
+  "_comment": "`ideas`, `tiers`, `built`, `source` and `new_url` are WRITTEN BY site/scripts/export-board.mjs from GitHub Discussions. `discord` is authored here — set `invite` to the server's permanent invite URL and the community page links it; while it is null the page says the invite is not published yet rather than linking somewhere that is not the server.",
+  "generated_by": "site/scripts/export-board.mjs",
+  "source": "https://github.com/fabri-blasio/cloudconvert/discussions/categories/ideas",
+  "new_url": "https://github.com/fabri-blasio/cloudconvert/discussions/new?category=ideas",
+  "built": null,
+  "discord": {
+    "invite": null,
+    "purpose": "Questions, conversion problems worth looking at together, and early builds."
+  },
+  "tiers": [
+    { "id": "shipped", "label": "Shipped", "blurb": "In a release you can download." },
+    { "id": "building", "label": "Building", "blurb": "Someone is on it now." },
+    { "id": "next", "label": "Next up", "blurb": "Accepted, not started." },
+    { "id": "considering", "label": "Under consideration", "blurb": "Open. Most ideas live here." },
+    { "id": "declined", "label": "Not planned", "blurb": "With a reason, always." }
+  ],
+  "ideas": []
+}

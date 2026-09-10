@@ -1,0 +1,88 @@
+[package]
+name = "openconvert"
+description = "The CLI."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+
+[[bin]]
+name = "openconvert"
+path = "src/main.rs"
+
+[dependencies]
+openconvert-core    = { workspace = true }
+# `attest` lets the shell turn MEASURED capabilities into the profile `route()`
+# plans against. I11 permits only `openconvert-os` to construct a claiming
+# profile; this is the shell asking that crate to, from values it probed by
+# creating and closing the real mechanisms. The receipt does not come from here
+# -- it records what the worker read back (`StepOutput::confinement`).
+openconvert-os      = { workspace = true, features = ["attest"] }
+openconvert-run     = { workspace = true }
+openconvert-sandbox = { workspace = true }
+anyhow        = { workspace = true }
+serde_json    = "1"
+# Batch ids and the request hash stored in journals/recipes. Already built
+# for openconvert-run; this adds no new code to the tree.
+blake3        = "1"
+
+[dev-dependencies]
+# `declared_routes_run` drives every declared document route through the real
+# CLI, and three of its sources -- pptx, odp and epub -- are ZIPs this build
+# reads and does not write. So the fixtures have to be built, and building a
+# ZIP needs a ZIP writer. Same features as every other user of it here.
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[lints.clippy]
+# The CLI is a front end; it reads argv, files and the environment.
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+# ---------------------------------------------------------------------------
+# .deb packaging -- `cargo deb -p openconvert`
+# ---------------------------------------------------------------------------
+# The worker binaries are assets, not dependencies of the .deb: `openconvert`
+# spawns them by path, so they have to be installed beside it or every
+# sandboxed conversion answers Failed. Listing them here is what makes
+# `cargo deb` produce a package that actually converts a HEIC.
+#
+# NOT listed as `depends`: libheif, libde265, libraw, lcms2. Those are shipped
+# as replaceable shared libraries next to the workers, which is how the LGPL
+# obligation is discharged (see NOTICE and engines.toml). A distro package that
+# linked them statically would fail the CI gate; one that depended on the
+# distro's own copies would be fine too, but then the version in the receipt
+# stops being a version we tested.
+[package.metadata.deb]
+name = "openconvert"
+maintainer = "The OpenConvert Authors <security@openconvert.dev>"
+copyright = "2026, The OpenConvert Authors"
+license-file = ["../../LICENSE", "0"]
+extended-description = """\
+Convert any file into anything, on your machine.
+
+Every third-party engine runs inside an OS sandbox: Landlock path rules, a \
+seccomp-bpf filter denying AF_INET and AF_INET6 at socket(2), an empty network \
+namespace, cgroup v2 limits and no_new_privs. Engines receive open file \
+descriptors and never a filename. A machine that cannot deny an engine the \
+network does not convert.
+
+Every output carries a receipt naming the engine, the operation class, the \
+limits, the confinement that engaged and the hash of the bytes read. Nothing \
+that already exists is overwritten: every create is O_EXCL and no truncating \
+open exists in the codebase."""
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/release/openconvert", "usr/bin/", "755"],
+    ["target/release/oc-images", "usr/libexec/openconvert/", "755"],
+    ["target/release/oc-audio", "usr/libexec/openconvert/", "755"],
+    ["target/release/oc-archive", "usr/libexec/openconvert/", "755"],
+    ["target/release/oc-pdf", "usr/libexec/openconvert/", "755"],
+    ["../../NOTICE", "usr/share/doc/openconvert/NOTICE", "644"],
+    ["../../README.md", "usr/share/doc/openconvert/README.md", "644"],
+]
+# Landlock landed in 5.13. Below that the ladder drops to Minimal, which does
+# not meet the filesystem floor, and the program refuses rather than converting
+# with less confinement than it reported.
+recommends = "linux-image-generic (>= 5.13)"

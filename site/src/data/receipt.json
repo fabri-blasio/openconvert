@@ -1,0 +1,31 @@
+{
+  "generated_by": "scripts/export-receipt.mjs",
+  "command": "openconvert convert bundle.zip -t tar --json",
+  "platform": "win32 x64",
+  "receipt": {
+    "version": 1,
+    "tool": "openconvert 0.1.0",
+    "content_id": "845c65d1e47b19221591a3356f5e059c0e4e8dbf555344154e3537bb75c2e948",
+    "detected": "zip",
+    "declared_mismatch": null,
+    "steps": [
+      {
+        "kind": "Extract",
+        "class": "A (lossless)",
+        "engine": "oc-archive",
+        "isolation": "sandboxed (read back in the worker): engaged ACG, AppContainer; not engaged CIG",
+        "limits": {
+          "memory_bytes": 1073741824,
+          "decode_pixels": 268435456,
+          "wall_time_secs": 120
+        },
+        "removed": [
+          "zip member timestamps and permission bits"
+        ]
+      }
+    ],
+    "class": "A",
+    "output": "bundle.tar",
+    "output_bytes": 3072
+  }
+}

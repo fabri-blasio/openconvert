@@ -1,0 +1,224 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  # Deliberately NOT `RUSTFLAGS: -D warnings`.
+  #
+  # RUSTFLAGS applies to DEPENDENCY compilation, not only ours -- so a warning
+  # introduced by a new release of `image`, or anything below it, would fail CI
+  # on code we neither wrote nor can fix. It is also redundant: the clippy step
+  # below already denies warnings in our own crates, which is the part we
+  # control.
+  #
+  # Flagged by reading rather than by a failure: it passes today, because every
+  # dependency currently compiles clean. Recorded as a hazard we removed, not a
+  # bug we hit.
+
+jobs:
+  # Everything in this job is live from week 1 and fails the build.
+  # 08 §4 is the authoritative table; this file is its implementation.
+  gates:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+
+      # First: does every file the build references actually exist? This gate
+      # exists because the workflow below was committed naming deny.toml,
+      # engines.toml and models.toml before any of them had been written.
+      - name: manifest — every referenced file exists
+        run: cargo run -p xtask -- manifest
+
+      - name: fmt
+        run: cargo fmt --all --check
+
+      # The purity gate. Denied in openconvert-core, allowed explicitly
+      # elsewhere -- see each crate's [lints.clippy]. 03 §4.
+      - name: clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: build worker executables used by integration tests
+        run: cargo build --workspace
+
+      - name: test
+        run: cargo test --workspace
+
+      # D7's real enforcement. #![forbid(unsafe_code)] does NOT do this --
+      # it is a lint on the keyword in a crate's own source, and the unsafe
+      # lives in the -sys dependency (spike S2).
+      - name: depcheck — no boundary crate links a native library
+        run: cargo run -p xtask -- depcheck
+
+      - name: lint — source scans
+        run: cargo run -p xtask -- lint
+
+      # The webview boundary. Runs from the first GUI commit rather than from
+      # the first GUI feature: two of its gates are deliberately waiting for
+      # files that do not exist yet, so they fire on the commit that introduces
+      # the file instead of on the commit where someone remembers to add a gate.
+      - name: desktop — capabilities, CSP, plugins
+        run: cargo run -p xtask -- desktop
+
+      # THE DESKTOP APP IS A SEPARATE WORKSPACE, so `--workspace` above does not
+      # reach it. Roughly four thousand lines of command surface and a build
+      # script had never been formatted, linted or tested by CI -- the gap was
+      # found by running clippy inside that directory for the first time, which
+      # immediately reported findings nobody had seen.
+      - name: desktop app — fmt, clippy, test
+        working-directory: apps/desktop/src-tauri
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+
+      # The installer's licence page is generated from release/privacy.json,
+      # the same file the website and the README render. Four hand-maintained
+      # copies of a privacy statement are four statements that will disagree,
+      # and the installer is the copy least likely to be noticed when it does.
+      - name: installer text matches privacy.json
+        run: node release/render-installer-text.mjs --check
+
+      # Prove each gate above can actually fail. A gate nobody has watched
+      # fail is a gate nobody has tested.
+      - name: verify-gates — every failure path fires
+        run: cargo run -p xtask -- verify-gates
+
+      # The fuzz targets are their own workspace, so nothing else compiles
+      # them. Without this they drift out of sync with the API silently -- as
+      # one of them already had, by a field added days earlier.
+      - name: fuzz targets still compile
+        run: cargo check --manifest-path fuzz/Cargo.toml
+
+  product-surfaces:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            apps/desktop/package-lock.json
+            site/package-lock.json
+
+      - name: desktop dependencies
+        working-directory: apps/desktop
+        run: npm ci
+
+      - name: desktop typecheck and build
+        working-directory: apps/desktop
+        run: |
+          npm run check
+          npm run build
+
+      - name: site dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: site verification
+        working-directory: site
+        run: npm run verify
+
+  # Every target in docs/spec/TARGETS.md must at least TYPECHECK on every commit.
+  #
+  # The gates matrix above runs the tests wherever a runner exists, which is
+  # the stronger check and the reason this job is not a substitute for it.
+  # What this catches is the class docs/spec/TARGETS.md calls out by name: code that
+  # compiles for one architecture and not another. One of this project's own
+  # spikes (S15) compiled for x86_64 and failed on aarch64 over `c_char`
+  # signedness, and nothing but a cross-check finds that before a release.
+  #
+  # `cargo check` links nothing, so a Darwin or Linux target can be checked
+  # from any runner. Crates with C build scripts are excluded rather than
+  # worked around: they need that platform's toolchain, and pretending
+  # otherwise would make this job's failures uninformative.
+  cross-typecheck:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - x86_64-apple-darwin
+          - aarch64-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      # `--all-targets` so the tests compile too. The macOS module's own tests
+      # assert the read-back probes behave before anything is applied, and a
+      # check that skipped them would miss the half of the file most likely to
+      # reference a platform API that is not there.
+      - name: check the confinement layer for ${{ matrix.target }}
+        run: cargo check -p openconvert-os -p openconvert-core --all-targets --target ${{ matrix.target }}
+
+  # Separated because these need network and a tool install; a flaky
+  # advisory feed must not be able to redden an ordinary code PR.
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: install
+        run: cargo install cargo-audit cargo-deny --locked
+
+      # --target filtering is not optional. A real advisory exists in
+      # postcard -> heapless -> atomic-polyfill for a target we never build,
+      # and it appears only because Cargo.lock is target-independent
+      # (spike S33). Without the filter this gate cries wolf on day one, and
+      # a gate that cries wolf acquires an --ignore flag within a month.
+      - name: cargo-audit (host target only)
+        run: cargo audit --target-arch x86_64 --target-os linux
+
+      - name: cargo-deny — licences and bans
+        run: cargo deny check licenses bans sources
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: website dependency audit
+        working-directory: site
+        run: |
+          npm ci
+          npm audit --audit-level=high
+
+  # Audits the TESTS, not the code. Run on a schedule rather than per-PR:
+  # it is slow, and its finding is "your test suite has a hole", which is
+  # not a thing to block a single PR on.
+  mutants:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo install cargo-mutants --locked
+
+      # Threshold rises over time. Measured justification: on a comparable
+      # parser, 7.4M fuzz cases found nothing while 30 mutants exposed a
+      # test that passed when its own input was deleted (spikes S29, S30).
+      # Slow by nature -- it compiles and tests the crate once per mutant, ~220
+      # of them. It ran over ten minutes locally, so it gets a generous timeout
+      # and its own job rather than blocking the gates.
+      - name: mutation score on the core
+        timeout-minutes: 45
+        run: cargo mutants --package openconvert-core --minimum-test-timeout 60

@@ -1,0 +1,77 @@
+---
+/*
+  The desktop window's own chrome, reproduced. (apps/desktop/src/components/TitleBar.svelte)
+
+  The app draws its own title bar because the native one, left on, reads as a
+  second program stacked above the first. That decision is visible in the
+  product, so it is visible here too: brand, Tools, theme, settings on the left
+  of the strip; minimise, maximise, close on the right at the Windows metric.
+
+  The window controls are inert markup, not disabled buttons. A <button> that
+  does nothing is a promise the page cannot keep, and a screen reader would
+  offer every one of them as an action. They stay `aria-hidden`: they are a
+  picture of a window, drawn in text so it themes and reflows.
+
+  Tools and Settings are the exception. Given `toolsHref` / `settingsHref` they
+  become real links to the pages that show those screens — so the two controls
+  a visitor is most likely to reach for in the sample do something, and so
+  every screen of the app is reachable by following links from the homepage
+  rather than being locked behind a demo. Without the props they render inert,
+  exactly as before.
+
+  Styling lives in styles/app-ui.css, shared with every page that shows the app.
+*/
+import '../styles/app-ui.css';
+
+export interface Props {
+  /** Content of the window's stage. */
+  class?: string;
+  /** Show the keyboard strip under the stage. */
+  keys?: boolean;
+  /** Make the Tools control a link to the page that shows the Tools menu. */
+  toolsHref?: string;
+  /** Make the settings control a link to the page that shows Settings. */
+  settingsHref?: string;
+}
+const { class: cls = '', keys = false, toolsHref, settingsHref } = Astro.props;
+const live = Boolean(toolsHref || settingsHref);
+---
+
+<div class:list={['tw', cls]}>
+  <div class="tw-bar" aria-hidden={live ? undefined : 'true'}>
+    <span class="tw-brand">OpenConvert</span>
+
+    {toolsHref
+      ? <a href={toolsHref} class="tw-tools tw-link">Tools <span class="caret" aria-hidden="true">▾</span></a>
+      : <span class="tw-tools">Tools <span class="caret">▾</span></span>}
+
+    <span class="tw-ctl" aria-hidden="true">☀</span>
+
+    {settingsHref
+      ? <a href={settingsHref} class="tw-ctl tw-link" aria-label="Settings">⚙</a>
+      : <span class="tw-ctl">⚙</span>}
+
+    <span class="tw-spacer"></span>
+
+    <span class="tw-caps" aria-hidden="true">
+      <span class="tw-cap">
+        <svg viewBox="0 0 10 10"><path d="M0 5h10" stroke="currentColor" stroke-width="1" /></svg>
+      </span>
+      <span class="tw-cap">
+        <svg viewBox="0 0 10 10"><path d="M0.5 0.5h9v9h-9z" fill="none" stroke="currentColor" stroke-width="1" /></svg>
+      </span>
+      <span class="tw-cap">
+        <svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1" /></svg>
+      </span>
+    </span>
+  </div>
+
+  <slot />
+
+  {keys && (
+    <div class="tw-keys" aria-hidden="true">
+      <kbd>Enter</kbd><kbd>Space</kbd><kbd>1–9</kbd><kbd>Esc</kbd><kbd>Backspace</kbd>
+      <kbd>Ctrl+Z</kbd><kbd>Ctrl+O</kbd><kbd>Ctrl+D</kbd><kbd>Ctrl+,</kbd><kbd>Alt+T</kbd>
+    </div>
+  )}
+</div>

@@ -1,0 +1,8 @@
+{
+  "identifier": "main",
+  "description": "NEGATIVE FIXTURE. Two defects that arrive together in practice: the capability names no windows, so it applies to every window the app ever opens, and it grants a filesystem permission that walks around the broker entirely.",
+  "permissions": [
+    "core:default",
+    "fs:allow-read-file"
+  ]
+}

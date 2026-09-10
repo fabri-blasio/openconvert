@@ -1,0 +1,98 @@
+---
+import Base from '../layouts/Base.astro';
+
+/* Release entries, newest first. Generated from release tags where the tag
+   exists; until 1.0 the development log is curated here and the exhaustive
+   record lives on GitHub, where it is already maintained per commit. */
+const GITHUB_RELEASES = 'https://github.com/fabri-blasio/cloudconvert/releases';
+
+const entries = [
+  {
+    version: '0.1.0',
+    date: '2026-08-25',
+    highlights: [
+      'Desktop shell audit: every tool now reports available (8 of 8); engines resolve beside our own executable',
+      'Confinement measured on Windows (AppContainer) and Linux (Landlock + seccomp, empty netns)',
+      '34 formats · 88 routes · 65 verified end to end · 0 cannot finish',
+      '441 tests across 41 suites; mutation-scored since the scope fix',
+    ],
+    security: [],
+    breaking: [],
+  },
+];
+---
+<Base
+  title="Changelog — OpenConvert"
+  description="What shipped, what broke, what to do about it — newest first. Security fixes are marked and dated."
+  path="/changelog">
+
+  <div class="wrap measure-wide">
+    <section>
+      <span class="eyebrow">changelog</span>
+      <h1>Shipped releases only.</h1>
+      <p class="lede measure">
+        What changed, what broke, what to do about it. Security fixes carry their own mark.
+      </p>
+    </section>
+
+    {entries.map((e) => (
+      <article class="entry">
+        <header class="entry-head">
+          <h2 class="mono">{e.version}</h2>
+          <span class="caption mono">{e.date}</span>
+        </header>
+
+        {e.highlights.length > 0 && (
+          <>
+            <span class="eyebrow">highlights</span>
+            <ul class="tight">
+              {e.highlights.map((h) => <li>{h}</li>)}
+            </ul>
+          </>
+        )}
+
+        {e.security.length > 0 && (
+          <>
+            <span class="eyebrow lock">🔒 security fixes</span>
+            <ul class="tight">
+              {e.security.map((s) => <li>{s}</li>)}
+            </ul>
+          </>
+        )}
+
+        {e.breaking.length > 0 && (
+          <>
+            <span class="eyebrow">breaking changes</span>
+            <ul class="tight">
+              {e.breaking.map((b) => <li>{b}</li>)}
+            </ul>
+          </>
+        )}
+      </article>
+    ))}
+
+    <section class="road">
+      <h2>Road to 1.0</h2>
+      <p class="small measure">
+        The full development record — phases, defects found and fixed, platform passes — is kept
+        in the repository's changelog, maintained per commit rather than reconstructed:
+        <a href={GITHUB_RELEASES} rel="noopener">releases ↗</a>.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .measure-wide { max-width: 760px; }
+  section { padding-block: var(--section-y-tight); }
+  h1 { font-size: clamp(1.9rem, 4vw, 2.5rem); font-weight: var(--fw-normal); }
+  .entry {
+    border-top: 1px solid var(--hairline);
+    padding-block: var(--s-6);
+    display: grid; gap: var(--s-3);
+  }
+  .entry-head { display: flex; align-items: baseline; gap: var(--s-4); }
+  .entry h2 { font-size: 1.2rem; }
+  .tight { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; font-size: var(--fs-small); color: var(--text-secondary); }
+  .lock { color: var(--accent-critical); }
+</style>

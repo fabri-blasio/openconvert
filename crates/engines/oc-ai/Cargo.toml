@@ -1,0 +1,100 @@
+[package]
+name = "oc-ai"
+description = "Model worker: ONNX Runtime inference for OCR, transcription and image effects."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+publish = false
+
+[lib]
+name = "oc_ai"
+path = "src/lib.rs"
+
+[[bin]]
+name = "oc-ai"
+path = "src/main.rs"
+
+[dependencies]
+realfft = "3.5"
+serde = {version="1",features=["derive"]}
+openconvert-worker = { path = "../openconvert-worker", version = "0.1.0" }
+# Only for , which has to spawn a child under the real
+# ACG mitigation to answer whether a GPU provider survives it.
+openconvert-os      = { workspace = true }
+
+# ONNX Runtime, per `06-ML-RUNBOOK`. `load-dynamic` makes the worker dlopen
+# onnxruntime.dll at run time from beside its own binary rather than importing
+# it at link time: the same replaceable-library property the LGPL engines need,
+# and it keeps a missing runtime a REFUSAL rather than a process that will not
+# start. `download-binaries` is deliberately OFF -- a build script that fetches
+# a native library from the network is exactly the supply-chain decision SR-9's
+# single-fetch rule exists to prevent.
+ort = { version = "2.0.0-rc.10", default-features = false, features = [
+    "load-dynamic",
+    "ndarray",
+    "std",
+] }
+
+ndarray = "0.17"
+
+# Transcription needs the audio decoded before it can be turned into a mel
+# spectrogram, and the worker cannot ask oc-audio to do it: workers do not talk
+# to each other. Same decoder crate and same features as oc-audio, so the two
+# agree about what a file contains.
+symphonia = { version = "0.5", default-features = false, features = [
+    "wav", "flac", "mp3", "ogg", "vorbis", "pcm",
+    "aac", "alac", "isomp4", "mpa", "mkv",
+] }
+
+# The tokeniser is a HuggingFace `tokenizer.json`; only its vocabulary is read.
+serde_json = "1"
+
+# WAV out for the enhancement adapter; same version oc-audio pins.
+hound = "3.5"
+
+# Pre- and post-processing for the image models: decode, resize, re-encode.
+image = { version = "0.25", default-features = false, features = [
+    "png",
+    "jpeg",
+    "webp",
+] }
+
+[lints.clippy]
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+[dev-dependencies]
+openconvert-sandbox = { workspace = true }
+serde_json        = { workspace = true }
+
+[features]
+# GPU inference through DirectML.
+#
+# ON for Windows builds, via the target section below rather than as a default
+# feature. `default = ["directml"]` would enable `ort/directml` on Linux and
+# macOS too, where the provider does not exist and CI builds this crate on
+# every push -- a build break on two platforms to configure a third.
+#
+# The feature still exists by name so `cargo test -p oc-ai --features directml`
+# and `examples/try_gpu.rs` can ask for it explicitly.
+#
+# DirectML rather than CUDA: vendor-neutral on Windows, working on NVIDIA, AMD
+# and Intel alike, and needing no vendor redistributable beside the binary.
+directml = ["ort/directml"]
+
+# WINDOWS GETS THE GPU PROVIDER, AND ONLY WINDOWS.
+#
+# Cargo unions features across dependency sections, so this adds `directml` to
+# the `ort` above when the target is Windows and changes nothing anywhere else.
+# `cargo xtask deps` stages the matching runtime -- the DirectML build of ONNX
+# Runtime plus the DirectML redistributable -- so the flag and the artifact
+# cannot drift apart.
+[target.'cfg(windows)'.dependencies]
+ort = { version = "2.0.0-rc.10", default-features = false, features = [
+    "load-dynamic",
+    "ndarray",
+    "std",
+    "directml",
+] }

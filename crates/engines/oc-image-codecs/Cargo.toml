@@ -1,0 +1,9 @@
+[package]
+name = "oc-image-codecs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+[dependencies]
+mozjpeg = { version = "0.10.13", default-features = false }
+oxipng = { version = "10.2.1", default-features = false, features = ["zopfli"] }

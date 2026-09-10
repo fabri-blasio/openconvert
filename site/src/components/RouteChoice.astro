@@ -1,0 +1,85 @@
+---
+// A3 — LOSSLESS OR NOT. (10-WEBSITE §7)
+//
+// Same target, opposite answers, said before the conversion starts. Two ordered
+// routes; the requirement resolves; the eliminated route is struck through with
+// its reason. Both columns render at once so the comparison is the component.
+//
+// Route classes and requirement names are the ones the binary prints:
+//   openconvert routes mkv mp4  →  1. class A  steps [StreamCopy]
+//                                requires codecs are compatible with the
+//                                destination container
+const cases = [
+  {
+    input: 'movie.mkv → mp4',
+    requirement: 'codecs are compatible with the destination container',
+    holds: true,
+    detail: 'H.264 video, AAC audio — both carry into MP4 unchanged',
+    verdict: 'StreamCopy selected · class A · bit-identical streams',
+    cost: '1.9 s for 4.2 GB',
+  },
+  {
+    input: 'movie.avi → mp4',
+    requirement: 'codecs are compatible with the destination container',
+    holds: false,
+    detail: 'DivX video, MP3 audio — neither carries into MP4 unchanged',
+    verdict: 'route 1 eliminated · re-encode selected · class B',
+    cost: 'about 6 minutes, and you are told before it starts',
+  },
+];
+---
+<div class="rc-grid">
+  {cases.map((c, i) => (
+    <figure class="panel rc seq" style={`animation-delay: ${140 + i * 220}ms`}>
+      <div class="rec-bar">
+        <span class="rec-label">{c.input}</span>
+        <span class="rec-label">{c.holds ? '=' : '≈'} class {c.holds ? 'A' : 'B'}</span>
+      </div>
+      <div class="panel-body stack stack-3">
+        <div class="rc-route" data-eliminated={c.holds ? 'no' : 'yes'}>
+          <span class="rc-num mono">1</span>
+          <div class="stack stack-1">
+            <code class="rc-steps">StreamCopy</code>
+            <span class="caption">requires {c.requirement}</span>
+          </div>
+        </div>
+        <p class="rc-detail">{c.detail}</p>
+        <p class="rc-verdict">{c.verdict}</p>
+        <p class="caption mono">{c.cost}</p>
+      </div>
+    </figure>
+  ))}
+</div>
+
+<style>
+  .rc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); }
+  @media (max-width: 760px) { .rc-grid { grid-template-columns: 1fr; } }
+
+  .rc { animation: seq-line 380ms var(--curve) both; }
+
+  .rc-route {
+    display: flex; align-items: flex-start; gap: var(--s-3);
+    padding: var(--s-3); border-radius: var(--r-sm);
+    background: var(--surface-sunken);
+  }
+  .rc-route[data-eliminated='yes'] { color: var(--text-tertiary); }
+  .rc-route[data-eliminated='yes'] .rc-steps {
+    text-decoration: line-through;
+    text-decoration-color: var(--accent-critical);
+    text-decoration-thickness: 1px;
+  }
+  .rc-num {
+    font-size: 0.72rem; color: var(--text-tertiary);
+    padding-top: 2px;
+  }
+  .rc-steps {
+    background: none; padding: 0;
+    font-family: var(--mono); font-size: 0.82rem;
+  }
+  .stack-1 { display: flex; flex-direction: column; gap: 2px; }
+  .rc-detail { font-size: var(--fs-small); color: var(--text-secondary); }
+  .rc-verdict {
+    font-family: var(--mono); font-size: 0.78rem;
+    color: var(--text-primary);
+  }
+</style>

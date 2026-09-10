@@ -1,0 +1,101 @@
+---
+// A2 — CONTAINMENT. (10-WEBSITE §7)
+//
+// A confined engine attempts the four things that would matter, each is denied
+// by name, and the conversion completes anyway. Every other converter claims
+// safety in prose; the denials are the part that can be checked.
+//
+// Zero JavaScript. Each row is one `seq-line` keyframe on a delay, so the
+// sequence runs once on load and holds its end state. Under
+// `prefers-reduced-motion` base.css zeroes both duration and delay, and all
+// four denials plus the completion render at once — nothing is lost.
+const attempts = [
+  {
+    call: 'connect() → 203.0.113.7:443',
+    errno: 'EPERM',
+    why: 'no network namespace',
+  },
+  {
+    call: 'open("~/.ssh/id_rsa")',
+    errno: 'EACCES',
+    why: 'outside the job directory',
+  },
+  {
+    call: 'fork() → /bin/sh',
+    errno: 'EPERM',
+    why: 'seccomp denies execve',
+  },
+  {
+    call: 'write("../../Startup/x.lnk")',
+    errno: 'EACCES',
+    why: 'not a single path component',
+  },
+];
+---
+<figure class="panel cm">
+  <div class="rec-bar">
+    <span class="rec-label">recorded · oc-images under Landlock + seccomp</span>
+    <span class="rec-label">4 attempts · 4 denied</span>
+  </div>
+  <div class="panel-body cm-body">
+    <ol class="cm-list">
+      {attempts.map((a, i) => (
+        <li class="cm-row seq" style={`animation-delay: ${300 + i * 620}ms`}>
+          <code class="cm-call">{a.call}</code>
+          <span class="cm-errno mono">{a.errno}</span>
+          <span class="cm-why">{a.why}</span>
+        </li>
+      ))}
+    </ol>
+    <p class="cm-done seq">
+      <span class="glyph" aria-hidden="true">=</span>
+      <code>invoice.pdf → invoice.png</code>
+      <span>completed · nothing left the job directory</span>
+    </p>
+  </div>
+</figure>
+
+<style>
+  .cm-body { padding-block: var(--s-4); }
+  .cm-list {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 2px;
+    /* Reserved height: four rows plus the completion line. CLS budget is 0. */
+    min-height: calc(4 * 30px);
+  }
+  .cm-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1.05fr);
+    align-items: baseline; gap: var(--s-3);
+    padding: 5px 0;
+    font-size: 0.82rem;
+    animation: seq-line 300ms var(--curve) both;
+  }
+  .cm-call {
+    background: none; padding: 0;
+    font-family: var(--mono); font-size: 0.82rem;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+  .cm-errno {
+    font-size: 0.78rem; letter-spacing: 0.02em;
+    color: var(--accent-critical);
+  }
+  .cm-why { font-size: var(--fs-caption); color: var(--text-tertiary); }
+
+  .cm-done {
+    display: flex; align-items: baseline; gap: var(--s-3); flex-wrap: wrap;
+    margin-top: var(--s-4); padding-top: var(--s-4);
+    border-top: 1px solid var(--hairline);
+    font-size: var(--fs-small); color: var(--text-secondary);
+    animation: seq-line 320ms var(--curve) both;
+    animation-delay: 3080ms;
+  }
+  .cm-done .glyph { color: var(--brand); }
+  .cm-done code { background: none; padding: 0; color: var(--text-primary); }
+
+  @media (max-width: 700px) {
+    .cm-row { grid-template-columns: 1fr auto; }
+    .cm-why { grid-column: 1 / -1; }
+  }
+</style>

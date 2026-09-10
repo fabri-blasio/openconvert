@@ -1,0 +1,22 @@
+# Components only. Deliberately NOT an exact channel pin.
+#
+# An earlier version of this file pinned `channel = "1.90"`. That forces every
+# contributor and every CI run to download that exact toolchain before doing
+# anything -- and it did, costing two minutes on a machine that already had a
+# newer one installed. Pinning here is the wrong place for it.
+#
+# Where each concern actually lives:
+#
+#   MSRV            `rust-version` in Cargo.toml. Cargo enforces it, and a
+#                   dependency that needs newer fails with a clear message
+#                   instead of silently raising the floor.
+#   Target matrix   TARGETS.md, with CI installing per-job what it needs.
+#                   Listing targets here makes rustup fetch all five up front.
+#   Reproducibility  A fixed container image and build path -- which is what a
+#                   byte-identical rebuild actually requires. Two flags and a
+#                   toolchain pin are not sufficient: same source, same
+#                   SOURCE_DATE_EPOCH, different build ROOT gives different
+#                   bytes (spike S31). 09 section 9 scopes the claim to match.
+[toolchain]
+channel    = "stable"
+components = ["rustfmt", "clippy"]

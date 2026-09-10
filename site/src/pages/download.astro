@@ -1,0 +1,274 @@
+---
+import Base from '../layouts/Base.astro';
+import Shot from '../components/Shot.astro';
+import release from '../data/release.json';
+
+type Artifact = {
+  platform: string; label: string; arch: string; target: string; file: string;
+  bytes: number; sha256: string; manager: string;
+  confinement: string; verified: string; note: string;
+};
+const artifacts = release.artifacts as Artifact[];
+
+/* Icon and a one-line "what it runs on" per platform. The compatibility line
+   is derived from the target triple and the release job's own note — nothing
+   here is a claim the build does not already make. */
+const PLATFORMS = [
+  { id: 'windows', label: 'Windows' },
+  { id: 'macos', label: 'macOS' },
+  { id: 'linux', label: 'Linux' },
+];
+
+const forPlatform = (id: string) => artifacts.filter((a) => a.platform === id);
+
+const mb = (b: number) => (b > 0 ? `${(b / 1048576).toFixed(0)} MB` : '—');
+
+/** The format the artifact is, taken from its own filename. */
+const kind = (file: string) => file.slice(file.lastIndexOf('.') + 1).toUpperCase();
+
+/**
+ * What each package runs on.
+ *
+ * Keyed by target triple and package type, and every phrase is one the release
+ * job's own `note` already makes — truncating the note itself gave "Runs on:
+ * Recommended." and "Runs on: Intel.", which is the lead-in rather than the
+ * answer. Anything not in this map falls back to the triple, which is always
+ * true even when it is not friendly.
+ */
+const RUNS_ON: Record<string, string> = {
+  'x86_64-pc-windows-msvc.exe': 'x86-64 · installs for you or for every user',
+  'x86_64-pc-windows-msvc.msi': 'x86-64 · every user, needs an administrator',
+  'aarch64-apple-darwin.dmg': 'Apple Silicon',
+  'x86_64-apple-darwin.dmg': 'Intel',
+  'x86_64-unknown-linux-gnu.deb': 'x86-64 · Ubuntu 22.04 LTS and newer',
+  'x86_64-unknown-linux-gnu.AppImage': 'x86-64 · any distribution with FUSE, no install',
+};
+const runsOn = (a: Artifact) =>
+  RUNS_ON[`${a.target}.${a.file.slice(a.file.lastIndexOf('.') + 1)}`] ?? a.target;
+
+/**
+ * Where the button goes.
+ *
+ * Until the release job has published a tag there is no artifact at
+ * `base_url`, and a Download button that 404s is worse than one that lands on
+ * the releases page. `release.state` is the same flag the checksum gate reads.
+ */
+const releasesPage = release.base_url.replace(/\/download\/[^/]+$/, '');
+const hrefFor = (a: Artifact) =>
+  release.state === 'published' ? `${release.base_url}/${a.file}` : releasesPage;
+
+/* The headless line is built from the release job's own base URL and file
+   name, so it can never point at an artifact this release did not publish. */
+const curlFor = (a: Artifact) => `curl -fL ${release.base_url}/${a.file} -o ${a.file}`;
+---
+<Base
+  title="Install OpenConvert"
+  description="Download OpenConvert for Windows, macOS or Linux. Free forever, Apache-2.0, and nothing you convert ever leaves your machine."
+  path="/download"
+  copy>
+
+  <!-- ══════════ HERO ══════════ -->
+  <section class="head">
+    <div class="wrap head-grid">
+      <div class="stack stack-5 head-copy">
+        <!-- Decoration, so it is hidden from the accessibility tree: the page
+             already says "OpenConvert" in the heading, the nav and the title. -->
+        <img class="head-mole only-light" src="/logo.svg" width="180" height="154" alt="" aria-hidden="true" />
+        <img class="head-mole only-dark" src="/logo-dark.svg" width="180" height="154" alt="" aria-hidden="true" />
+        <h1 class="hero-title">Install OpenConvert.</h1>
+        <p class="lede hero-lede">Free forever.</p>
+        <ul class="chips">
+          <li class="chip">Apache-2.0</li>
+          <li class="chip">No account</li>
+          <li class="chip">Nothing is uploaded</li>
+        </ul>
+      </div>
+      <div class="head-shot">
+        <Shot id="batch-plan" hero />
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ ONE TABLE PER PLATFORM ══════════ -->
+  {PLATFORMS.map((p) => (
+    <section class="plat" id={p.id}>
+      <div class="wrap stack stack-5">
+        <h2 class="plat-head">
+          <span class="plat-mark" aria-hidden="true">
+            {p.id === 'windows' && (
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.4 5.3l7.6-1.05v7.35H2.4V5.3Zm0 13.4l7.6 1.05v-7.26H2.4v6.21Zm8.45 1.16L21.6 21.4V12.4h-10.75v7.46ZM10.85 3.7v7.9H21.6V2.6L10.85 3.7Z" />
+              </svg>
+            )}
+            {p.id === 'macos' && (
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16.36 12.62c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.19-1.72-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.87-.76-1.48.02-2.84.86-3.6 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.25 2.74 2.2 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.7.71 2.86.69 1.18-.02 1.93-1.08 2.65-2.14.83-1.22 1.18-2.41 1.2-2.47-.03-.01-2.3-.88-2.32-3.52ZM14.2 5.9c.6-.74 1.01-1.75.9-2.77-.87.04-1.93.58-2.56 1.31-.56.65-1.05 1.69-.92 2.68.97.08 1.96-.49 2.58-1.22Z" />
+              </svg>
+            )}
+            {p.id === 'linux' && (
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2c-2.2 0-3.6 1.7-3.6 4.1 0 1 .1 1.9.1 2.6 0 .9-.7 1.7-1.5 2.9-1 1.5-2 3-2.4 4.7-.3 1.2-.1 2.1.5 2.6.5.4 1.2.5 1.9.4.3.6.9 1.1 1.7 1.4 1.9.7 4.7.7 6.6 0 .8-.3 1.4-.8 1.7-1.4.7.1 1.4 0 1.9-.4.6-.5.8-1.4.5-2.6-.4-1.7-1.4-3.2-2.4-4.7-.8-1.2-1.5-2-1.5-2.9 0-.7.1-1.6.1-2.6C15.6 3.7 14.2 2 12 2Zm-1.55 3.05c.44 0 .8.5.8 1.1s-.36 1.1-.8 1.1c-.44 0-.8-.5-.8-1.1s.36-1.1.8-1.1Zm3.1 0c.44 0 .8.5.8 1.1s-.36 1.1-.8 1.1c-.44 0-.8-.5-.8-1.1s.36-1.1.8-1.1ZM12 8.3c.9 0 1.9.4 1.9.9 0 .3-.3.5-.7.8-.4.3-.8.6-1.2.6s-.8-.3-1.2-.6c-.4-.3-.7-.5-.7-.8 0-.5 1-.9 1.9-.9Z" />
+              </svg>
+            )}
+          </span>
+          {p.label}
+        </h2>
+
+        <div class="table-scroll">
+          <table class="dl">
+            <thead>
+              <tr>
+                <th scope="col">Package</th>
+                <th scope="col">Runs on</th>
+                <th scope="col">Version</th>
+                <th scope="col">Date</th>
+                <th scope="col">Size</th>
+                <th scope="col"><span class="sr-only">Download</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {forPlatform(p.id).map((a) => (
+                <tr>
+                  <td><span class="pkg">{kind(a.file)}</span></td>
+                  <td class="runs">{runsOn(a)}</td>
+                  <td class="mono">{release.version}</td>
+                  <td class="mono">{release.date}</td>
+                  <td class="mono">{mb(a.bytes)}</td>
+                  <td class="dl-cell">
+                    <a class="dl-link" href={hrefFor(a)} rel="noopener">Download</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="headless stack stack-3">
+          <span class="eyebrow">Headless</span>
+          {[
+            { id: `${p.id}-curl`, cmd: curlFor(forPlatform(p.id)[0]) },
+            { id: `${p.id}-pkg`, cmd: forPlatform(p.id)[0].manager },
+          ].map((line) => (
+            <div class="cmd">
+              <code class="cmd-text" id={line.id}>{line.cmd}</code>
+              <button type="button" class="cmd-copy" data-copy={line.id} data-state="idle"
+                title={`Copy: ${line.cmd}`}>
+                <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect class="c-back" x="7" y="7" width="9.5" height="9.5" rx="2" />
+                  <path class="c-front" d="M13 4.5H5.5a2 2 0 0 0-2 2V14" stroke-linecap="round" />
+                  <path class="c-tick" d="M6 10.5l3 3 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span class="sr-only" data-label>Copy</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  ))}
+</Base>
+
+<style>
+  section { border-top: 0; }
+
+  /* ---- hero ---- */
+  .head { padding-block: clamp(var(--s-7), 6vw, var(--s-9)) var(--s-8); }
+  .head-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(var(--s-6), 5vw, var(--s-8));
+    align-items: center;
+  }
+  @media (max-width: 900px) { .head-grid { grid-template-columns: 1fr; } }
+  .head-copy { position: relative; }
+  .head-copy .hero-lede { color: var(--text-secondary); }
+
+  /* The mark sits ABOVE the heading, in the flow.
+     
+     It was absolutely positioned over the first line, and two things went
+     wrong at once: the rule carried `z-index: 3` and then `z-index: 1` again
+     further down, so the later one won and the heading painted over the mole;
+     and even with that fixed, a mark laid across a 4.4rem headline leaves both
+     the mark and the word underneath it hard to read. In the flow it is a
+     logo introducing a title, which is what it is. */
+  .head-mole {
+    height: auto;
+    width: clamp(120px, 12vw, 168px);
+    margin-bottom: var(--s-2);
+    rotate: -6deg;
+    transform-origin: left bottom;
+  }
+
+
+  /* ---- one block per platform ---- */
+  .plat { padding-block: var(--section-y-tight); border-top: 1px solid var(--hairline); }
+  .plat-head { display: flex; align-items: center; gap: var(--s-3); font-size: var(--fs-heading); }
+  .plat-mark { display: grid; place-items: center; color: var(--text-primary); }
+  .plat-mark svg { width: 26px; height: 26px; }
+
+  .dl { min-width: 640px; }
+  .dl th {
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-tertiary);
+  }
+  .dl td { padding-block: var(--s-4); vertical-align: middle; }
+  .pkg {
+    display: inline-block; padding: 3px 9px;
+    border: 1px solid var(--hairline-strong); border-radius: var(--r-sm);
+    font-size: 0.75rem; font-weight: var(--fw-strong);
+  }
+  .runs { color: var(--text-secondary); max-width: 40ch; }
+  .dl-cell { text-align: right; }
+  .dl-link {
+    display: inline-block; padding: 7px 16px;
+    border-radius: var(--r-full);
+    border: 1px solid var(--brand-line);
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-size: var(--fs-small);
+    font-weight: var(--fw-strong);
+    white-space: nowrap;
+  }
+  .dl-link:hover { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+
+  /* One command per line, the way a documentation page sets them: the text, and
+     a copy control in the corner. No box within a box — the line IS the object. */
+  .cmd {
+    display: flex; align-items: center; gap: var(--s-4);
+    padding: 11px var(--s-4);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-md);
+    background: var(--surface-raised);
+  }
+  .cmd-text {
+    flex: 1; min-width: 0;
+    background: none; padding: 0;
+    font-size: 0.78rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    scrollbar-width: thin;
+  }
+  .cmd-copy {
+    flex: none;
+    display: grid; place-items: center;
+    width: 30px; height: 30px;
+    border: 0; border-radius: var(--r-sm);
+    background: none; color: var(--text-tertiary);
+    cursor: pointer;
+    transition: color var(--m-micro) ease-out, background var(--m-micro) ease-out;
+  }
+  .cmd-copy:hover { color: var(--text-primary); background: var(--surface-sunken); }
+  .cmd-copy svg { width: 17px; height: 17px; }
+  .cmd-copy .c-tick { display: none; }
+  .cmd-copy[data-state='done'] { color: var(--brand); }
+  .cmd-copy[data-state='done'] .c-back,
+  .cmd-copy[data-state='done'] .c-front { display: none; }
+  .cmd-copy[data-state='done'] .c-tick { display: block; }
+  .cmd-copy[data-state='failed'] { color: var(--accent-attention); }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+</style>

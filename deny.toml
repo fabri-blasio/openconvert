@@ -1,0 +1,82 @@
+# cargo-deny: licences, bans, advisories, sources.
+#
+# One of three licence surfaces (09 section 9). This one covers Rust crates;
+# engines.toml covers native engines and models.toml covers model weights.
+
+[graph]
+# Every target we ship. Advisories and bans are evaluated per target, which
+# matters: a real advisory exists in postcard -> heapless -> atomic-polyfill for
+# a target we never build, and it shows up only because Cargo.lock is
+# target-independent (spike S33). Enumerating targets here is what stops this
+# gate crying wolf on day one -- and a gate that cries wolf acquires an --ignore
+# flag within a month.
+targets = [
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+]
+all-features = true
+
+[advisories]
+version = 2
+yanked  = "deny"
+# Every entry here needs a comment saying WHY it is safe, not just that it is.
+ignore = []
+
+[licenses]
+version = 2
+# Permissive only. Copyleft in a Rust dependency would attach to the host
+# binary, which is the boundary 02 section 11 exists to keep clean -- unlike the
+# engines, which are separate processes with their own linkage story.
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "IJG", # MozJPEG, confined image/PDF workers only
+    "Zlib",
+    "Unicode-3.0",
+    "CC0-1.0",
+    "MPL-2.0",  # file-level copyleft; acceptable, and no MPL crate is modified
+    # webpki-roots (via ureq's rustls TLS in the worker fetch path): a bundled
+    # set of root CA data under the PERMISSIVE half of the CDLA -- redistribution
+    # and use are explicitly granted; only the copyleft half (CDLA-Sharing) is
+    # restrictive, and this is not it.
+    "CDLA-Permissive-2.0",
+]
+confidence-threshold = 0.93
+# The allowlist is deliberately wider than what we currently pull, so that a new
+# dependency under a licence we have already accepted does not fail the build at
+# an inconvenient moment. Without this, cargo-deny warns on every unused entry
+# and the run stops being quiet -- and a noisy green run is one nobody reads.
+unused-allowed-license = "allow"
+
+[bans]
+multiple-versions = "warn"
+
+# A `*` version accepts whatever the registry serves tomorrow, which is a
+# supply-chain decision made by someone else.
+#
+# This fired on our OWN crates the first time the step ever ran, because a path
+# dependency with no version is a wildcard. The fix was to add versions to the
+# workspace dependency table -- not to relax this rule -- because `cargo publish`
+# refuses a bare path dependency for the same reason. cargo-deny found a real
+# packaging defect months before anyone would have hit it.
+wildcards = "deny"
+deny = [
+    # A dependency that links a native library into a boundary crate is a
+    # licence boundary AND a security boundary crossed at once (D7). xtask
+    # depcheck is the real enforcement -- this is a second, cheaper net.
+    { name = "openssl-sys",  reason = "no native TLS: SR-9 permits exactly one outbound call, over rustls" },
+    { name = "openssl",      reason = "see openssl-sys" },
+    { name = "git2",         reason = "pulls libgit2; nothing here needs git at runtime" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git      = "deny"
+allow-registry   = ["https://github.com/rust-lang/crates.io-index"]

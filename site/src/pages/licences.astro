@@ -1,0 +1,145 @@
+---
+import Base from '../layouts/Base.astro';
+import { parseTables } from '../lib/toml-tables';
+// Through Vite with ?raw so the table joins the module graph: an edit to
+// models.toml rebuilds this page, and the page can never drift from what CI
+// checks the code against.
+import raw from '../../../models.toml?raw';
+
+const rows = parseTables(raw, 'model');
+/* The registry refuses any row whose hash is the zero sentinel, so this page
+   renders exactly what could load today: nothing, until a row is fetched,
+   hashed and enabled. An empty table that looks correct is still the honest
+   rendering; a fabricated row would not be. */
+const shipped = rows.filter((m) => m.enabled === true && m.sha256 !== '0'.repeat(64));
+
+const COMMERCIAL: Record<string, string> = {
+  'Apache-2.0': 'yes',
+  'MIT': 'yes',
+  'BSD-3-Clause': 'yes',
+  'CC-BY-4.0': 'yes, with attribution',
+};
+const commercial = (l: unknown) => COMMERCIAL[String(l)] ?? 'review the licence';
+
+/* Engine notices. Link modes are the compliance story: copyleft tools stay
+   separate processes; LGPL libraries are dynamically linked and their source
+   is offered beside the binaries that use them. */
+const engines = [
+  ['FFmpeg / libav*', 'audio · video', 'LGPL-2.1+', 'dynamically linked'],
+  ['libvips', 'images', 'LGPL-2.1+', 'dynamically linked'],
+  ['LibreOffice (headless)', 'documents', 'MPL-2.0', 'separate process'],
+  ['Pandoc', 'markup', 'GPL-2+', 'separate process'],
+  ['Calibre ebook-convert', 'ebooks', 'GPL-3', 'separate process'],
+  ['pdfium', 'pdf', 'BSD-3', 'dynamically linked'],
+  ['lcms2', 'colour', 'MIT', 'dynamically linked'],
+  ['image-rs', 'images, pure Rust', 'Apache-2.0 / MIT', 'in-process'],
+  ['Symphonia', 'audio probing', 'MPL-2.0', 'in-process Rust'],
+  ['ONNX Runtime', 'inference', 'MIT', 'dynamically linked'],
+];
+---
+<Base
+  title="Licences — OpenConvert"
+  description="Apache-2.0 for OpenConvert, plus every engine licence with its link mode and every model's registry row — generated from the file CI checks."
+  path="/licences">
+
+  <div class="wrap measure-wide">
+
+    <section>
+      <span class="eyebrow">the app</span>
+      <h1>Apache-2.0.</h1>
+      <p class="small measure">
+        Commercial use, modification, redistribution and a patent grant — the text ships as
+        <code>LICENSE</code> in the repository and in every artifact. This page adds the two
+        surfaces the Apache licence cannot speak for: the engines' own licences, and the models'.
+      </p>
+    </section>
+
+    <section>
+      <span class="eyebrow">engines</span>
+      <h2>Every engine, its licence, how it links.</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>engine</th><th>domain</th><th>licence</th><th>link mode</th></tr></thead>
+          <tbody>
+            {engines.map(([name, domain, lic, mode]) => (
+              <tr>
+                <td class="mono">{name}</td>
+                <td>{domain}</td>
+                <td class="mono">{lic}</td>
+                <td>{mode}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="notice">
+        <p class="small">
+          <strong>FFmpeg notice.</strong> This application uses code of FFmpeg licensed under the
+          GNU Lesser General Public License, version 2.1 or later. The build is LGPL-only:
+          GPL components such as libx264 are excluded, and no nonfree flag is ever set.
+        </p>
+        <p class="small">
+          <strong>LGPL source offer.</strong> The complete corresponding source for the LGPL-
+          licensed libraries, at the versions pinned in the build, is published in the repository
+          and attached to each release — the same server you downloaded the binary from.
+          Copyleft tools marked "separate process" run over documented interfaces and are never
+          linked.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">models</span>
+      <h2>The registry table.</h2>
+      {shipped.length > 0 ? (
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>model</th><th>version</th><th>licence</th><th>format</th><th>commercial</th><th>sha256</th></tr>
+            </thead>
+            <tbody>
+              {shipped.map((m) => (
+                <tr>
+                  <td class="mono">{m.name}</td>
+                  <td class="mono">{m.version}</td>
+                  <td class="mono">{m.licence}</td>
+                  <td class="mono">{m.format}</td>
+                  <td>{commercial(m.licence)}</td>
+                  <td class="mono md-hash" data-verbatim={m.sha256}>{String(m.sha256).slice(0, 24)}…</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p class="note measure">
+          The registry holds no downloadable model today. Nothing bundles, and the downloader
+          refuses any row whose hash is the placeholder sentinel — a row appears here on the day it
+          is real. The pack's intended contents and licences are listed on
+          <a href="/features#ai">features → ai</a>.
+        </p>
+      )}
+      <p class="caption" style="margin-top: var(--s-3)">
+        Generated from <code>models.toml</code>, the same bytes CI gates the code against.
+        Hand-editing this page fails nothing; hand-editing that file fails everything.
+      </p>
+    </section>
+
+  </div>
+</Base>
+
+<style>
+  .measure-wide { max-width: 860px; }
+  section { padding-block: var(--section-y-tight); }
+  section + section { border-top: 1px solid var(--hairline); }
+  h1 { font-size: clamp(1.9rem, 4vw, 2.5rem); font-weight: var(--fw-normal); }
+  h2 { font-size: 1.25rem; font-weight: var(--fw-normal); margin-bottom: var(--s-5); }
+  .notice {
+    margin-top: var(--s-5);
+    border-left: 3px solid var(--hairline-strong);
+    padding-left: var(--s-4);
+    display: grid; gap: var(--s-3);
+  }
+  .md-hash { font-size: 0.66rem; overflow-wrap: anywhere; color: var(--text-secondary); }
+</style>

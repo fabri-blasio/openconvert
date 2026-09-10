@@ -1,0 +1,8 @@
+{
+  "name": "openconvert-desktop",
+  "comment": "NEGATIVE FIXTURE. The prose in this field names plugin-shell deliberately: if the gate fires on THIS line rather than on the dependency below, it is matching documentation and the fixture is passing vacuously.",
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-shell": "^2.0.0"
+  }
+}

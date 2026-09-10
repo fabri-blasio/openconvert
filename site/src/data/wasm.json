@@ -1,0 +1,15 @@
+{
+  "generated_by": "scripts/export-wasm.mjs",
+  "file": "/openconvert.wasm",
+  "bytes": 36592,
+  "gzip_bytes": 15622,
+  "budget_kb": 20,
+  "head_bytes": 262,
+  "exports": [
+    "alloc",
+    "dealloc",
+    "head_bytes",
+    "last_len",
+    "plan"
+  ]
+}

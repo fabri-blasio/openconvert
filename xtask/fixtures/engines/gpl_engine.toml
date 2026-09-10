@@ -1,0 +1,17 @@
+# Negative fixture: a GPL native engine, linked dynamically.
+#
+# THE CASE NEITHER EXISTING GATE CAUGHT. deny.toml sees only Rust crates; the
+# LGPL rule checks link mode, not licence class. `vcpkg install libheif` really
+# does install this by default, for HEVC encoding that decoding never needs.
+#
+# Dynamic on purpose: if the gate only refused STATIC GPL, this would pass, and
+# the whole point is that no link_mode discharges the GPL.
+[[engine]]
+name       = "x265"
+version    = "4.3"
+licence    = "GPL-2.0"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-images"
+source     = "https://bitbucket.org/multicoreware/x265_git"
+enabled    = true

@@ -1,0 +1,53 @@
+---
+/**
+ * The long tail, felt rather than read.
+ *
+ * Two rows drifting in opposite directions. The point is breadth: nobody reads
+ * a marquee, they register that it does not end. The items come from the real
+ * route table and the real Tools menu, so what scrolls past is what the binary
+ * does.
+ *
+ * Transform only, on an infinite loop — the one animation on this site that
+ * repeats, because it is decoration rather than narration and carries no
+ * information a reader could miss. `prefers-reduced-motion` stops it dead and
+ * leaves the first screenful legible, which is all it ever said.
+ */
+export interface Props {
+  rows: string[][];
+}
+const { rows } = Astro.props as Props;
+---
+<div class="marquee" aria-hidden="true">
+  {rows.map((row, i) => (
+    <div class="track" data-dir={i % 2 === 0 ? 'left' : 'right'}>
+      {/* Twice, so the loop has something to arrive from. */}
+      {[...row, ...row].map((item) => <span class="chip">{item}</span>)}
+    </div>
+  ))}
+</div>
+
+<style>
+  .marquee {
+    display: grid; gap: var(--s-3);
+    overflow: hidden;
+    /* Faded at both ends so the loop seam never lands in the reader's eye. */
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .track {
+    display: flex; gap: var(--s-3); width: max-content;
+    animation: drift 64s linear infinite;
+  }
+  .track[data-dir='right'] { animation-direction: reverse; animation-duration: 78s; }
+
+  /* Half of the doubled row, so the second copy lands exactly where the first
+     started and the seam is invisible. */
+  @keyframes drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track { animation: none; }
+    .marquee { mask-image: linear-gradient(90deg, #000 92%, transparent); }
+  }
+</style>

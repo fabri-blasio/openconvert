@@ -1,0 +1,33 @@
+{
+  "name": "openconvert-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "openconvert.dev — static product site",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "export": "node scripts/export-data.mjs && node scripts/export-tools.mjs && node scripts/export-receipt.mjs && node scripts/export-cli.mjs && node scripts/export-threats.mjs",
+    "gates": "node scripts/gates.mjs",
+    "verify": "astro check && astro build && node scripts/gates.mjs",
+    "shots": "node tools/shots/run.mjs",
+    "shots:encode": "node tools/shots/encode.mjs",
+    "export:board": "node scripts/export-board.mjs"
+  },
+  "dependencies": {
+    "@astrojs/vercel": "^11.0.10",
+    "astro": "^7.3.2",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "playwright": "^1.62.1",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "sharp": "^0.35.4",
+    "path-to-regexp": "6.3.0"
+  }
+}

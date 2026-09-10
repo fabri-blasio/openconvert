@@ -1,0 +1,24 @@
+[package]
+name = "openconvert-sandbox"
+description = "THE BOUNDARY: broker, EngineBin, Argv, WorkerSession, sweep. No unsafe."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+
+[dependencies]
+openconvert-core = { workspace = true }
+thiserror      = { workspace = true }
+# Pure Rust, no `links` key -- verified by depcheck, which is what lets a
+# boundary crate take a dependency at all.
+unicode-normalization = "0.1"
+
+[lints.clippy]
+# THE BOUNDARY holds no I/O of its own but names types the core may not. See
+# openconvert-run's manifest for why these are allowed explicitly.
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+[dev-dependencies]
+corpus = { workspace = true }

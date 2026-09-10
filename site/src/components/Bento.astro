@@ -1,0 +1,433 @@
+---
+/**
+ * The six things that matter, in one grid.
+ *
+ * Every cell draws its own point rather than describing it: the AI cell is a
+ * network with its outputs labelled, the conversion cell is two format lists
+ * passing each other, the offline cell is a wireless signal being refused, the
+ * sandbox cell is a cage closing around a file. Inline SVG and CSS only — no
+ * images to load beyond the one real screenshot, no script, and it themes with
+ * the page because every colour is `currentColor` or a token.
+ *
+ * Motion rules, inherited from 10-WEBSITE §6 and enforced by a gate: animate
+ * `transform` and nothing else, and resolve to a legible end state under
+ * `prefers-reduced-motion`. Each animation here is decoration over a diagram
+ * that already reads when frozen.
+ */
+import Shot from './Shot.astro';
+import data from '../data/formats.json';
+
+/* The two counts the cells quote come from the binary's own export, so the
+   grid cannot advertise a number the router does not have. */
+type Fmt = { id: string; routes: { to: string }[] };
+const formats = data.formats as Fmt[];
+const formatCount = formats.length;
+const routeCount = formats.reduce((n, f) => n + f.routes.length, 0);
+
+/** What the local models do, in the order the network draws its outputs. */
+const outputs = [
+  'Remove background',
+  'Audio transcript',
+  'Upscaling',
+  'Text extraction',
+  'Audio denoising',
+];
+
+/** The two passing columns in the conversion cell. Doubled for the loop. */
+const fromFormats = ['HEIC', 'PNG', 'MKV', 'DOCX', 'FLAC', 'CR2', 'SVG', 'TIFF', 'WEBP', 'M4A'];
+const toFormats = ['JPEG', 'WEBP', 'MP4', 'PDF', 'WAV', 'DNG', 'PNG', 'AVIF', 'MP3', 'TXT'];
+
+/** Output node centres in the SVG's own units, so the pills line up with them. */
+const nodeY = [34, 92, 150, 208, 266];
+const midY = [24, 82, 140, 198, 256];
+const inY = [56, 118, 180, 242];
+---
+<div class="bento">
+
+  <!-- ══ local AI models ══ -->
+  <article class="cell cell-ai">
+    <div class="cell-head">
+      <h3>Local AI models for advanced conversions</h3>
+      <p class="small">
+        Optional, off by default. No data is sent anywhere; the model runs on your
+        computer. That is what makes state-of-the-art conversions free.
+      </p>
+    </div>
+
+    <!-- `preserveAspectRatio` default plus a flexed box: the drawing grows to
+         fill whatever height this two-row cell has left, instead of sitting at
+         its natural size with a hole above it. -->
+    <div class="net-box">
+      <svg class="net" viewBox="0 0 520 300" role="img"
+        aria-label="A small neural network whose five outputs are labelled: remove background, audio transcript, upscaling, text extraction, audio denoising.">
+        <g class="net-edges" fill="none" stroke="currentColor" stroke-width="1">
+          {inY.map((y1) => midY.map((y2) => <line x1="30" y1={y1} x2="118" y2={y2} />))}
+          {midY.map((y1) => nodeY.map((y2) => <line x1="118" y1={y1} x2="206" y2={y2} />))}
+          {nodeY.map((y) => <line class="lead" x1="206" y1={y} x2="244" y2={y} />)}
+        </g>
+
+        <g class="net-nodes">
+          {inY.map((y, i) => <circle class="n-in" style={`--i:${i}`} cx="30" cy={y} r="6.5" />)}
+          {midY.map((y, i) => <circle class="n-mid" style={`--i:${i}`} cx="118" cy={y} r="6.5" />)}
+          {nodeY.map((y, i) => <circle class="n-out" style={`--i:${i}`} cx="206" cy={y} r="8" />)}
+        </g>
+
+        <g class="net-pills">
+          {outputs.map((label, i) => (
+            <g style={`--i:${i}`}>
+              <rect x="244" y={nodeY[i] - 17} width="264" height="34" rx="17" />
+              <text x="264" y={nodeY[i] + 5}>{label}</text>
+            </g>
+          ))}
+        </g>
+      </svg>
+    </div>
+  </article>
+
+  <!-- ══ open source ══ -->
+  <article class="cell cell-open">
+    <svg class="os-mark" viewBox="0 0 64 64" aria-hidden="true">
+      <!-- A RING WITH A PIECE CUT OUT OF THE BOTTOM. Nothing else — no stem.
+           One arc of radius 19 about (32,32), 10 units thick, running from 105
+           degrees the long way round to 75, which leaves exactly 30 degrees
+           open at the bottom.
+
+           `stroke-linecap="butt"` is the part that makes it read as a CUT.
+           Round caps would bulge the two ends outward and turn the gap into a
+           gesture; flat ends are what a piece removed from a solid ring looks
+           like. Drawn as an explicit arc rather than a dash pattern, because a
+           dash offset has to be recomputed against the circumference every
+           time the radius moves. -->
+      <path d="M27.08 50.35 A19 19 0 1 1 36.92 50.35" fill="none" stroke="currentColor"
+        stroke-width="10" stroke-linecap="butt" />
+    </svg>
+    <div class="cell-head">
+      <h3>Open source</h3>
+      <p class="small">
+        Apache-2.0, engines included. No feature is held back for a paid tier,
+        because there is no paid tier to hold it in.
+      </p>
+    </div>
+    <a href="/licences" class="caption">Every licence →</a>
+  </article>
+
+  <!-- ══ conversion showcase ══ -->
+  <article class="cell cell-conv">
+    <div class="cell-head">
+      <h3>{routeCount} routes</h3>
+      <p class="small">Pick a file, pick a target. The router finds the way.</p>
+    </div>
+
+    <div class="belt" aria-hidden="true">
+      <div class="belt-col">
+        <div class="belt-track">
+          {[...fromFormats, ...fromFormats].map((f) => <span class="fmt">{f}</span>)}
+        </div>
+      </div>
+
+      <span class="belt-arrow">
+        <!-- Two arrows on separate lines. The first version drew them through
+             each other and read as a scribble. -->
+        <svg viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M4 10h16M16 6l4 4-4 4" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M24 19H8M12 15l-4 4 4 4" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+
+      <div class="belt-col">
+        <div class="belt-track belt-up">
+          {[...toFormats, ...toFormats].map((f) => <span class="fmt">{f}</span>)}
+        </div>
+      </div>
+    </div>
+    <p class="caption belt-note">{formatCount} formats, both directions where the route exists.</p>
+  </article>
+
+  <!-- ══ fully local ══ -->
+  <article class="cell cell-local">
+    <div class="off-box">
+      <svg class="offline" viewBox="0 0 120 96" role="img"
+        aria-label="A wireless signal struck through: the app makes no network request at all.">
+        <g class="waves" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round">
+          <path class="w3" style="--i:2" d="M18 46a58 58 0 0 1 84 0" />
+          <path class="w2" style="--i:1" d="M33 62a36 36 0 0 1 54 0" />
+          <path class="w1" style="--i:0" d="M48 77a17 17 0 0 1 24 0" />
+        </g>
+        <circle class="dot" cx="60" cy="88" r="5" />
+        <g class="strike" fill="none" stroke-width="9" stroke-linecap="round">
+          <path class="s1" d="M43 38 L77 72" />
+          <path class="s2" d="M77 38 L43 72" />
+        </g>
+      </svg>
+    </div>
+    <div class="cell-head">
+      <h3>Completely offline</h3>
+      <p class="small">
+        Every conversion runs with no network capability at all. The only
+        connection the app makes is downloading an AI model from Hugging Face,
+        if you ask for one.
+      </p>
+    </div>
+  </article>
+
+  <!-- ══ batch ══ -->
+  <article class="cell cell-batch">
+    <div class="cell-head">
+      <h3>Drop in as many as you like</h3>
+      <p class="small">
+        One target filetype for everything, or a different one per row. No
+        practical limit on how many files go in at once.
+      </p>
+    </div>
+    <Shot
+      id="batch-plan"
+      alt="A batch of five files queued in OpenConvert, each with its own source format and target."
+    />
+  </article>
+
+  <!-- ══ sandboxing ══ -->
+  <article class="cell cell-sand">
+    <div class="cell-head">
+      <h3>Every file opens in a cage</h3>
+      <p class="small">
+        Convert files knowing your computer stays safe. Parsers are where the
+        exploits live, so each one runs confined by the OS with file descriptors
+        instead of paths. A hostile file has nothing to reach.
+      </p>
+      <a href="/safety" class="caption">How the confinement works →</a>
+    </div>
+
+    <div class="cage-box">
+      <svg class="cage" viewBox="0 0 200 136" role="img"
+        aria-label="A file with a cage closing around it: every parser runs confined, and a hostile file has nothing to reach.">
+        <!-- The file sits on the cage's own centre line (y = 68), not near its
+             floor. It was drawn from its top-left corner and ended up pressed
+             against the bottom bar. -->
+        <g class="cage-file">
+          <path d="M78 38h30l16 16v44a6 6 0 0 1-6 6H78a6 6 0 0 1-6-6V44a6 6 0 0 1 6-6Z"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+          <path d="M108 38v16h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+          <path d="M84 68h28M84 79h28M84 90h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </g>
+
+        <g class="bars">
+          {[54, 78, 102, 126, 150].map((x, i) => (
+            <line class="bar" style={`--i:${i}`} x1={x} y1="24" x2={x} y2="112"
+              stroke-width="3" stroke-linecap="round" />
+          ))}
+        </g>
+        <g class="frame">
+          <line class="rail" style="--i:0" x1="44" y1="24" x2="152" y2="24" stroke-width="4" stroke-linecap="round" />
+          <line class="rail" style="--i:1" x1="44" y1="112" x2="152" y2="112" stroke-width="4" stroke-linecap="round" />
+        </g>
+      </svg>
+    </div>
+  </article>
+</div>
+
+<style>
+  /* THE AI CELL IS ONE ROW TALL, not two.
+     
+     Spanning two rows sounded like prominence and measured like a hole: the
+     rows are sized by the two narrow text cells beside it, so the cell came
+     out 774px tall around a drawing that is 232px, leaving 357px of nothing
+     under the network. A cell whose height is decided by somebody else's
+     paragraph cannot be composed.
+     
+     One row means the drawing sets its own cell's height. `local` moves down
+     beside it and gets two columns, which is the other half of the fix: at
+     226px its paragraph ran to 203px of wrapped text and was what made row two
+     tall in the first place. */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-areas:
+      "ai ai open conv"
+      "batch batch sand conv"
+      "local local local local";
+    gap: var(--s-4);
+  }
+  @media (max-width: 1000px) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        "ai ai"
+        "open conv"
+        "local conv"
+        "batch batch"
+        "sand sand";
+    }
+  }
+  @media (max-width: 620px) {
+    .bento {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "ai" "open" "conv" "local" "batch" "sand";
+    }
+  }
+
+  .cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+    padding: clamp(var(--s-5), 2.2vw, var(--s-6));
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    background: var(--surface-base);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .cell-ai    { grid-area: ai; }
+  .cell-open  { grid-area: open; }
+  .cell-conv  { grid-area: conv; }
+  .cell-local { grid-area: local; }
+  .cell-batch { grid-area: batch; }
+  .cell-sand  { grid-area: sand; }
+
+  .cell-head { display: flex; flex-direction: column; gap: var(--s-2); }
+  .cell h3 { font-size: var(--fs-title); letter-spacing: -0.015em; }
+  .cell .small { color: var(--text-secondary); max-width: 46ch; }
+  .cell a.caption { color: var(--brand); border-bottom: 0; width: fit-content; }
+
+  /* ---- the network ---- */
+  /* `height: 100%` on the drawing made the SVG 865px tall and dragged both
+     grid rows with it. Auto height means it takes its own aspect ratio at
+     whatever width the cell gives it, and nothing here can inflate a row. */
+  .net-box { flex: 1; display: grid; place-items: center; min-height: 0; }
+  .net { width: 100%; height: auto; max-height: 100%; color: var(--text-primary); }
+  .net-edges { color: var(--hairline-strong); }
+  .net-edges .lead { stroke: var(--brand-line); }
+  .net-nodes circle { fill: var(--surface-sunken); stroke: var(--hairline-strong); stroke-width: 1.5; }
+  .net-nodes .n-out { fill: var(--brand-soft); stroke: var(--brand); }
+  .net-pills rect { fill: var(--surface-sunken); stroke: var(--hairline); stroke-width: 1; }
+  .net-pills text { font-size: 15px; fill: var(--text-secondary); }
+
+  /* One pulse down the network on entry: inputs, middle, outputs, pills. It
+     says "signal flows left to right" and then stops. */
+  @media (prefers-reduced-motion: no-preference) {
+    .net-nodes circle { animation: pop 420ms var(--curve) both; animation-delay: calc(var(--i) * 40ms); }
+    .net-nodes .n-mid { animation-delay: calc(160ms + var(--i) * 40ms); }
+    .net-nodes .n-out { animation-delay: calc(340ms + var(--i) * 40ms); }
+    .net-pills g { animation: slide-in 420ms var(--curve) both; animation-delay: calc(460ms + var(--i) * 55ms); }
+  }
+  @keyframes pop { from { transform: scale(0.4); } to { transform: none; } }
+  @keyframes slide-in { from { transform: translateX(-10px); } to { transform: none; } }
+
+  /* ---- open source ---- */
+  .os-mark { width: 52px; height: 52px; color: var(--brand); }
+
+  /* ---- the conversion belt ---- */
+  /* `margin-block: auto`, NOT `flex: 1` with a percentage-height column.
+     Filling was tried and measured: `min-height: 0` did not stop the
+     twenty-item track from handing its intrinsic height up to the two grid
+     rows this cell spans, and the bento grew from 1267px to 1420px — the
+     original bug, back again. The column keeps a definite height and the belt
+     centres in whatever is left. */
+  .belt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: center;
+    gap: var(--s-3);
+    margin-block: auto;
+  }
+  .belt-col {
+    width: 100%;
+    max-width: 116px;
+    /* A DEFINITE height, not `100%` with a minimum. `overflow: hidden` hides
+       the overflow but does not stop the twenty-item track contributing its
+       full 815px to the cell's intrinsic height — which is what made this
+       column set the height of the two rows beside it. */
+    /* A DEFINITE height, for the reason in the note above. The number is
+       chosen against the space this cell actually spans: two rows sized by the
+       cells beside it come to ~923px here, of which the heading, gap and
+       padding take ~157, so anything up to ~766 fills without the column
+       pushing those rows taller. Tracking the viewport's WIDTH rather than its
+       height keeps it in step with the grid, which is width-driven. */
+    height: clamp(320px, 46vw, 720px);
+    overflow: hidden;
+    /* Faded top and bottom, so the loop seam is never where the eye is. */
+    mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+  }
+  .belt-track { display: flex; flex-direction: column; gap: var(--s-2); }
+  .fmt {
+    display: block;
+    padding: 7px 0;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    background: var(--surface-sunken);
+    border-radius: var(--r-sm);
+  }
+  .belt-arrow { color: var(--brand); }
+  .belt-arrow svg { width: 30px; height: 30px; display: block; }
+  .belt-note { margin-top: var(--s-4); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Half the doubled column, so the second copy lands where the first began. */
+    .belt-track { animation: belt 20s linear infinite; }
+    .belt-up { animation-direction: reverse; animation-duration: 25s; }
+  }
+  @keyframes belt {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-50%); }
+  }
+
+  /* ---- offline ---- */
+  .off-box { display: grid; place-items: center; padding-block: var(--s-3); }
+  .offline { width: 100%; max-width: 150px; height: auto; color: var(--text-tertiary); }
+  .offline .dot { fill: var(--text-tertiary); }
+  .offline .strike { stroke: var(--accent-critical); }
+  /* The X sits over the outer arc, not across the whole drawing: a slash from
+     corner to corner reads as "image broken" rather than as "refused". */
+  .offline .strike path { transform-box: fill-box; transform-origin: 50% 50%; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The arcs stay put and only the cross moves. An earlier version faded the
+       arcs in and out too, which meant that for a third of every cycle the cell
+       showed a red X over nothing — and a still capture of it showed exactly
+       that. The signal is the subject; the cross is the answer to it. */
+    .offline .strike path { animation: strike-in 3.2s var(--curve) infinite; }
+    .offline .strike .s2 { animation-delay: 110ms; }
+  }
+  @keyframes strike-in {
+    0%, 14%   { transform: scale(0.15); }
+    34%, 86%  { transform: scale(1); }
+    100%      { transform: scale(0.15); }
+  }
+
+  /* ---- the cage ---- */
+  .cage-box { flex: 1; display: grid; place-items: center; min-height: 0; }
+  .cage { width: 100%; max-width: 300px; height: auto; }
+  .cage-file { color: var(--text-secondary); }
+  .bars line, .frame line { stroke: var(--accent-critical); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The cage closes: the two rails draw across, then the bars drop into
+       place one by one. Scale only, from the top, so nothing is ever painted
+       outside the box and a stalled timeline leaves the cage shut. */
+    .bars .bar {
+      transform-box: fill-box;
+      transform-origin: 50% 0%;
+      animation: bar-drop 4s var(--curve) infinite;
+      animation-delay: calc(var(--i) * 110ms);
+    }
+    .frame .rail {
+      transform-box: fill-box;
+      transform-origin: 0% 50%;
+      animation: rail-draw 4s var(--curve) infinite;
+      animation-delay: calc(var(--i) * 90ms);
+    }
+  }
+  @keyframes bar-drop {
+    0%, 18%   { transform: scaleY(0); }
+    40%, 82%  { transform: scaleY(1); }
+    96%, 100% { transform: scaleY(0); }
+  }
+  @keyframes rail-draw {
+    0%, 6%    { transform: scaleX(0); }
+    24%, 86%  { transform: scaleX(1); }
+    98%, 100% { transform: scaleX(0); }
+  }
+</style>

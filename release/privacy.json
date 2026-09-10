@@ -1,0 +1,33 @@
+{
+  "_comment": "THE SINGLE PRIVACY SOURCE. Three surfaces render this file: openconvert.dev/privacy, the privacy section of README.md, and the app's settings screen. 10-WEBSITE §9 gates the site copy at 300 words and diffs it against the other two, because three hand-maintained copies of a privacy statement are three statements that will disagree. Edit here, re-render, never edit a rendering.",
+  "word_cap": 300,
+  "revised": "2026-08-24",
+  "sections": [
+    {
+      "id": "files",
+      "heading": "Your files",
+      "body": "Never leave the machine. There is no upload, no account, no sync, and no endpoint that receives them — we do not operate one. Conversions run on your CPU, in a sandbox with the network denied by the operating system."
+    },
+    {
+      "id": "telemetry",
+      "heading": "Telemetry",
+      "body": "None. No analytics, no crash pings, no feature flags, no identifier, and no setting to turn any of it off -- because none of it is in the build."
+    },
+    {
+      "id": "one-call",
+      "heading": "Network access",
+      "body": "Two things reach the network, both starting with you: fetching an AI feature you chose, and replacing a model file this build pins differently from your copy. Spotting that costs no network -- it compares two local files -- so the only question is whether the app fetches it. That is Model auto update in Settings, the one network setting here; off, nothing dials out unless you press Download. Addresses come from the model registry in the build; every artifact is hash-checked against it and a mismatch is refused. No telemetry, crash reports, licence check or periodic call. Engines reach nothing, each sandboxed with networking denied by the operating system."
+    },
+    {
+      "id": "stored",
+      "heading": "Stored locally",
+      "body": "Config, history, recipes, the batch journal and the engine quarantine list, all under your user profile, all readable and wipeable. None can enable a capability: quarantine only ever disables, and no config key touches the network floor, because that key does not exist."
+    },
+    {
+      "id": "website",
+      "heading": "This website",
+      "body": "Static files. No cookies, no third-party scripts, no remote fonts or images, no tag manager. A Content-Security-Policy blocks outbound connections and a build check verifies it. Any future analytics are self-hosted, cookieless, and disclosed in this paragraph."
+    }
+  ],
+  "closing": "Generated from one file shared with the README and the app's settings screen. The build fails if the three disagree."
+}

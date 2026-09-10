@@ -1,0 +1,107 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "OpenConvert",
+  "version": "0.1.0",
+  "identifier": "dev.openconvert.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "OpenConvert",
+        "decorations": false,
+        "transparent": false,
+        "shadow": true,
+        "width": 900,
+        "height": 680,
+        "minWidth": 640,
+        "minHeight": 480,
+        "resizable": true,
+        "dragDropEnabled": true,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,msExperimentationAndConfigurationService,OptimizationHints,MediaRouter --disable-background-networking --disable-component-update --disable-domain-reliability --disable-sync --disable-speech-api --disable-client-side-phishing-detection --no-first-run --no-pings --no-default-browser-check --no-service-autorun --metrics-recording-only --disable-breakpad --enable-features=msEdgeIdentityDisabled"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' data:; font-src 'self'; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'",
+      "freezePrototype": true
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "engines/*"
+    ],
+    "publisher": "Clura srls",
+    "homepage": "https://openconvert.dev",
+    "copyright": "Copyright (c) 2026 Clura srls",
+    "license": "Apache-2.0",
+    "licenseFile": "installer/LICENSE-AND-PRIVACY.txt",
+    "category": "Utility",
+    "shortDescription": "Convert and modify files locally.",
+    "longDescription": "A desktop file converter that runs every conversion on this machine. Each format is handled by an engine confined by the operating system, and every output is written beside a receipt recording which engine ran, what it did, and what it was allowed to do. No upload, no account, no telemetry.",
+    "windows": {
+      "nsis": {
+        "installMode": "both",
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "installer/header.bmp",
+        "sidebarImage": "installer/sidebar.bmp",
+        "startMenuFolder": "OpenConvert",
+        "languages": [
+          "English",
+          "Italian",
+          "German",
+          "French",
+          "Spanish"
+        ],
+        "displayLanguageSelector": false,
+        "compression": "lzma",
+        "installerHooks": "installer/hooks.nsh"
+      },
+      "wix": {
+        "language": "en-US"
+      }
+    },
+    "linux": {
+      "deb": {
+        "section": "utils",
+        "priority": "optional"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.plist",
+      "dmg": {
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        },
+        "appPosition": {
+          "x": 180,
+          "y": 180
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 180
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,140 @@
+---
+/**
+ * Every tool in the menu, named and explained in one line each.
+ *
+ * This replaced a four-tab carousel of screenshots whose bullet lists were
+ * authored prose about the tools rather than the tools themselves — which is
+ * why it could say "eleven tools" while the product shipped twenty, and why
+ * three of the PDF tools that landed in this release appeared nowhere on the
+ * site. The names come from `all_tools()` through scripts/export-tools.mjs.
+ * Only the sentence after each name is written by hand.
+ *
+ * A tool with no sentence here still renders, with its name and nothing else.
+ * That is the correct failure: a missing description is a writing job, and it
+ * is visible rather than silent.
+ */
+import toolData from '../data/tools.json';
+
+type Tool = {
+  id: string;
+  category: string;
+  title: string;
+  advertised: boolean;
+  previewOnly: boolean;
+  multiInput: boolean;
+  needsModel: boolean;
+};
+
+const tools = (toolData.tools as Tool[]).filter((t) => t.advertised);
+
+/** One line each. What it does, not why it is good. */
+const says: Record<string, string> = {
+  'image-remove-background':
+    'Cuts the subject out and leaves the rest transparent, matted on your own machine.',
+  'image-upscale': 'Enlarges two or four times over without the softness that usually comes with it.',
+  'image-invert': 'Flips every colour to its opposite.',
+  'image-greyscale': 'Drops the colour and keeps the tone.',
+  'image-compress':
+    'Makes the file smaller at a quality you choose. The format does not change; only the size does.',
+  'image-pick': 'Reads the exact colour of any pixel, magnified so you can see which one you are taking.',
+  'image-ocr': 'Finds the words in a screenshot or a scan and hands them back as text.',
+
+  'pdf-compress':
+    'Deflates the streams a producer left uncompressed and drops the document metadata. Nothing is re-encoded, so nothing is lost.',
+  'pdf-extract': 'Keeps the pages you name and writes them out as their own document.',
+  'pdf-remove': 'The same operation inverted: name the pages to lose rather than the ones to keep.',
+  'pdf-rotate': 'Turns pages a quarter of the way round in either direction, or all the way over.',
+  'pdf-crop': 'Trims the margins, asked for in points off each edge rather than as a coordinate box.',
+  'pdf-unlock':
+    'Removes a password you already know. There is no cracking here and no empty-password probe.',
+  'pdf-protect': 'Locks the document with AES-256, and an owner password if you want a second one.',
+  'pdf-split': 'Breaks one document into several, every so many pages or at ranges you name.',
+  'pdf-merge': 'Joins documents end to end, hyperlinks intact.',
+  'pdf-reorder': 'Puts the pages in the order you give.',
+  'pdf-stamp':
+    'Places a signature image on a page. The receipt records it as a stamped image, because that is what it is.',
+
+  'audio-denoise': 'Takes the hiss and the room out of a speech recording.',
+  'audio-transcribe': 'Turns what is said into text you can read, search and save.',
+};
+
+/* The order the app's own menu uses (ToolsMenu.svelte's ORDER). Video is
+   absent because its two tools are dispatchable but unadvertised, so the app
+   shows no Video heading either. */
+const GROUPS = [
+  { id: 'image', label: 'Images' },
+  { id: 'pdf', label: 'PDFs and documents' },
+  { id: 'audio', label: 'Audio' },
+];
+
+const groups = GROUPS.map((g) => ({
+  ...g,
+  tools: tools.filter((t) => t.category === g.id),
+})).filter((g) => g.tools.length > 0);
+---
+<div class="tool-list">
+  {groups.map((g) => (
+    <section class="tl-group">
+      <h3 class="tl-cat">{g.label}</h3>
+      <ul class="tl-items">
+        {g.tools.map((t) => (
+          <li class="tl-item">
+            <p class="tl-line">
+              <strong class="tl-name">{t.title}</strong>
+              {says[t.id] && <span class="tl-says"> {says[t.id]}</span>}
+            </p>
+            {t.needsModel && <span class="tl-tag">needs a model</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</div>
+
+<style>
+  .tool-list { display: grid; gap: var(--s-7); }
+
+  .tl-group { display: grid; gap: var(--s-4); }
+  .tl-cat {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .tl-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    /* Two columns where there is room for two; the tools are short entries and
+       a single 20-item column is a scroll rather than a list you can take in. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+
+  .tl-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-4) var(--s-5);
+    background: var(--surface-base);
+  }
+  .tl-line { margin: 0; font-size: var(--fs-small); line-height: 1.55; }
+  .tl-name { font-weight: var(--fw-strong); letter-spacing: -0.012em; color: var(--text-primary); }
+  .tl-says { color: var(--text-secondary); }
+
+  .tl-tag {
+    flex: none;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+</style>

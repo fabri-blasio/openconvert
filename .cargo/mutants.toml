@@ -1,0 +1,21 @@
+# Mutation testing runs the WHOLE workspace's tests, not the mutated package's.
+#
+# Default cargo-mutants behaviour is `cargo test --package=<mutated package>`.
+# That is wrong for this repo, and it was silently wrong: mutating
+# `openconvert-run::worker_client` left 20 mutants alive, including
+#
+#     Worker::run -> Ok((vec![], vec![]))
+#
+# which is a host reporting success having converted nothing. Six tests cover
+# that function -- they live in `crates/engines/oc-images/tests/`, because that
+# is the only package where `CARGO_BIN_EXE_oc-images` guarantees the binary
+# exists, and package-scoped runs never executed them.
+#
+# The shape recurs throughout this design. `openconvert-sandbox` holds invariants
+# that `openconvert-run` and the workers exercise; `openconvert-os` holds syscalls
+# whose only realistic callers are elsewhere. Scoring a crate against its own
+# tests measures the wrong thing whenever the boundary is the point.
+#
+# Slower, and correct. A mutation score that excludes the tests which actually
+# exercise the code is not a weaker measurement, it is a misleading one.
+test_workspace = true

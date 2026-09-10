@@ -1,0 +1,230 @@
+{
+  "generated_by": "scripts/export-tools.mjs from crates/openconvert-run/src/tools.rs",
+  "tools": [
+    {
+      "id": "image-remove-background",
+      "category": "image",
+      "title": "Remove background",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": true
+    },
+    {
+      "id": "image-upscale",
+      "category": "image",
+      "title": "Upscale",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": true
+    },
+    {
+      "id": "image-invert",
+      "category": "image",
+      "title": "Invert colours",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "image-greyscale",
+      "category": "image",
+      "title": "Black and white",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "image-compress",
+      "category": "image",
+      "title": "Compress",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-text",
+      "category": "pdf",
+      "title": "Extract text",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-compress",
+      "category": "pdf",
+      "title": "Compress",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "image-pick",
+      "category": "image",
+      "title": "Colour picker",
+      "advertised": true,
+      "previewOnly": true,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "audio-denoise",
+      "category": "audio",
+      "title": "Remove background noise",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": true
+    },
+    {
+      "id": "audio-transcribe",
+      "category": "audio",
+      "title": "Transcribe to text",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": true
+    },
+    {
+      "id": "pdf-extract",
+      "category": "pdf",
+      "title": "Extract pages",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-remove",
+      "category": "pdf",
+      "title": "Remove pages",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-rotate",
+      "category": "pdf",
+      "title": "Rotate",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-crop",
+      "category": "pdf",
+      "title": "Crop",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-unlock",
+      "category": "pdf",
+      "title": "Remove password",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-protect",
+      "category": "pdf",
+      "title": "Password",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-split",
+      "category": "pdf",
+      "title": "Split",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-merge",
+      "category": "pdf",
+      "title": "Merge documents",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": true,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-reorder",
+      "category": "pdf",
+      "title": "Modify pages",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "pdf-stamp",
+      "category": "pdf",
+      "title": "Sign",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "image-compose",
+      "category": "image",
+      "title": "Combine edits",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "image-ocr",
+      "category": "image",
+      "title": "Read text in image",
+      "advertised": true,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": true
+    },
+    {
+      "id": "pdf-compose",
+      "category": "pdf",
+      "title": "Compose",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": true,
+      "needsModel": false
+    },
+    {
+      "id": "video-trim",
+      "category": "video",
+      "title": "Trim clip",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": false,
+      "needsModel": false
+    },
+    {
+      "id": "video-concat",
+      "category": "video",
+      "title": "Join clips",
+      "advertised": false,
+      "previewOnly": false,
+      "multiInput": true,
+      "needsModel": false
+    }
+  ]
+}

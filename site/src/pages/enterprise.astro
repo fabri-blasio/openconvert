@@ -1,0 +1,203 @@
+---
+/**
+ * Enterprise — short on purpose.
+ *
+ * The people this page is for have already decided the tool is interesting and
+ * are now asking one question: what does it take to run this across a fleet,
+ * and who answers the phone. So it says what is on offer, what it costs
+ * (nothing, for the software), and how to start the conversation. No pricing
+ * table, no tiers, no "request a demo" funnel — the product is free and the
+ * download link is two clicks away on every page.
+ */
+import Base from '../layouts/Base.astro';
+import Shot from '../components/Shot.astro';
+
+/** What organisations actually ask for, in the order they ask. */
+const offers = [
+  {
+    title: 'Deployment and policy',
+    body:
+      'MSI and Group Policy templates, fleet-wide defaults for the sandbox, output ' +
+      'destinations and the revocation check, and a build with the network call ' +
+      'compiled out if your policy needs that.',
+  },
+  {
+    title: 'Attested builds',
+    body:
+      'Builds produced from a tagged commit with the SBOM, the toolchain and the ' +
+      'checksums you can reproduce yourself, signed for your own allowlist.',
+  },
+  {
+    title: 'Support with a clock on it',
+    body:
+      'A named response time, a route to an engineer rather than a queue, and a ' +
+      'say in what gets fixed first.',
+  },
+  {
+    title: 'Integration',
+    body:
+      'The CLI is the whole product without a window: it exits non-zero, prints ' +
+      'JSON, and writes a receipt per job. We will help you wire it into an ' +
+      'ingestion pipeline, a scanner, or your own front end.',
+  },
+  {
+    title: 'Compliance evidence',
+    body:
+      'The receipt already records the engine, the operation class, the limits, the ' +
+      'confinement that engaged and the hash of the bytes read. We will map that ' +
+      'onto whatever your auditor asks for.',
+  },
+  {
+    title: 'Something not on this list',
+    body:
+      'OpenConvert is Apache-2.0 and the engine layer is in the repository. If you ' +
+      'need it to do something it does not do, that is a conversation rather than ' +
+      'a licence negotiation.',
+  },
+];
+
+const facts = [
+  ['Licence', 'Apache-2.0 — commercial use, modification and redistribution included'],
+  ['Per-seat cost', 'None. There is no paid tier and no feature gating'],
+  ['Data leaving the machine', 'No data ever leaves your machine, everything is processed locally'],
+  [
+    'Air-gapped install',
+    'The only internet requests are for model downloads and model updates, which can be disabled',
+  ],
+];
+---
+<Base
+  title="Enterprise — OpenConvert"
+  description="Deploy OpenConvert across a fleet: policy templates, attested builds, support with a response time, and integration help. The software stays free and Apache-2.0."
+  path="/enterprise">
+
+  <!-- ══════════ 1 · THE PITCH ══════════ -->
+  <section class="head">
+    <div class="wrap">
+      <div class="head-grid">
+        <div class="stack stack-5 head-copy">
+          <h1 class="hero-title">Run it across the whole company.</h1>
+          <p class="lede hero-lede">
+            The software is free and stays free. What organisations buy is
+            everything around it: deployment, attested builds, a response time,
+            and someone to talk to.
+          </p>
+          <div class="row cta-row">
+            <a href="/contact" class="btn btn-primary btn-lg">Talk to us</a>
+            <a href="/download" class="small">Or just try it →</a>
+          </div>
+        </div>
+        <Shot
+          id="receipt-open"
+          hero
+          alt="A OpenConvert receipt expanded: engine and version, operation class, sandbox profile, limits, the hash of the bytes read, and the network calls made."
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 2 · THE FOUR FACTS ══════════ -->
+  <section class="band">
+    <div class="wrap">
+      <dl class="facts">
+        {facts.map(([k, v]) => (
+          <div class="fact">
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <!-- ══════════ 3 · WHAT WE DO ══════════ -->
+  <section>
+    <div class="wrap stack stack-7">
+      <div class="sec-head stack stack-3">
+        <h2>What we take on.</h2>
+        <p class="lede">Pick the ones you need; ignore the rest.</p>
+      </div>
+
+      <ul class="offers">
+        {offers.map((o) => (
+          <li class="offer stack stack-2">
+            <h3>{o.title}</h3>
+            <p class="small">{o.body}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════ 4 · THE ASK ══════════ -->
+  <section class="band">
+    <div class="wrap stack stack-5 close">
+      <h2>Tell us what you are trying to do.</h2>
+      <p class="lede">
+        One email, no qualification steps, and an answer within two business
+        days. If the honest answer is that you do not need us, we will say so.
+      </p>
+      <a href="/contact" class="btn btn-primary btn-lg">Start the conversation</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  section { border-top: 0; }
+
+  .head { padding-block: clamp(var(--s-7), 6vw, var(--s-9)) var(--s-8); }
+  .head-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(var(--s-6), 5vw, var(--s-8));
+    align-items: center;
+  }
+  @media (max-width: 900px) { .head-grid { grid-template-columns: 1fr; } }
+  .head-copy { max-width: 46ch; }
+  .cta-row { gap: var(--s-5); }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-5);
+    margin: 0;
+  }
+  @media (max-width: 900px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .facts { grid-template-columns: 1fr; } }
+  .fact dt {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .fact dd {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-small);
+    color: var(--text-primary);
+  }
+
+  .sec-head { text-align: center; align-items: center; }
+  .sec-head h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); letter-spacing: -0.028em; }
+
+  .offers {
+    list-style: none; margin: 0; padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+  @media (max-width: 900px) { .offers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 620px) { .offers { grid-template-columns: 1fr; } }
+  .offer {
+    padding: var(--s-5);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    background: var(--surface-base);
+  }
+  .offer h3 { font-size: var(--fs-title); letter-spacing: -0.015em; }
+  .offer .small { color: var(--text-secondary); }
+
+  .close { text-align: center; align-items: center; }
+  .close h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); letter-spacing: -0.028em; }
+  .close .lede { max-width: 54ch; }
+</style>

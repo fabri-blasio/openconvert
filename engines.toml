@@ -1,0 +1,183 @@
+# Native engines: licence and LINKAGE. One of three licence surfaces.
+#
+# CI asserts every engine referenced in code appears here. Vacuous until week
+# 15, when the first native engine lands -- switched on from week 1 deliberately,
+# because a gate that fires the moment the first engine is added costs nothing
+# to have waiting, and a gate added later is a gate someone has to remember.
+#
+# ---------------------------------------------------------------------------
+# WHY `link_mode` IS A FIELD AND NOT A COMMENT
+# ---------------------------------------------------------------------------
+# v0.5 recorded linkage as "subprocess vs linked" and concluded no LGPL
+# obligation was owed because "the engines are separate executables". The
+# subprocess boundary is real and it is in the WRONG PLACE: it sits between
+# openconvert-run and oc-images, while libheif sits INSIDE oc-images, linked. The
+# LGPL cares about the boundary between the library and whatever contains it.
+#
+# What actually discharges the obligation is dynamic linking: each LGPL engine
+# ships as its own .dll/.so/.dylib and a user can replace it. CI fails any
+# engine whose licence is LGPL and whose link_mode is not "dynamic".
+#
+#   linkage   = subprocess | linked-into-worker | linked-into-host
+#   link_mode = dynamic | static
+#
+# A packaging consequence that costs a week if discovered late: shared libraries
+# are opened by the loader INSIDE the sandbox, under the container's identity.
+# On Windows they must be readable by the AppContainer SID or the worker fails
+# before main() runs, with a loader error naming a missing dependency rather
+# than a permission problem (03 section 5.3).
+
+# ---------------------------------------------------------------------------
+# WHY GPL IS REFUSED OUTRIGHT AND NOT GIVEN A link_mode
+# ---------------------------------------------------------------------------
+# Two licence surfaces existed and neither covered a GPL NATIVE library.
+# deny.toml bars copyleft from the Rust dependency tree; the LGPL rule above
+# checks link mode, not licence class. A GPL .lib passes both.
+#
+# That is not hypothetical. `vcpkg install libheif` -- the obvious command --
+# installs x265 (GPL-2.0) by default, because libheif's default feature set is
+# ["hevc"] and `hevc` means HEVC *encoding* via x265. Decoding HEIC needs only
+# libde265. The flagship heic -> jpg conversion needs no GPL code at all, and
+# the default install brings it anyway.
+#
+# `cargo xtask engines` now refuses GPL and AGPL whatever the linkage. No
+# link_mode discharges the GPL for a work we distribute, and offering one as an
+# option invites someone to pick it.
+
+[[engine]]
+name       = "libheif"
+version    = "1.23.1"
+licence    = "LGPL-3.0"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-images"
+source     = "https://github.com/strukturag/libheif"
+enabled    = false
+
+[[engine]]
+# The HEIC DECODER. This is the one heic -> jpg actually needs.
+name       = "libde265"
+version    = "1.1.1"
+licence    = "LGPL-3.0"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-images"
+source     = "https://github.com/strukturag/libde265"
+enabled    = false
+
+[[engine]]
+# Camera RAW decode. vcpkg's copyright metadata declares this dual licence,
+# NOT LGPL-3.0-or-later as first assumed -- recorded honestly; dynamic
+# linkage discharges either way.
+name       = "libraw"
+version    = "0.22.1"
+licence    = "LGPL-2.1-only OR CDDL-1.0"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-images"
+source     = "https://github.com/LibRaw/LibRaw"
+enabled    = false
+
+[[engine]]
+# ICC profile transforms for embedded colour management (MIT, so linkage
+# choice is packaging mechanism, not obligation).
+name       = "lcms2"
+version    = "2.19.1"
+licence    = "MIT"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-images"
+source     = "https://github.com/mm2/Little-CMS"
+enabled    = false
+
+[[engine]]
+# MP3 encoding. vcpkg port is `mp3lame` (no `lame` port exists).
+name       = "libmp3lame"
+version    = "3.100"
+licence    = "LGPL-3.0"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-audio"
+source     = "https://lame.sourceforge.io"
+enabled    = true
+
+[[engine]]
+# Opus encoding (Ogg container written by our own code).
+name       = "libopus"
+version    = "1.5.2"
+licence    = "BSD-3-Clause"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-audio"
+source     = "https://github.com/xiph/opus"
+enabled    = true
+
+# NOT DECLARED, DELIBERATELY: x265 (GPL-2.0).
+#
+# It is the HEVC *encoder*, pulled in by libheif's default `hevc` feature. It
+# was built on a development machine before anyone checked its licence, which is
+# exactly the accident the gate above now catches. Build with
+# `vcpkg install libheif[core]` -- no hevc feature -- and it never appears.
+#
+# Writing HEIC is a separate decision with its own licence consequences, and it
+# has a fraction of the demand that reading HEIC does.
+
+[[engine]]
+# PDF page rendering. The upstream binary distribution ships only pdfium.dll;
+# build.rs links against a minimal import library generated from its exports,
+# so the linkage is dynamic by construction rather than by choice. Apache-2.0
+# imposes no relinking obligation -- the row exists because NOTICE is generated
+# from this file, and a shipped DLL absent from the attribution table is an
+# attribution gap regardless of how permissive its licence is.
+name       = "pdfium"
+version    = "7215"
+licence    = "Apache-2.0"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-pdf"
+source     = "https://pdfium.googlesource.com/pdfium/"
+enabled    = false
+
+[[engine]]
+# ONNX Runtime: the inference engine behind the oc-ai model workers
+# (PaddleOCR, Whisper, u2netp...). MIT, so linkage choice is packaging
+# mechanism rather than obligation -- the row exists because NOTICE is
+# generated from this table and a shipped DLL absent from attribution is a
+# gap. Dynamic link keeps the replaceable-library rule uniform across every
+# native component.
+name       = "onnxruntime"
+version    = "1.20.1"
+licence    = "MIT"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-ai"
+source     = "https://github.com/microsoft/onnxruntime"
+enabled    = false
+
+# NOT DECLARED, DELIBERATELY: FFmpeg (the Video module).
+#
+# Every row in this file is a library this project LINKS AND SHIPS, which is
+# what makes NOTICE an attribution of what reaches the user's disk from us.
+# The Video module is neither: `02-FEATURES` §3 keeps every transcoder out of
+# core, and `openconvert-run::video` runs the module as a separate binary the
+# user installs -- a system FFmpeg if they have one, otherwise a build they
+# fetch themselves.
+#
+# So there is nothing of FFmpeg's inside anything we distribute, no linkage,
+# and no relinking obligation. Attributing it here would claim we ship it.
+#
+# The module's own licence obligations travel with the module. What this
+# project owes is the honest statement above and the refusal that names it
+# when it is absent.
+
+[[engine]]
+# Shipped because libraw's DLL fails to load without it, not because anything
+# calls it directly. It reaches the user's disk either way, so it is attributed.
+name       = "zlib"
+version    = "1.3.1"
+licence    = "Zlib"
+linkage    = "linked-into-worker"
+link_mode  = "dynamic"
+worker     = "oc-images"
+source     = "https://github.com/madler/zlib"
+enabled    = false

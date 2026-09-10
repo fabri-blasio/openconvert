@@ -1,0 +1,212 @@
+/* ============================================================================
+   TOKENS — the single source of truth for the site's visual language.
+   Inherited verbatim from 07-DESIGN-SYSTEM.md. Do not invent values here.
+
+   Three divergences from the app, and only three (10-WEBSITE §6):
+     1. --brand          a hue the app is explicitly forbidden (07 §3.3)
+     2. type scale       16px body, not the app's 13px
+     3. --m-narrative    the web-only motion tier (10-WEBSITE §3)
+
+   Light palette is complete on bare :root. Dark redefines TOKENS ONLY.
+   ============================================================================ */
+
+/* ============================================================================
+   FONT — Inter, self-hosted, latin subset, variable weight.
+   One file (47 KB), one request to this origin, `font-display: swap` so text
+   never waits on it. The state glyphs (⌇ ✦ ⛨) are NOT in Inter by design —
+   they resolve through the mono stack, which the app gates the same way.
+   ============================================================================ */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-latin-var.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  /* ---- neutral ramp (07 §3.1) ---------------------------------------- */
+  --n-0:    #FFFFFF;
+  --n-50:   #FAFAFA;
+  --n-100:  #F4F4F5;
+  --n-200:  #E8E8EA;
+  --n-300:  #D4D4D6;
+  --n-400:  #A1A1A6;
+  --n-500:  #79797E;
+  --n-600:  #5A5A5F;
+  --n-700:  #3D3D42;
+  --n-800:  #2A2A2E;
+  --n-900:  #1D1D1F;
+
+  /* ---- semantic surfaces (07 §5) ------------------------------------- */
+  --surface-base:    var(--n-0);
+  --surface-raised:  var(--n-50);
+  --surface-sunken:  var(--n-100);
+
+  /* ---- text: opacity, never separate greys (07 §3.2) ------------------ */
+  --text-primary:    #1D1D1F;
+  --text-secondary:  rgba(29, 29, 31, 0.64);
+  --text-tertiary:   rgba(29, 29, 31, 0.40);
+  --text-disabled:   rgba(29, 29, 31, 0.24);
+
+  /* ---- hairlines, not borders (07 §5) -------------------------------- */
+  --hairline:        rgba(29, 29, 31, 0.11);
+  --hairline-strong: rgba(29, 29, 31, 0.20);
+
+  /* ---- accents: exactly two, both semantic (07 §3.3) ------------------ */
+  --accent-attention: #B4690E;
+  --accent-critical:  #C0392B;
+
+  /* ---- brand: site + icon only. NEVER in product chrome (07 §3.3) ----- */
+  --brand:      #2F6F6A;
+  --brand-soft: rgba(47, 111, 106, 0.10);
+  --brand-line: rgba(47, 111, 106, 0.32);
+  --brand-ink:  #FFFFFF;
+
+  /* ---- type ---------------------------------------------------------- */
+  --sans: 'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code",
+          "Roboto Mono", Menlo, Consolas, monospace;
+
+  --fs-caption:  0.75rem;
+  --fs-small:    0.85rem;
+  --fs-body:     1rem;
+  --fs-title:    1.06rem;
+  --fs-heading:  clamp(1.45rem, 3vw, 1.9rem);
+  --fs-display:  clamp(2.1rem, 5.2vw, 3.2rem);
+
+  /* The product-site display tier (13-SITE-REBUILD §7). One promise, set as
+     large as it deserves. The app has no use for this size and never gets it;
+     it exists on marketing pages, where the headline is the page. */
+  --fs-hero: clamp(2.6rem, 6.2vw, 4.4rem);
+
+  /* two weights only — a third is a hierarchy problem in disguise (07 §6.2) */
+  --fw-normal: 400;
+  --fw-strong: 600;
+
+  /* ---- space: 4px base (07 §7) --------------------------------------- */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px;
+
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-full: 999px;
+
+  --measure: 68ch;
+  --content: 1000px;
+
+  /* ---- section rhythm ------------------------------------------------
+     Twelve pages once carried twelve `section { padding-block: … }` rules
+     across five different steps, which is what inconsistent spacing looks
+     like in source. Two values, named for what they are:
+
+       --section-y        product pages. 128px on a wide screen is the
+                          whitespace 12-SITE-PAGES asks the layout to do the
+                          work with; it clamps down to 56px on a phone, where
+                          the same gap is just scrolling.
+       --section-y-tight  reference documents — legal, changelog. Someone
+                          reading these is looking something up, and generous
+                          air between sections turns a page you scan into a
+                          page you scroll. */
+  --section-y:       clamp(56px, 8vw, 128px);
+  --section-y-tight: clamp(40px, 4.5vw, 64px);
+
+  /* ---- screenshot elevation -----------------------------------------
+     THE FOURTH STATED DIVERGENCE from 07-DESIGN-SYSTEM (which prefers
+     translucency to shadows). That rule governs app chrome: panes over panes,
+     where a shadow reads as a second window. A screenshot on a marketing page
+     is a photograph of the product sitting on the page, and with no shadow it
+     reads as a flat diagram of the product instead. It applies to `.shot`
+     only, and nothing else on this site may grow one. */
+  --shadow-shot: 0 1px 2px rgba(0,0,0,0.05), 0 18px 48px -12px rgba(0,0,0,0.20);
+
+  /* ---- motion (07 §8 + the web-only narrative tier) ------------------- */
+  --m-micro:     120ms;
+  --m-standard:  220ms;
+  --m-large:     340ms;
+  --m-narrative: 5600ms;
+  --curve: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Dark: the ramp INVERTS rather than mirrors (07 §3.1).
+   Guarded so an explicit light choice beats a dark OS. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --n-0:    #000000;
+    --n-50:   #0A0A0A;
+    --n-100:  #141414;
+    --n-200:  #1F1F1F;
+    --n-300:  #2A2A2A;
+    --n-400:  #3D3D3D;
+    --n-500:  #5A5A5A;
+    --n-600:  #7C7C7C;
+    --n-700:  #A3A3A3;
+    --n-800:  #C9C9C9;
+    --n-900:  #EDEDED;
+
+    --surface-base:   #0A0A0A;
+    --surface-raised: #141414;
+    --surface-sunken: #1F1F1F;
+
+    --text-primary:   #EDEDED;
+    --text-secondary: rgba(237, 237, 237, 0.64);
+    --text-tertiary:  rgba(237, 237, 237, 0.40);
+    --text-disabled:  rgba(237, 237, 237, 0.24);
+
+    --hairline:        rgba(255, 255, 255, 0.13);
+    --hairline-strong: rgba(255, 255, 255, 0.24);
+
+    --accent-attention: #E0A458;
+    --accent-critical:  #E5766A;
+
+    --brand:      #6FB3AC;
+    --brand-soft: rgba(111, 179, 172, 0.12);
+    --brand-line: rgba(111, 179, 172, 0.34);
+    --brand-ink:  #0A0A0A;
+
+    /* A drop shadow is invisible on a near-black page. Dark mode lifts a
+       screenshot with a hairline ring and a wide, soft halo instead. */
+    --shadow-shot: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 24px 60px -16px rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* The toggle must win in the other direction too. */
+:root[data-theme="dark"] {
+  --n-0:    #000000;
+  --n-50:   #0A0A0A;
+  --n-100:  #141414;
+  --n-200:  #1F1F1F;
+  --n-300:  #2A2A2A;
+  --n-400:  #3D3D3D;
+  --n-500:  #5A5A5A;
+  --n-600:  #7C7C7C;
+  --n-700:  #A3A3A3;
+  --n-800:  #C9C9C9;
+  --n-900:  #EDEDED;
+
+  --surface-base:   #0A0A0A;
+  --surface-raised: #141414;
+  --surface-sunken: #1F1F1F;
+
+  --text-primary:   #EDEDED;
+  --text-secondary: rgba(237, 237, 237, 0.64);
+  --text-tertiary:  rgba(237, 237, 237, 0.40);
+  --text-disabled:  rgba(237, 237, 237, 0.24);
+
+  --hairline:        rgba(255, 255, 255, 0.13);
+  --hairline-strong: rgba(255, 255, 255, 0.24);
+
+  --accent-attention: #E0A458;
+  --accent-critical:  #E5766A;
+
+  --brand:      #6FB3AC;
+  --brand-soft: rgba(111, 179, 172, 0.12);
+  --brand-line: rgba(111, 179, 172, 0.34);
+  --brand-ink:  #0A0A0A;
+
+  /* A drop shadow is invisible on a near-black page: the toggle branch gets
+     the same ring-and-halo the media query does. */
+  --shadow-shot: 0 0 0 1px rgba(255,255,255,0.09), 0 24px 60px -16px rgba(0,0,0,0.9);
+}

@@ -1,0 +1,161 @@
+---
+/**
+ * About — deliberately the shortest page on the site.
+ *
+ * Four things a person wants before they trust a binary with their contracts:
+ * why it exists, who makes it, what the licence lets them do, and whose code is
+ * actually reading the file. Nothing else belongs here.
+ */
+import Base from '../layouts/Base.astro';
+import Shot from '../components/Shot.astro';
+
+/* Engines credited here, high on the page, because upstream projects read how
+   they are described — and so does everyone who was ever told "built on open
+   source" without a single name attached. Link modes matter: subprocess for
+   copyleft tools, dynamic linking inside the app's own process otherwise. */
+const engines = [
+  ['FFmpeg / libav*', 'audio · video', 'LGPL-2.1+', 'dynamically linked'],
+  ['libvips', 'images', 'LGPL-2.1+', 'dynamically linked'],
+  ['LibreOffice (headless)', 'documents', 'MPL-2.0', 'separate process'],
+  ['Pandoc', 'markup', 'GPL-2+', 'separate process'],
+  ['Calibre ebook-convert', 'ebooks', 'GPL-3', 'separate process'],
+  ['pdfium', 'pdf', 'BSD-3', 'dynamically linked'],
+  ['lcms2', 'colour', 'MIT', 'dynamically linked'],
+  ['image-rs · Symphonia', 'pure-Rust paths', 'Apache-2.0 / MPL-2.0', 'in-process'],
+  ['ONNX Runtime', 'inference', 'MIT', 'dynamically linked'],
+];
+
+const licence = [
+  'Use it commercially. Sell things made with it.',
+  'Modify it, fork it, ship your fork.',
+  'Patents are granted with the code.',
+  'No warranty; the licence text is the contract.',
+];
+---
+<Base
+  title="About — OpenConvert"
+  description="Why OpenConvert exists, who builds it, the Apache-2.0 licence in plain words, and every engine it stands on."
+  path="/about">
+
+  <!-- ══════════ 1 · WHY ══════════ -->
+  <section class="head">
+    <div class="wrap stack stack-5 head-inner">
+      <h1 class="hero-title">A tool you don't have to take on faith.</h1>
+      <p class="lede hero-lede">
+        In March 2025 the FBI warned people away from online file converters; many
+        of them were malware. Do you want your confidential files uploaded to
+        somebody else's server? We did not, so we built the open-source tool we
+        wanted to use.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════ 2 · THE PROOF ══════════ -->
+  <section class="band">
+    <div class="wrap">
+      <div class="split">
+        <div class="stack stack-4 split-copy">
+          <span class="eyebrow">complete privacy</span>
+          <h2>No file escapes your computer.</h2>
+          <p class="lede">
+            Every conversion runs locally; no file is ever sent to a server.
+            Optional AI models can be downloaded to unlock the advanced tools.
+          </p>
+          <p><a href="/features#ai">What each model does →</a></p>
+        </div>
+        <Shot id="settings-models" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 3 · WHO, LICENCE ══════════ -->
+  <section>
+    <div class="wrap two">
+      <div class="stack stack-4">
+        <span class="eyebrow">who</span>
+        <h2>Clura srls.</h2>
+        <p class="small">
+          A small company in Italy, built by Fabrizio Blasio, an aerospace
+          engineering student, with the goal of making privacy-focused software
+          that solves everyday problems. Company details on the
+          <a href="/imprint">imprint</a>; anything else,
+          <a href="/contact">contact</a>.
+        </p>
+      </div>
+
+      <div class="stack stack-4">
+        <span class="eyebrow">licence</span>
+        <h2>Apache-2.0, in plain words.</h2>
+        <ul class="tight">
+          {licence.map((line) => <li>{line}</li>)}
+        </ul>
+        <p class="small">
+          The binary is free forever with no feature gates. Revenue comes from what
+          organisations need around running it: SLAs, attested builds, fleet policy.
+          Nothing needed to convert a file is paid, and the engine is never
+          relicensed. If you are an enterprise looking to integrate it,
+          <a href="/enterprise">talk to us</a>. <a href="/licences">Full text →</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 4 · ATTRIBUTION ══════════ -->
+  <section class="band">
+    <div class="wrap stack stack-5">
+      <div class="stack stack-2">
+        <span class="eyebrow">attribution</span>
+        <h2>Built on their work.</h2>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Engine</th><th>Domain</th><th>Licence</th><th>Link mode</th></tr></thead>
+          <tbody>
+            {engines.map(([name, domain, lic, mode]) => (
+              <tr>
+                <td><strong>{name}</strong></td>
+                <td>{domain}</td>
+                <td>{lic}</td>
+                <td>{mode}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="caption">
+        Models carry their own registry with hashes and commercial-use status:
+        <a href="/licences">the table →</a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  section { border-top: 0; }
+  .head { padding-block: clamp(var(--s-7), 6vw, var(--s-9)) var(--s-8); }
+  .head-inner { align-items: center; text-align: center; }
+  .head-inner .hero-lede { max-width: 62ch; }
+  h2 { font-size: var(--fs-heading); }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(var(--s-6), 5vw, var(--s-8));
+    align-items: center;
+  }
+  .split-copy { max-width: 44ch; }
+  @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+
+  .two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(var(--s-6), 5vw, var(--s-8));
+  }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+
+  .tight {
+    margin: 0; padding-left: 1.2em;
+    display: grid; gap: 6px;
+    font-size: var(--fs-small); color: var(--text-secondary);
+  }
+</style>

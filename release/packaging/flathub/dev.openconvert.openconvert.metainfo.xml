@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata — OpenConvert, for Flathub.
+
+  Validate before submitting:
+    appstreamcli validate packaging/flathub/dev.openconvert.openconvert.metainfo.xml
+    flatpak run org.flathub.flatpak-external-data-checker  # for the manifest
+
+  A note on the sandbox declarations below, because they read oddly for a
+  security product: the Flatpak permissions describe what the APPLICATION may
+  do. They are not the confinement this program is about. Each conversion
+  engine runs in its own OS sandbox INSIDE the app — Landlock path rules,
+  a seccomp-bpf filter denying AF_INET and AF_INET6 at socket(2), an empty
+  network namespace and cgroup v2 limits — and that boundary sits between the
+  worker and the engine, several layers below anything Flatpak controls.
+
+  The application requests no network permission at all, which is the part a
+  reviewer should check first.
+-->
+<component type="desktop-application">
+  <id>dev.openconvert.openconvert</id>
+
+  <name>OpenConvert</name>
+  <summary>Convert any file into anything, on your machine</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+
+  <developer id="dev.openconvert">
+    <name>The OpenConvert Authors</name>
+  </developer>
+
+  <description>
+    <p>
+      OpenConvert converts files on your own machine. Around 20 formats across
+      images, audio, video, documents, archives and tabular data, with the plan
+      shown before the conversion runs: which engine, which steps, lossless or
+      lossy, and how long it takes.
+    </p>
+    <p>
+      Every third-party engine runs inside an operating-system sandbox. On
+      Linux that is Landlock path rules, a seccomp-bpf filter that denies
+      AF_INET and AF_INET6 at socket(2), an empty network namespace, cgroup v2
+      memory and CPU limits, and no_new_privs. Engines receive open file
+      descriptors and never a filename, so a filename cannot be an injection
+      vector. A machine that cannot deny an engine the network does not convert;
+      there is no configuration key that lowers that.
+    </p>
+    <p>
+      Nothing you already have is overwritten. Every file is created with
+      O_EXCL, no truncating open exists anywhere in the codebase, and a source
+      scan fails the build if one appears. An archive member named after a file
+      you already have lands beside it with a suffix.
+    </p>
+    <p>
+      Every output carries a receipt: the engine and its version, the operation
+      class, the limits applied, the confinement the worker read back about
+      itself, the metadata removed, and the hash of the bytes actually read.
+    </p>
+    <p>
+      There is no telemetry, no account and no upload. One network call exists:
+      a weekly signed manifest carrying the engine revocation list, sending no
+      identifier, no version and no query. It is previewable in settings and can
+      be switched off.
+    </p>
+    <p>
+      On-device AI for text recognition, transcription and background removal is
+      an optional separate download of about 500 MB. Conversion works in full
+      without it, and every model is permissively licensed and hash-pinned.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">dev.openconvert.openconvert.desktop</launchable>
+
+  <url type="homepage">https://openconvert.dev</url>
+  <url type="bugtracker">https://github.com/fabri-blasio/cloudconvert/issues</url>
+  <url type="help">https://openconvert.dev/docs</url>
+  <url type="vcs-browser">https://github.com/fabri-blasio/cloudconvert</url>
+  <url type="contact">https://openconvert.dev/security</url>
+
+  <categories>
+    <category>Utility</category>
+    <category>Graphics</category>
+    <category>AudioVideo</category>
+  </categories>
+
+  <keywords>
+    <keyword>converter</keyword>
+    <keyword>convert</keyword>
+    <keyword>transcode</keyword>
+    <keyword>image</keyword>
+    <keyword>audio</keyword>
+    <keyword>video</keyword>
+    <keyword>pdf</keyword>
+    <keyword>archive</keyword>
+    <keyword>heic</keyword>
+    <keyword>offline</keyword>
+  </keywords>
+
+  <provides>
+    <binary>openconvert</binary>
+  </provides>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+
+  <content_rating type="oars-1.1" />
+
+  <!--
+    Declared so the Flathub listing shows what the app asks for. `filesystems`
+    is the only one that is not `none`: the program has to read the file you
+    ask it to convert. Note the absence of any `network` permission.
+  -->
+  <recommends>
+    <internet>offline-only</internet>
+  </recommends>
+
+  <releases>
+    <release version="0.1.0" date="2026-08-24">
+      <description>
+        <p>First release.</p>
+        <ul>
+          <li>Images: PNG, JPEG, WebP, GIF, BMP, TIFF, HEIC, AVIF, JPEG XL and SVG.</li>
+          <li>Camera RAW decode for CR3, NEF, ARW and DNG.</li>
+          <li>Audio: WAV, FLAC, MP3 and Ogg, with FLAC and WAV round-tripping bit-identically at their own sample width.</li>
+          <li>Video containers: MKV, WebM and MP4, copying streams byte-for-byte when the codecs carry.</li>
+          <li>Documents: PDF page rendering. Archives: ZIP and TAR.</li>
+          <li>Tabular: CSV and JSON, with values kept as literal text.</li>
+          <li>Landlock and seccomp-bpf confinement, verified engaged by the workers themselves rather than claimed by the host.</li>
+          <li>A receipt beside every output, and a batch journal that resumes an interrupted run.</li>
+        </ul>
+      </description>
+      <url type="details">https://github.com/fabri-blasio/cloudconvert/releases/tag/v0.1.0</url>
+    </release>
+  </releases>
+</component>

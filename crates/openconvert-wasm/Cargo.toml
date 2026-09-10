@@ -1,0 +1,39 @@
+[package]
+name = "openconvert-wasm"
+description = "The browser executor: detect and plan in the page, from the same pure core the desktop app routes with."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+publish = false
+
+[lib]
+# A raw cdylib with a hand-written C ABI, and NO wasm-bindgen.
+#
+# wasm-bindgen would be the obvious choice and it is the wrong one here. It
+# generates a JS shim of its own, adds a build-time toolchain the site would
+# have to install, and pulls a dependency tree into an artifact whose entire
+# argument is that the page loads nothing it did not build. The surface this
+# needs is four functions and a byte buffer; that is smaller than the glue a
+# binding generator would write for it.
+crate-type = ["cdylib"]
+
+[dependencies]
+# `attest` is enabled here for exactly the reason 03 §7.4 documents: the browser
+# executor is the second of the two callers permitted to construct a
+# SandboxProfile from read-back, and the read-back it performs is the honest
+# one -- BrowserOrigin filesystem, CSP network, and no privilege drop, which
+# `strength()` caps at Reduced. A marketing surface that flattered its own
+# isolation would undermine the one claim the site exists to make.
+openconvert-core = { workspace = true, features = ["attest"] }
+
+[lints.clippy]
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+# The size profile lives at the WORKSPACE ROOT as [profile.wasm]: cargo ignores
+# a profile declared in a non-root manifest, silently, which is how this crate
+# spent its first build at opt-level 3 while claiming to be size-optimised.
+#
+#   cargo build -p openconvert-wasm --target wasm32-unknown-unknown --profile wasm

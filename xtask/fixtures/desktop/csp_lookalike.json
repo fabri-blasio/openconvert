@@ -1,0 +1,8 @@
+{
+  "comment": "NEGATIVE FIXTURE. This CSP is otherwise clean: default-src 'self', object-src 'none', no unsafe-*. The only defect is a host that starts with a permitted origin. A prefix-stripping check passes this file, which is why the check tokenises.",
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; object-src 'none'; connect-src 'self' http://ipc.localhost.evil.com"
+    }
+  }
+}

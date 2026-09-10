@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+
+/* Art. 2250 c.c.: company data a società must publish on its site. Fields
+   pending from the registry carry an em dash rather than a guess — a wrong
+   REA number is worse than a visible gap while the page is under review. */
+---
+<Base
+  title="Imprint — OpenConvert"
+  description="Company details for Clura srls, operator of openconvert.dev."
+  path="/imprint">
+
+  <div class="wrap narrow">
+    <section>
+      <span class="eyebrow">imprint · dati societari</span>
+      <h1>Clura srls</h1>
+
+      <dl class="imp">
+        <dt>Sede legale</dt><dd class="mono">—</dd>
+        <dt>Partita IVA</dt><dd class="mono">18314321003</dd>
+        <dt>REA</dt><dd class="mono">—</dd>
+        <dt>Capitale sociale versato</dt><dd class="mono">€ — i.v.</dd>
+        <dt>Registro imprese</dt><dd class="mono">— n. —</dd>
+        <dt>PEC</dt><dd><a href="mailto:clura@legalmail.it" class="mono">clura@legalmail.it</a></dd>
+        <dt>Email</dt><dd><a href="mailto:hello@openconvert.dev" class="mono">hello@openconvert.dev</a></dd>
+        <dt>Rappresentante legale</dt><dd>—</dd>
+      </dl>
+
+      <p class="caption" style="margin-top: var(--s-6)">
+        Published per Art. 2250 of the Italian Civil Code.
+        <a href="/contact">Contact</a> · <a href="/terms">Terms</a>.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .narrow { max-width: 620px; }
+  section { padding-block: var(--section-y-tight); }
+  h1 { font-size: clamp(1.7rem, 3.6vw, 2.3rem); font-weight: var(--fw-normal); }
+  .imp { display: grid; grid-template-columns: auto 1fr; gap: 10px var(--s-6); margin: var(--s-6) 0 0; }
+  dt { font-size: var(--fs-caption); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); align-self: baseline; }
+  dd { margin: 0; font-size: var(--fs-small); overflow-wrap: anywhere; }
+</style>

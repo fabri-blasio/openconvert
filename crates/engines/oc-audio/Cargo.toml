@@ -1,0 +1,62 @@
+[package]
+name = "oc-audio"
+description = "Audio conversion worker: symphonia decode, hound WAV, flacenc FLAC."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+publish = false
+
+[[bin]]
+name = "oc-audio"
+path = "src/main.rs"
+
+[dependencies]
+openconvert-worker = { path = "../openconvert-worker", version = "0.1.0" }
+
+# Decode: pure Rust (MPL-2.0), no `links` key. Permitted here because the
+# depcheck gate constrains `-run`'s graph, not the far side of the boundary --
+# that is the entire point of workers being separate binaries.
+#
+# Pinned to 0.5 deliberately. 0.6 rewrote the decoder API end to end
+# (GenericAudioBufferRef over planar AudioSpec, Probe::probe, Option<Packet>);
+# migrating is a tracked follow-up, not something to absorb invisibly while
+# wiring this worker's first lossless path.
+#
+# Features are the DECODE surface: wav/flac/mp3/ogg-vorbis were there from the
+# start; aac + alac + isomp4 add M4A (and friends) decode, mpa adds MPEG-1/2
+# elementary-stream decode. Every enabled feature is a format the route table
+# may honestly advertise decoding for.
+symphonia = { version = "0.5", default-features = false, features = [
+    "wav", "flac", "mp3", "ogg", "vorbis", "pcm",
+    "aac", "alac", "isomp4", "mpa",
+    "mkv",
+] }
+
+# Encode: WAV (Apache-2.0/MIT) and FLAC (Apache-2.0), both pure Rust. engines.toml
+# therefore lists no native audio engine yet: LAME and libopus arrive with their
+# linkage rows when MP3 and Opus output do, and until then an encoder we cannot
+# ship is a route the table must not advertise.
+hound   = "3.5"
+flacenc = "0.5"
+
+[lints.clippy]
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+[dev-dependencies]
+openconvert-sandbox = { workspace = true }
+serde_json        = { workspace = true }
+openconvert-core    = { workspace = true }
+
+# The fixtures build WAV/FLAC and verify FLAC decode independently of the
+# worker under test -- the round-trip test must not trust its own subject.
+hound   = "3.5"
+symphonia = { version = "0.5", default-features = false, features = [
+    "wav", "flac",
+] }
+
+# The HOST, as a dev-dependency of the worker -- same backwards-looking shape
+# as oc-images: `CARGO_BIN_EXE_oc-audio` exists only inside this package.
+openconvert-run = { workspace = true, features = ["test-support"] }

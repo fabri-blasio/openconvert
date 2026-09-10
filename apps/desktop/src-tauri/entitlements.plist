@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Entitlements for the OpenConvert host process under the hardened runtime.
+
+  THE HOST IS NOT SANDBOXED, AND THAT IS THE DESIGN. `03 §9` puts the trust
+  boundary between the host and the engines, not around the application: the
+  host reads the file the user pointed at, writes the output where the user
+  asked, and spawns one confined worker per engine. Putting the host inside the
+  App Sandbox would mean every path arriving through the CLI, a batch directory
+  or a recipe had to come back through Powerbox, which is a different product.
+
+  So the confinement that matters is applied to the CHILD, by
+  `openconvert-os::macos`, and this file exists to keep the host's own privileges
+  as small as a non-sandboxed process can be.
+
+  ⚠️ UNVERIFIED. Every macOS claim in this project is reasoning rather than
+  measurement (`docs/spec/TARGETS.md`), and that includes this file. It has
+  never been through `codesign`, `spctl` or a notarization submission. The
+  runbook that would settle it is the private macOS validation runbook.
+
+  What is deliberately ABSENT matters more than what is present:
+
+    com.apple.security.cs.disable-library-validation
+        Would let any unsigned dylib load into the host. Our engines are signed
+        with the same Team ID, so validation should pass without it. If a build
+        appears to need this, the correct fix is to sign the engine.
+
+    com.apple.security.cs.allow-unsigned-executable-memory
+    com.apple.security.cs.allow-dyld-environment-variables
+        Each removes a hardened-runtime protection outright. Neither has a
+        reason here.
+
+    com.apple.security.automation.apple-events
+        The app scripts nothing.
+-->
+<plist version="1.0">
+<dict>
+  <!--
+    WKWebView's JavaScript engine JITs. The web content runs in its own process
+    (com.apple.WebKit.WebContent) with its own entitlements, but the host is
+    what launches it, and a hardened-runtime host that cannot allow JIT is the
+    usual cause of a blank window on first launch.
+
+    This is the one protection knowingly relaxed, and it is relaxed for a
+    process that -- per the CSP in tauri.conf.json -- loads no remote script,
+    connects to no remote origin, and renders no remote frame.
+  -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+</dict>
+</plist>

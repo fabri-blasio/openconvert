@@ -1,0 +1,127 @@
+---
+/**
+ * "Missing a feature? We'll build it." — the pitch, and the live shortlist.
+ *
+ * The list is the top of `board.json`, which `scripts/export-board.mjs` writes
+ * from GitHub Discussions at build time. Votes are the 👍 and 👎 on the
+ * discussion itself, so this page holds no vote of its own and opens no
+ * connection when it loads — which is how `connect-src 'none'` stays true on
+ * every page of this site.
+ *
+ * When the board is empty the section says so and asks for the first idea. A
+ * shortlist of invented requests with invented vote counts would be the one
+ * thing this component must never render.
+ */
+import board from '../data/board.json';
+
+export interface Props {
+  /** How many to show here. The rest live on /community. */
+  limit?: number;
+}
+const { limit = 5 } = Astro.props as Props;
+
+type Idea = { number: number; title: string; tier: string; up: number; down: number; url: string };
+
+const ideas = (board.ideas as Idea[])
+  .filter((i) => i.tier !== 'shipped' && i.tier !== 'declined')
+  .slice(0, limit);
+
+---
+<div class="ask">
+  <div class="ask-copy stack stack-5">
+    <h2>Missing a feature? We'll build it.</h2>
+    <p class="lede">
+      You get to decide what we build next. Put your idea on the board, vote on
+      everyone else's, and the ones people actually want move up the list.
+    </p>
+    <div class="row ask-cta">
+      <a href={board.new_url} class="btn" rel="noopener">Add an idea</a>
+      <a href="/community" class="small">See the whole board →</a>
+    </div>
+  </div>
+
+  <div class="ask-list">
+    {ideas.length === 0 ? (
+      <div class="empty stack stack-3">
+        <p><strong>Nobody has asked for anything yet.</strong></p>
+        <p class="small">
+          The board is open and empty. Whatever you were about to install a
+          second tool for — put it here.
+        </p>
+        <p><a href={board.new_url} rel="noopener">Open the first idea →</a></p>
+      </div>
+    ) : (
+      <ul class="ideas">
+        {ideas.map((idea) => (
+          <li class="idea">
+            <a class="vote plain" href={idea.url} rel="noopener" aria-label={`${idea.up} for, ${idea.down} against`}>
+              <span class="arrow up" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="M8 3.5l5 6H3l5-6Z" fill="currentColor" /></svg>
+              </span>
+              <span class="score">{idea.up - idea.down}</span>
+              <span class="arrow down" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="M8 12.5l-5-6h10l-5 6Z" fill="currentColor" /></svg>
+              </span>
+            </a>
+            <a class="idea-title plain" href={idea.url} rel="noopener">{idea.title}</a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>
+
+<style>
+  .ask {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(var(--s-6), 5vw, var(--s-8));
+    align-items: center;
+  }
+  @media (max-width: 900px) { .ask { grid-template-columns: 1fr; } }
+
+  .ask-copy { max-width: 46ch; }
+  .ask-cta { gap: var(--s-4); }
+
+  .ideas {
+    list-style: none; margin: 0; padding: 0;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: var(--surface-base);
+  }
+  .idea {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s-4);
+    padding: var(--s-4) var(--s-5) var(--s-4) var(--s-3);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .idea:last-child { border-bottom: 0; }
+
+  .vote {
+    display: grid; justify-items: center; gap: 1px;
+    padding: var(--s-2) 0;
+    border-radius: var(--r-sm);
+    color: var(--text-tertiary);
+  }
+  .vote:hover { background: var(--surface-sunken); }
+  .vote:hover .up { color: var(--brand); }
+  .arrow svg { width: 15px; height: 15px; display: block; }
+  .score {
+    font-size: 0.95rem;
+    font-weight: var(--fw-strong);
+    color: var(--text-primary);
+  }
+
+  .idea-title { font-size: var(--fs-small); line-height: 1.45; }
+  .idea-title:hover { color: var(--brand); }
+
+  .empty {
+    border: 1px dashed var(--hairline-strong);
+    border-radius: var(--r-lg);
+    padding: var(--s-7) var(--s-6);
+  }
+  .empty .small { color: var(--text-secondary); }
+</style>

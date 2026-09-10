@@ -1,0 +1,315 @@
+============================================================================
+  OPENCONVERT 0.1.0
+  Convert and modify files locally. Nothing is uploaded.
+============================================================================
+
+WHAT YOU ARE INSTALLING
+
+  A desktop file converter that runs every conversion on this machine. Each
+  format is handled by an engine confined by the operating system -- its own
+  filesystem slice, no network access, resource limits -- and every output
+  is written beside a receipt recording which engine ran, what it did, and
+  what it was allowed to do.
+
+  Free software under the Apache License 2.0, reproduced in full below.
+  There is no account, no subscription, and no paid tier of the program.
+
+
+PRIVACY
+
+  The same words as openconvert.dev/privacy, revised 2026-08-24. The section
+  about the website itself is left out here and is on that page; everything
+  the PROGRAM does is below, in full.
+
+  Your files. Never leave the machine. There is no upload, no account, no
+  sync, and no endpoint that receives them -- we do not operate one.
+  Conversions run on your CPU, in a sandbox with the network denied by the
+  operating system.
+
+  Telemetry. None. No analytics, no crash pings, no feature flags, no
+  identifier, and no setting to turn any of it off -- because none of it is
+  in the build.
+
+  Network access. Two things reach the network, both starting with you:
+  fetching an AI feature you chose, and replacing a model file this build
+  pins differently from your copy. Spotting that costs no network -- it
+  compares two local files -- so the only question is whether the app
+  fetches it. That is Model auto update in Settings, the one network setting
+  here; off, nothing dials out unless you press Download. Addresses come
+  from the model registry in the build; every artifact is hash-checked
+  against it and a mismatch is refused. No telemetry, crash reports, licence
+  check or periodic call. Engines reach nothing, each sandboxed with
+  networking denied by the operating system.
+
+  Stored locally. Config, history, recipes, the batch journal and the engine
+  quarantine list, all under your user profile, all readable and wipeable.
+  None can enable a capability: quarantine only ever disables, and no config
+  key touches the network floor, because that key does not exist.
+
+
+WHAT THIS INSTALLER DOES
+
+  It will:
+
+    - Ask where to install, and whether to install for you alone or for
+      every user of this computer. Both are your choice on the next screens.
+    - Copy the program and its conversion engines into that folder.
+    - Create a Start menu shortcut.
+    - Register an uninstaller with Windows.
+
+  It will NOT:
+
+    - Take over file associations. OpenConvert does not claim .pdf, .jpg or
+      any other extension. Opening a file with it stays your decision.
+    - Install a service, a background process, a startup entry, a browser
+      extension, or a shell extension.
+    - Bundle other software, toolbars, or offers.
+    - Send anything anywhere during installation.
+
+  Settings, history and receipts are written under your user profile the
+  first time you run the program, never by this installer. Uninstalling
+  offers to remove them.
+
+
+AI FEATURES ARE OPTIONAL, AND NONE ARE INCLUDED
+
+  This installer contains no AI models. The first time you run OpenConvert
+  it asks which of these you want, if any, and fetches only those. Each one
+  runs entirely on this machine once it is here. You can add or remove them
+  at any time in Settings.
+
+    Clean up noisy audio  --  8.3 MB
+      Removes hiss and background noise from speech recordings.
+
+    Remove image backgrounds  --  10.7 MB
+      Cuts the subject out of a photo and leaves the rest transparent.
+
+    Enlarge images  --  63.9 MB
+      Quadruples an image's size without the usual blur.
+
+    Transcribe speech  --  77.6 MB
+      Turns speech in an audio file into text you can read and search.
+
+    Read text in images  --  132 MB
+      Finds the words in a photo or scan and writes them to a text file.
+
+  All of them together: 293 MB.
+
+
+WHEN THIS PROGRAM USES THE NETWORK
+
+  Two things, both about AI features and both started by you: fetching a
+  feature you chose, and checking whether a feature you already have has a
+  newer version. Nothing else in the program opens a connection -- no
+  telemetry, no crash reports, no licence check, no periodic request of any
+  kind, and no setting to switch any of it off, because none of it is in the
+  build. Conversion engines reach nothing at all: each runs in a sandbox
+  with networking denied by the operating system.
+
+
+----------------------------------------------------------------------------
+  APACHE LICENSE, VERSION 2.0
+----------------------------------------------------------------------------
+
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.

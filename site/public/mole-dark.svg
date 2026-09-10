@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="255 335 1035 850" role="img" aria-labelledby="title desc">
+  <title id="title">OpenConvert mole, dark</title>
+  <desc id="desc">The OpenConvert mole, lifted out of the folder mark, leaning over an edge with both paws hooked over it.</desc>
+
+  <!-- THE BODY, FILLED.
+       In the folder logo the mole's back is an open `fill="none"` contour and
+       the body reads as solid only because the folder behind it is. Lift the
+       mole out and it becomes a hole: whatever it is placed over shows through
+       the chest. So the silhouette is closed here and filled with the same
+       colour the folder used.
+
+       The bottom is flat at y=1000 ON PURPOSE — that is the line the mole is
+       leaning over, and it is where the surface underneath begins. Everything
+       below it is paw. -->
+  <path d="M320 1000C317 788 363 604 459 494C532 410 628 366 733 366C867 366 971 434 1018 545C1033 580 1036 617 1048 650C1060 683 1082 704 1119 721L1119 1000Z"
+        fill="#0A0A0A"/>
+
+  <!-- Mole back and head: one uninterrupted source-matched contour. -->
+  <path d="M320 1009C317 788 363 604 459 494C532 410 628 366 733 366C867 366 971 434 1018 545C1033 580 1036 617 1048 650C1060 683 1082 704 1119 721"
+        fill="none" stroke="#EDEDED" stroke-width="47" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Eye and offset highlight. -->
+  <circle cx="710" cy="630" r="63" fill="#EDEDED"/>
+  <circle cx="711" cy="619" r="20" fill="#0A0A0A"/>
+
+  <!-- Three whiskers on each side, layered behind the snout as in the stencil. -->
+  <g fill="none" stroke="#EDEDED" stroke-width="32" stroke-linecap="round">
+    <path d="M800 806C757 793 716 790 681 792"/>
+    <path d="M806 846C764 854 728 869 696 890"/>
+    <path d="M824 879C787 905 757 933 734 958"/>
+    <path d="M1133 747C1170 721 1207 703 1241 692"/>
+    <path d="M1148 791C1192 789 1231 794 1265 805"/>
+    <path d="M1135 836C1173 850 1207 870 1235 893"/>
+  </g>
+
+  <!-- Full snout, matching the stencil's tilt and asymmetric oval profile. -->
+  <path d="M788 829c29-70 107-126 196-145 78-17 149 2 170 51 22 51-17 116-95 159-81 45-180 55-239 20-37-22-49-52-32-85Z"
+        fill="#6FB3AC" stroke="#EDEDED" stroke-width="43" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Two nostrils retained in the original off-centre placement. -->
+  <circle cx="997" cy="789" r="19" fill="#EDEDED"/>
+  <circle cx="1057" cy="789" r="19" fill="#EDEDED"/>
+
+  <!-- The paws, drawn LAST so they sit over the body's flat bottom edge and
+       hide the seam where it meets whatever the mole is leaning on. They hang
+       158 units past that line, which is the whole point of the pose. -->
+  <g fill="#0A0A0A" stroke="#EDEDED" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M285 1107C286 1033 298 985 333 952C360 927 393 918 430 922C487 928 527 959 545 1004C560 1042 558 1084 545 1118C536 1143 519 1158 499 1156C477 1154 463 1137 455 1111C446 1138 430 1154 410 1156C386 1158 368 1142 359 1113C349 1138 334 1152 315 1150C294 1147 284 1130 285 1107Z"
+          stroke-width="43"/>
+    <path d="M380 1028C376 1064 368 1094 359 1113M461 1029C459 1067 457 1095 455 1111"
+          fill="none" stroke-width="37"/>
+  </g>
+
+  <!-- True horizontal mirror of the left paw, preserving opposite handedness. -->
+  <g transform="translate(1430 0) scale(-1 1)" fill="#0A0A0A" stroke="#EDEDED" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M285 1107C286 1033 298 985 333 952C360 927 393 918 430 922C487 928 527 959 545 1004C560 1042 558 1084 545 1118C536 1143 519 1158 499 1156C477 1154 463 1137 455 1111C446 1138 430 1154 410 1156C386 1158 368 1142 359 1113C349 1138 334 1152 315 1150C294 1147 284 1130 285 1107Z"
+          stroke-width="43"/>
+    <path d="M380 1028C376 1064 368 1094 359 1113M461 1029C459 1067 457 1095 455 1111"
+          fill="none" stroke-width="37"/>
+  </g>
+</svg>

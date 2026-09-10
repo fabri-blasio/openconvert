@@ -1,0 +1,51 @@
+/*
+  Preview chrome only. **Not shipped** — nothing here is loaded by the desktop
+  build, and it must not restyle anything the app owns.
+
+  The desktop window is 900×680 (tauri.conf.json). A maximised browser tab would
+  show a wider app than exists, and `--content-max: 720px` means the difference
+  is visible. So the preview is framed at exactly the window's size, on a neutral
+  backdrop, and the app inside it is untouched.
+*/
+
+html.preview-frame,
+html.preview-frame body {
+  height: 100%;
+  overflow: hidden;
+}
+
+html.preview-frame body {
+  display: grid;
+  place-items: center;
+  /* Deliberately not a token: this is the desk the window sits on, not the app. */
+  background: light-dark(#e8e8ea, #141416);
+  padding: 24px;
+}
+
+/* Only the framed preview overrides the app's own `height: 100%`; without the
+   frame the harness must leave `#app` exactly as the desktop build has it, or
+   it goes on hiding the class of bug it hid once already. */
+html.preview-frame #app {
+  width: 900px;
+  height: 680px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--surface-base);
+  box-shadow:
+    0 0 0 0.5px light-dark(rgba(0, 0, 0, 0.14), rgba(255, 255, 255, 0.14)),
+    0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+/* A note that this is not the real window, kept out of the app's own box. */
+html.preview-frame body::after {
+  content: "browser preview · Tauri IPC is mocked · 900×680, the real window size";
+  position: fixed;
+  bottom: 6px;
+  left: 50%;
+  translate: -50% 0;
+  font: 11px/1.4 ui-sans-serif, system-ui, sans-serif;
+  color: light-dark(rgba(0, 0, 0, 0.45), rgba(255, 255, 255, 0.4));
+  pointer-events: none;
+}

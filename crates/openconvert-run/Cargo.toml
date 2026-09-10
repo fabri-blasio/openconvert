@@ -1,0 +1,93 @@
+[package]
+name = "openconvert-run"
+description = "The shell: detect, HandleTable, engine adapters, execute, receipts, state."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+
+[features]
+# Exposes `Worker::start_at`, which names an engine by path instead of by
+# `EngineBin`.
+#
+# It exists because a test that can SKIP is not coverage. The host-side worker
+# tests lived here, resolved the binary beside `current_exe()`, and silently
+# skipped under `cargo mutants` -- 33 mutants survived in code those tests were
+# written to cover. Only a test inside the `oc-images` package gets
+# `CARGO_BIN_EXE_oc-images`, and only a public constructor lets it in.
+#
+# Off in every shipped build, so the production guarantee is unchanged: nothing
+# outside this crate can name an engine by path. Cargo enables it only for the
+# dev-dependency edge from `oc-images`, which is a test build by construction.
+test-support = []
+# Turns measured OS capabilities into the planning profile `route()` consumes.
+# On by default: this crate IS the imperative shell, and every caller of its
+# conversion path (CLI, tools) wants plans built from probed values rather
+# than a hand-assembled profile -- I11 permits construction only from
+# measurements, which is exactly what this feature gates.
+default = ["attest"]
+attest = ["openconvert-os/attest"]
+
+[dependencies]
+openconvert-core    = { workspace = true }
+openconvert-sandbox = { workspace = true }
+openconvert-os      = { workspace = true }
+openconvert-worker  = { workspace = true }
+anyhow            = { workspace = true }
+thiserror         = { workspace = true }
+serde             = { workspace = true }
+serde_json        = "1"
+blake3            = "1"
+
+# Config and recipe files. 0.9 is what the lockfile already vendors (via
+# xtask); pinning it keeps one TOML parser in the tree instead of two.
+toml              = "0.9"
+
+# Model pins are sha256; blake3 stays the content-addressing for everything
+# else. MIT OR Apache-2.0, pure Rust, no `links`.
+#
+# NOTE on the fetch path: TLS is NOT linked here. The one outbound call site
+# (SR-9) lives in `openconvert-worker::net`, because every pure-Rust TLS stack
+# bottoms out in a natively-linked crypto crate (`ring`, aws-lc-rs), and the
+# depcheck gate rightly refuses exactly that inside THIS crate. The worker
+# crate is where native linkage is allowed -- same reason the engines live
+# there.
+sha2              = "0.10"
+
+# CSV parsing for the tabular path. Pure Rust, no `links` key -- the depcheck
+# gate would refuse it otherwise. RFC4180 quoting is a spec with famous edge
+# cases; a hand-rolled parser here would be a new attacker-facing parser that
+# exists only to avoid a dependency.
+csv = "1"
+
+# PNG -> PDF embeds decoded samples through a raw DEFLATE stream.
+flate2 = "1"
+
+# The in-process image path. Pure Rust, no C, no `links` key -- which is what
+# lets it run InProcess at all (I10). default-features = false so we take the
+# six codecs 08 commit 19 names and nothing else: every extra codec is extra
+# attacker-reachable parser.
+[dependencies.image]
+version          = "0.25"
+default-features = false
+features         = ["png", "jpeg", "webp", "gif", "bmp", "tiff"]
+
+[lints.clippy]
+# clippy.toml is workspace-wide, so the purity list applies here too. This crate
+# is the IMPERATIVE SHELL (03 section 4) -- owning files is its job, and the
+# HandleTable is the whole point of it. Allowed explicitly rather than left to
+# warn: a build that always emits warnings is a build where nobody reads them.
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+[dev-dependencies]
+serde_json = "1"
+# Examples only: the fixture generator reads the tone WAV back to build the
+# Matroska one. Same version oc-audio pins.
+hound      = "3.5"
+# Examples only: the Matroska fixture needs EXACT FLAC frame boundaries, and
+# the encoder is the only thing that knows them.
+flacenc    = "0.5"
+blake3     = "1"
+image      = { version = "0.25", default-features = false, features = ["png", "jpeg"] }

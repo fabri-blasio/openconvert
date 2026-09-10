@@ -1,0 +1,5 @@
+Contact: mailto:hello@openconvert.dev
+Expires: 2027-01-01T00:00:00.000Z
+Canonical: https://openconvert.dev/.well-known/security.txt
+Preferred-Languages: en, it
+Policy: https://github.com/fabri-blasio/cloudconvert/blob/main/SECURITY.md

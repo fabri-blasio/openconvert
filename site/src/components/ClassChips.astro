@@ -1,0 +1,82 @@
+---
+// The four operation classes, encoded four ways at once — glyph, label, border
+// and fill (07 §10). Nothing here depends on colour alone, which is why the
+// same chips work in the CLI, in the app and on this page.
+//
+// The class is a required field on every step, not a label added afterwards,
+// and a generative step is never armed by a default, a preset or the prediction
+// engine: "convert" never quietly means "enhance".
+const classes = [
+  {
+    glyph: '=',
+    id: 'A',
+    label: 'lossless',
+    tone: 'quiet',
+    body: 'The bytes that matter survive. FLAC to WAV, MKV to MP4 when the codecs fit, CSV to JSON.',
+  },
+  {
+    glyph: '≈',
+    id: 'B',
+    label: 'lossy',
+    tone: 'attention',
+    body: 'Pixels or samples are recompressed and some are discarded. HEIC to JPEG, WAV to MP3.',
+  },
+  {
+    glyph: '⌇',
+    id: 'C',
+    label: 'inferred',
+    tone: 'attention',
+    body: 'A model reads what is already there. OCR on a scan, speech in an audio track.',
+  },
+  {
+    glyph: '✦',
+    id: 'D',
+    label: 'generated',
+    tone: 'critical',
+    body: 'A model invents content that was never in the file. Upscaling past the sensor, filling a background.',
+  },
+];
+---
+<ul class="cc">
+  {classes.map((c, i) => (
+    <li class="cc-item seq" data-tone={c.tone} style={`animation-delay: ${80 + i * 90}ms`}>
+      <span class="cc-chip">
+        <span class="glyph" aria-hidden="true">{c.glyph}</span>
+        <span class="cc-label">{c.label}</span>
+      </span>
+      <p class="cc-body">{c.body}</p>
+      <span class="caption mono">class {c.id}</span>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .cc {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-5);
+  }
+  @media (max-width: 860px) { .cc { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .cc { grid-template-columns: 1fr; } }
+
+  .cc-item {
+    display: flex; flex-direction: column; gap: var(--s-2);
+    animation: seq-line 340ms var(--curve) both;
+  }
+  .cc-chip {
+    display: inline-flex; align-items: center; gap: var(--s-2);
+    width: fit-content; padding: 3px 10px 3px 8px;
+    border-radius: var(--r-full);
+    border: 1px solid var(--hairline-strong);
+    background: var(--surface-sunken);
+    font-family: var(--mono); font-size: 0.74rem;
+  }
+  .cc-item[data-tone='attention'] .cc-chip {
+    border-color: var(--accent-attention); color: var(--accent-attention);
+    background: color-mix(in srgb, var(--accent-attention) 8%, transparent);
+  }
+  .cc-item[data-tone='critical'] .cc-chip {
+    border-color: var(--accent-critical); color: var(--accent-critical);
+    background: color-mix(in srgb, var(--accent-critical) 8%, transparent);
+  }
+  .cc-body { font-size: var(--fs-caption); line-height: 1.55; color: var(--text-secondary); }
+</style>

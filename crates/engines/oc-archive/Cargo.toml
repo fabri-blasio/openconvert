@@ -1,0 +1,65 @@
+[package]
+name = "oc-archive"
+description = "Archive repacking worker. Runs confined, speaks the host protocol."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+
+[[bin]]
+name = "oc-archive"
+path = "src/main.rs"
+
+[dependencies]
+openconvert-worker = { path = "../openconvert-worker", version = "0.1.0" }
+
+# PURE RUST, and that is the point of this worker existing now.
+#
+# `engines.toml` names libarchive, and libarchive is a C library needing a
+# toolchain and a build. These three are Rust, so `oc-archive` could be written
+# and tested today rather than waiting on a dependency that is not the reason
+# the worker is interesting.
+#
+# The security story does not come from the library either way. Zip bombs are
+# refused by SR-5's caps in this crate -- depth, entry count, total bytes -- and
+# those are ours to enforce whichever decompressor sits underneath. Spike S23
+# settled that `expansion_ratio` cannot do it: a legitimate disk image
+# compresses 1029x and the bomb 1028x.
+#
+# `default-features = false` on both: the defaults pull in C backends (zlib-ng,
+# bzip2, zstd bindings) and a C backend here would defeat the whole reason this
+# crate exists this week. `flate2`'s rust_backend is miniz_oxide.
+zip    = { version = "2", default-features = false, features = ["deflate"] }
+tar    = { version = "0.4", default-features = false }
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+
+# 7z reading. Apache-2.0, and its LZMA is `lzma-rust2` -- pure Rust, so this
+# stays a dependency rather than becoming a native library with an
+# engines.toml row. Reading only: this repacks a 7z into formats we already
+# write, and does not create one.
+sevenz-rust2 = { version = "0.22", default-features = false }
+
+# WOFF2, which is Brotli over the concatenated tables. Nothing else in the
+# workspace needed a Brotli ENCODER -- `brotli-decompressor` is already here
+# through jxl-oxide, and it only reads.
+#
+# BSD-3-Clause AND MIT, both on `deny.toml`'s allowlist. Pure Rust, no_std
+# capable, and no build script, so it adds nothing to `depcheck`'s surface:
+# this stays a dependency rather than becoming a native library with an
+# engines.toml row, exactly like `sevenz-rust2` above.
+brotli = { version = "9", default-features = false, features = ["std"] }
+
+[lints.clippy]
+disallowed_types   = "allow"
+disallowed_methods = "allow"
+
+[dev-dependencies]
+# The tests build zip and tar fixtures byte by byte, so they need the same
+# libraries the worker does.
+zip               = { version = "2", default-features = false, features = ["deflate"] }
+tar               = { version = "0.4", default-features = false }
+openconvert-sandbox = { workspace = true }
+serde_json        = "1"
+openconvert-run     = { workspace = true, features = ["test-support"] }
+openconvert-core    = { workspace = true }

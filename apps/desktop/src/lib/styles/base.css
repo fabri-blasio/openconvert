@@ -1,0 +1,270 @@
+@import "./tokens.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/* The mount point needs a height, and only the app supplies one.
+   
+   `html, body { height: 100% }` stops at `body`: `#app` had no rule at all, so
+   `.app { height: 100% }` resolved against an auto-height parent and became
+   `auto`. Everything below it then grew to content — `main` never got a
+   constrained height so `overflow-y: auto` never engaged, the settings sheet
+   ran past the window and `body { overflow: hidden }` clipped it, and the drop
+   zone's `height: 100%` collapsed to its content. One missing rule, three
+   symptoms: settings that would not scroll, a small drop box, and a screen that
+   ignored the window.
+   
+   The browser harness sized `#app` itself, which is exactly why none of this
+   showed up there. */
+#app {
+  height: 100%;
+  min-height: 0;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-lh);
+  font-weight: var(--weight-regular);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  user-select: none;
+  cursor: default;
+  overflow: hidden;
+}
+
+::selection {
+  background: var(--hairline-strong);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  user-select: text;
+}
+
+.card {
+  background: var(--surface-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 22px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-lh);
+  white-space: nowrap;
+}
+
+.chip.quiet {
+  border: 0.5px solid var(--hairline);
+  color: var(--text-primary);
+}
+
+.chip.lossy {
+  border: 0.5px solid var(--hairline);
+  color: var(--text-secondary);
+}
+
+.chip.inferred {
+  border: 0.5px dashed var(--hairline-strong);
+  color: var(--text-secondary);
+}
+
+.chip.generous {
+  border: none;
+  background: var(--accent-attention);
+  color: var(--on-accent);
+  font-weight: var(--weight-medium);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 22px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-lh);
+  border: 0.5px solid var(--hairline);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.badge.reduced {
+  color: var(--accent-attention);
+  border-color: color-mix(in srgb, var(--accent-attention) 35%, transparent);
+}
+
+.badge.blocked {
+  color: var(--accent-critical);
+  border-color: color-mix(in srgb, var(--accent-critical) 35%, transparent);
+}
+
+.seg {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.seg button {
+  /* 28 px interactive floor (07 §11), met by the control, not padding. */
+  min-height: 28px;
+  padding: 3px 12px;
+  border-radius: 5px;
+  font-size: var(--text-caption-size);
+  color: var(--text-secondary);
+  transition: background var(--motion-micro), color var(--motion-micro);
+}
+
+.seg button[aria-pressed="true"] {
+  background: var(--surface-base);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.5px var(--hairline), 0 1px 2px rgba(0, 0, 0, 0.08);
+  font-weight: var(--weight-medium);
+}
+
+.switch {
+  appearance: none;
+  /* The UA stylesheet gives input[type=checkbox] `margin: 3px 3px 3px 4px`,
+     which left every switch sitting 3 px inside the right edge that every
+     other control lines up on. */
+  margin: 0;
+  width: 42px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--radius-full);
+  background: var(--control-track);
+  position: relative;
+  transition: background var(--motion-standard);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  inset-block: 3px;
+  left: 3px;
+  width: 22px;
+  border-radius: var(--radius-full);
+  background: var(--control-knob);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: translate var(--motion-standard);
+}
+
+.switch:checked {
+  background: var(--control-track-on);
+}
+
+.switch:checked::after {
+  translate: 14px 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  min-height: var(--row-h);
+  padding-inline: var(--space-5);
+}
+
+.group {
+  background: var(--surface-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.group > * + * {
+  border-top: 0.5px solid var(--hairline);
+}
+
+.progress-track {
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.progress-fill {
+  /* The fraction arrives as a CSS custom property set via the CSSOM
+     (Svelte's style: directive), which survives `style-src 'self'`.
+
+     Scaled, not width-calc'd: see the `@property --fraction` note in
+     tokens.css. A transform also stays off the layout path. */
+  width: 100%;
+  height: 100%;
+  transform: scaleX(var(--fraction, 0));
+  transform-origin: left center;
+  background: var(--emphasis);
+  border-radius: var(--radius-full);
+  transition: transform var(--motion-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --material-thin: var(--surface-base);
+    --material-regular: var(--surface-base);
+    --material-thick: var(--surface-base);
+    --blur-thin: none;
+    --blur-regular: none;
+    --blur-thick: none;
+  }
+}

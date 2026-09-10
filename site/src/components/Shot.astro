@@ -1,0 +1,107 @@
+---
+/**
+ * A screenshot of the real app, in the reader's theme.
+ *
+ * Every picture on this site comes from `site/tools/shots`, which drives the
+ * desktop UI harness and photographs the shipping components. Nothing here is
+ * an illustration of the product.
+ *
+ * Theme switching is `<picture>` + `prefers-color-scheme`, so it costs no
+ * JavaScript and works on the first paint. The `alt` text is authored beside
+ * the click path in `tools/shots/scenes.mjs` and carried through `shots.json`;
+ * a page may override it when the same picture makes a different point, but it
+ * can never be absent — `scripts/gates.mjs` fails the build if it is.
+ */
+import data from '../data/shots.json';
+
+export interface Props {
+  /** Scene id from shots.json, e.g. "batch-plan". */
+  id: string;
+  /** Override the authored alt text when the context changes what it shows. */
+  alt?: string;
+  /** Above the fold: decode eagerly, and let the page preload it. */
+  hero?: boolean;
+  /** Lean it back a few degrees. Hero only. */
+  tilted?: boolean;
+  /**
+   * Pin the picture to one theme instead of following the reader's.
+   *
+   * The demo window carries its own light/dark switch, so inside it the
+   * screenshot has to obey that switch rather than the page — both variants are
+   * rendered and CSS picks. Everywhere else 'auto' is right.
+   */
+  theme?: 'auto' | 'light' | 'dark';
+  class?: string;
+}
+
+const { id, alt, hero = false, tilted = false, theme = 'auto', class: extra = '' } = Astro.props;
+
+type Shot = { id: string; alt: string; width: number; height: number };
+const shot = (data.shots as Shot[]).find((s) => s.id === id);
+
+// A missing shot is a build error, not a broken image in production. The site
+// renders 41 routes from generated data; the failure mode that matters is the
+// one that ships quietly.
+if (!shot) {
+  throw new Error(
+    `Shot "${id}" is not in src/data/shots.json. Run \`npm run shots && npm run shots:encode\`, ` +
+      `or check the id against tools/shots/scenes.mjs.`,
+  );
+}
+
+const text = alt ?? shot.alt;
+const cls = ['shot', tilted ? 'shot-tilted' : '', extra].filter(Boolean).join(' ');
+---
+{theme === 'auto' ? (
+  /*
+   * Two pictures, one shown.
+   *
+   * This was a single <picture> switching on `prefers-color-scheme`, which the
+   * site's own theme button cannot override: a `media` attribute reads the OS,
+   * not the attribute we stamp on <html>. So both variants are in the markup
+   * and CSS picks, on exactly the two branches `tokens.css` uses. The hidden
+   * one is `display: none` and lazy, so a browser does not fetch it until the
+   * theme actually changes.
+   */
+  <>
+    <picture class="shot-v only-light">
+      <source type="image/avif" srcset={`/shots/${id}.avif`} />
+      <img
+        class={cls}
+        src={`/shots/${id}.webp`}
+        width={shot.width}
+        height={shot.height}
+        alt={text}
+        loading={hero ? 'eager' : 'lazy'}
+        decoding={hero ? 'sync' : 'async'}
+        fetchpriority={hero ? 'high' : undefined}
+      />
+    </picture>
+    <picture class="shot-v only-dark">
+      <source type="image/avif" srcset={`/shots/${id}-dark.avif`} />
+      <img
+        class={cls}
+        src={`/shots/${id}-dark.webp`}
+        width={shot.width}
+        height={shot.height}
+        alt={text}
+        loading="lazy"
+        decoding="async"
+      />
+    </picture>
+  </>
+) : (
+  <picture>
+    <source type="image/avif" srcset={`/shots/${id}${theme === 'dark' ? '-dark' : ''}.avif`} />
+    <img
+      class={cls}
+      src={`/shots/${id}${theme === 'dark' ? '-dark' : ''}.webp`}
+      width={shot.width}
+      height={shot.height}
+      alt={text}
+      loading={hero ? 'eager' : 'lazy'}
+      decoding={hero ? 'sync' : 'async'}
+      fetchpriority={hero ? 'high' : undefined}
+    />
+  </picture>
+)}

@@ -1,0 +1,15 @@
+# Negative fixture: a misspelled closed vocabulary.
+#
+# `dynmaic` is not `dynamic`. On a PERMISSIVE engine the LGPL rule never fires,
+# so without this check the field would silently mean nothing -- and the next
+# LGPL engine to inherit the typo would pass a gate that had quietly stopped
+# reading it.
+[[engine]]
+name       = "lcms2"
+version    = "2.16"
+licence    = "MIT"
+linkage    = "linked-into-wroker"
+link_mode  = "dynmaic"
+worker     = "oc-images"
+source     = "https://littlecms.com/"
+enabled    = true

@@ -1,0 +1,93 @@
+[package]
+name = "openconvert-desktop"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.90"
+license = "Apache-2.0"
+publish = false
+description = "The OpenConvert desktop shell: a webview over the library crates, and nothing else."
+
+# Standalone, deliberately.
+#
+# The repo root Cargo.toml is an ancestor of this file, so without a `[workspace]`
+# table cargo refuses the package outright ("not a member of the workspace") --
+# spike W9 hit exactly this and fixed it the same way. Keeping the shell out of
+# the root workspace also keeps `cargo build` at the root from pulling a webview
+# toolchain into every library build.
+[workspace]
+
+[features]
+# **This feature is what makes a build a shipping build.**
+#
+# Tauri decides between `build.devUrl` and the bundled `frontendDist` from
+# `cfg!(not(feature = "custom-protocol"))` — the cargo feature, NOT the profile.
+# A `cargo build --release` without it produces an optimised binary that still
+# points at http://localhost:5173 and shows ERR_CONNECTION_REFUSED with no dev
+# server running. It is also what switches `app.security.csp` on: a dev build
+# applies `devCsp` (absent here) instead, so the strict CSP is only in force in
+# a build carrying this feature.
+#
+# `cargo tauri build` passes it; a plain cargo build needs
+# `--features custom-protocol`. Not defaulted, so `cargo tauri dev` still works.
+custom-protocol = ["tauri/custom-protocol"]
+
+[dependencies]
+base64 = "0.22"
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "=0.40.2", features = ["bundled"] }
+
+# Config persistence: `set_config` writes the merged `UserConfig` back as
+# TOML. Same major version `openconvert-run` pins, so one parser in the tree.
+toml = { version = "0.9", default-features = false, features = ["parse", "display", "serde"] }
+
+# The Browse button's native file dialog.
+#
+# A Rust-side picker rather than `tauri-plugin-dialog`: the plugin would need a
+# new entry on the gated capability allowlist (xtask/src/desktop.rs) and a webview
+# permission for exactly what a host-process call already provides. This way the
+# capability set stays `core:default` and nothing else — paths reach the UI the
+# same way drop paths already do, as plain strings over invoke. No gate is
+# bypassed; no gate needed widening. (Decision recorded in private implementation notes.)
+rfd = "0.15"
+
+# The libraries. This crate adds no logic of its own: every command below is a
+# thin, typed wrapper over one of these, which is what keeps the webview outside
+# the trust boundary (`09` §1) instead of holding half the state machine.
+#
+# `openconvert-os` needs `attest` for `available::planning_profile`, and
+# `openconvert-sandbox` carries `EngineBin` (which worker a step reaches) and
+# `DisplayName` (the one safe rendering of an untrusted string).
+openconvert-core = { path = "../../../crates/openconvert-core" }
+openconvert-run = { path = "../../../crates/openconvert-run" }
+openconvert-os = { path = "../../../crates/openconvert-os", features = ["attest"] }
+openconvert-sandbox = { path = "../../../crates/openconvert-sandbox" }
+
+# Preview rendering only: the worker returns a full-size PNG and the stage wants
+# a thumbnail, so it is decoded and scaled here. Same crate, same features and
+# same version as `openconvert-run` already links -- and the bytes decoded are our
+# own worker's output, never the user's original file.
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[[bin]]
+name = "openconvert-desktop"
+path = "src/main.rs"
+
+[lints.clippy]
+# The purity gate in clippy.toml exists for `openconvert-core`, which names no
+# paths and performs no I/O. This crate is the application shell: it takes a
+# path from a file dialog, writes an output where the user asked, and reads the
+# environment to find its own engines. Declared here for the same reason
+# `openconvert-os` declares it -- the exemption is a visible line in a manifest
+# rather than a scattering of `#[allow]`.
+#
+# It surfaced when the desktop workspace was linted for the first time. CI runs
+# clippy with `--workspace` from the repo root, and this crate is a SEPARATE
+# workspace, so neither its 4,000 lines nor its build script had ever been
+# linted at all.
+disallowed_types   = "allow"
+disallowed_methods = "allow"

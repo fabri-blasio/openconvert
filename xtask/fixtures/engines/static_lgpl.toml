@@ -1,0 +1,14 @@
+# Negative fixture: the rule engines.toml described and nothing enforced.
+#
+# LGPL discharges its relinking obligation by shipping a replaceable shared
+# library (D19). Static linking removes the user's ability to replace it, so the
+# obligation attaches to us instead.
+[[engine]]
+name       = "libheif"
+version    = "1.23.1"
+licence    = "LGPL-3.0"
+linkage    = "linked-into-worker"
+link_mode  = "static"
+worker     = "oc-images"
+source     = "https://github.com/strukturag/libheif"
+enabled    = true

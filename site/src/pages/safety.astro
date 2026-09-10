@@ -1,0 +1,145 @@
+---
+import Base from '../layouts/Base.astro';
+import Containment from '../components/Containment.astro';
+import NothingOverwritten from '../components/NothingOverwritten.astro';
+import notCovered from '../data/not-covered.json';
+
+/* Rendered verbatim from 09-THREAT-MODEL §8 via export-threats.mjs. The
+   data-verbatim cells are exempt from the voice gate: the one thing it must
+   never do is pressure a rewrite of the threat model to get a build green.
+   Only the source's own `**` markers are unwrapped into <strong>; no word is
+   touched. */
+type Row = { item: string; why: string };
+const rows = ((notCovered as { rows?: Row[] }).rows ?? []).map((r) => ({
+  item: r.item.replace(/\*\*/g, ''),
+  why: r.why.replace(/\*\*/g, ''),
+}));
+---
+<Base
+  title="Safety — OpenConvert"
+  description="A converter runs memory-unsafe parsers over files strangers wrote. How OpenConvert confines them, per engine, by the operating system — and what it does not protect against."
+  path="/safety">
+
+  <div class="wrap measure-wide">
+
+    <!-- ════ the problem ════ -->
+    <section>
+      <span class="eyebrow">the problem</span>
+      <h1>A converter's job is running a hostile parser.</h1>
+      <p class="lede measure">
+        Every conversion means executing a memory-unsafe parser over a file a stranger wrote.
+        Running locally moves that parser onto your machine. Local without confinement is a
+        downgrade, not an upgrade — so confinement is the floor, and nothing in the config can
+        lower it.
+      </p>
+    </section>
+
+    <!-- ════ five stages ════ -->
+    <section>
+      <span class="eyebrow">build order</span>
+      <h2>Five stages, each doing one thing.</h2>
+      <div class="table-scroll stages">
+        <table>
+          <thead><tr><th>stage</th><th>what it does</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">detect</td><td>Identifies the file by its bytes, never its extension. Polyglots are refused outright.</td></tr>
+            <tr><td class="mono">route</td><td>Builds the plan from classed routes. Refusal is an outcome like any other, with its reason named.</td></tr>
+            <tr><td class="mono">confine</td><td>Each engine gets its own OS sandbox: a filesystem slice ending at the job directory, no network, open descriptors instead of filenames.</td></tr>
+            <tr><td class="mono">execute</td><td>The engine tries what it wants. The kernel answers. Both are logged.</td></tr>
+            <tr><td class="mono">receipt</td><td>What happened is written down beside the output — engines, classes, limits, hashes.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: var(--s-6)">
+        <Containment />
+      </div>
+      <p class="small measure" style="margin-top: var(--s-4)">
+        A machine that cannot deny an engine the network does not convert. The mechanism per
+        platform is on <a href="/features#platforms">features → platforms</a>.
+      </p>
+    </section>
+
+    <!-- ════ nothing overwritten ════ -->
+    <section id="nothing-overwritten">
+      <span class="eyebrow">non-destructive</span>
+      <h2>An archive member named .bashrc is not an escape. It is a filename.</h2>
+      <NothingOverwritten />
+      <p class="small measure" style="margin-top: var(--s-4)">
+        Every create is <code>O_EXCL</code>; no truncating open exists anywhere in the codebase,
+        and a source scan fails the build if one appears. Structural, not a setting.
+      </p>
+    </section>
+
+    <!-- ════ models confined too ════ -->
+    <section>
+      <span class="eyebrow">supply chain</span>
+      <h2>Model weights are untrusted input too.</h2>
+      <p class="small measure">
+        Pickle is refused at the file-type layer, before anything opens it. Safetensors, GGUF and
+        ONNX only; hash-pinned on every load; ONNX custom operators rejected against an allowlist;
+        models fetched from our signed index. A malicious checkpoint is treated exactly like a
+        malicious document.
+      </p>
+    </section>
+
+    <!-- ════ not covered ════ -->
+    <section>
+      <span class="eyebrow">limits</span>
+      <h2>What we do not protect against.</h2>
+      <p class="small measure" style="margin-bottom: var(--s-5)">
+        Published because it is rare, and rare because it costs vendors cover stories. This is the
+        threat model's own table, word for word.
+      </p>
+      <details class="nc">
+        <summary class="mono">open the table ▾</summary>
+        <div class="table-scroll">
+          <table>
+            <tbody>
+              {rows.map((r) => (
+                <tr>
+                  <td class="nc-k"><strong>{r.item}</strong></td>
+                  <td data-verbatim>{r.why}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <!-- ════ disclosure ════ -->
+    <section>
+      <span class="eyebrow">disclosure</span>
+      <h2>Found something? Tell us.</h2>
+      <p class="small measure">
+        Reports go to the contact in <code>/.well-known/security.txt</code>, coordinated disclosure
+        respected, response inside a week. The weekly revocation manifest exists so that a fix to
+        an engine reaches every install within seven days of it being known.
+        Formal notices: <a href="/contact">contact</a>.
+      </p>
+    </section>
+
+  </div>
+</Base>
+
+<style>
+  .measure-wide { max-width: 860px; }
+  section + section { border-top: 1px solid var(--hairline); }
+  h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: var(--fw-normal); letter-spacing: -0.01em; }
+  h2 { font-size: clamp(1.25rem, 2.4vw, 1.6rem); font-weight: var(--fw-normal); margin-bottom: var(--s-4); }
+  .stages td:first-child { white-space: nowrap; }
+  section[id] { scroll-margin-top: 72px; }
+
+  .nc {
+    border: 1px solid var(--hairline-strong); border-radius: var(--r-md);
+    background: var(--surface-base);
+  }
+  .nc summary {
+    cursor: pointer; padding: var(--s-3) var(--s-4);
+    font-size: 0.8rem; color: var(--accent-critical);
+    user-select: none;
+  }
+  .nc[open] summary { border-bottom: 1px solid var(--hairline); }
+  .nc-k { font-weight: var(--fw-strong); min-width: 18ch; }
+</style>

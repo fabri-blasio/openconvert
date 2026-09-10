@@ -1,0 +1,93 @@
+{
+  "_comment": "WRITTEN BY THE RELEASE JOB, never by hand. 10-WEBSITE \u00a75: a stale checksum on a security product is worse than none, so /download renders this file and the release workflow overwrites it on tag. The zero hashes below are the shape a hash has, not a hash \u2014 scripts/gates.mjs fails the build if a page renders one while release.state is \"published\", which is what stops a placeholder reaching a live download page.",
+  "version": "0.1.0",
+  "state": "published",
+  "date": "2026-09-10",
+  "tag": "v0.1.0",
+  "base_url": "https://github.com/fabri-blasio/cloudconvert/releases/download/v0.1.0",
+  "artifacts": [
+    {
+      "platform": "windows",
+      "label": "Windows",
+      "arch": "x86_64",
+      "target": "x86_64-pc-windows-msvc",
+      "file": "openconvert-0.1.0-x86_64-pc-windows-msvc.exe",
+      "bytes": 26990413,
+      "sha256": "10456f87a66ef22541dcbd156529a8aa8c548f4dc7a189420b455c9c6052c782",
+      "manager": "winget install OpenConvert.OpenConvert",
+      "confinement": "AppContainer + restricted token + Job Object, no network capability SID",
+      "verified": "measured on this platform",
+      "note": "Recommended. Asks where to install and whether to install for you alone or for every user of the machine."
+    },
+    {
+      "platform": "windows",
+      "label": "Windows",
+      "arch": "x86_64",
+      "target": "x86_64-pc-windows-msvc",
+      "file": "openconvert-0.1.0-x86_64-pc-windows-msvc.msi",
+      "bytes": 35803136,
+      "sha256": "db52a17eb94d120207d88256ffc3bd28f50fe676f85624314df3ef4a46a7b761",
+      "manager": "winget install OpenConvert.OpenConvert",
+      "confinement": "AppContainer + restricted token + Job Object, no network capability SID",
+      "verified": "measured on this platform",
+      "note": "Same application. Always installs for every user, so it always needs an administrator; the usual choice for Group Policy or Intune."
+    },
+    {
+      "platform": "macos",
+      "label": "macOS",
+      "arch": "aarch64",
+      "target": "aarch64-apple-darwin",
+      "file": "openconvert-0.1.0-aarch64-apple-darwin.dmg",
+      "bytes": 13781956,
+      "sha256": "b3e7606f063009ec0057f8b468e6b397a8d7db6aa8ba9605732f1120b35dd355",
+      "manager": "brew install --cask openconvert",
+      "confinement": "Seatbelt pure-computation profile: filesystem and network denied; hardened runtime",
+      "verified": "builds; confinement written but never executed on a Mac",
+      "note": "Apple Silicon. Unsigned: Gatekeeper quarantines it until you clear the attribute."
+    },
+    {
+      "platform": "macos",
+      "label": "macOS",
+      "arch": "x86_64",
+      "target": "x86_64-apple-darwin",
+      "file": "openconvert-0.1.0-x86_64-apple-darwin.dmg",
+      "bytes": 14641423,
+      "sha256": "4d7dccea3a5ff3758d72745482f5eab8c4ef69db2c72597d56b94d9716a61958",
+      "manager": "brew install --cask openconvert",
+      "confinement": "Seatbelt pure-computation profile: filesystem and network denied; hardened runtime",
+      "verified": "builds; confinement written but never executed on a Mac",
+      "note": "Intel. Unsigned: Gatekeeper quarantines it until you clear the attribute."
+    },
+    {
+      "platform": "linux",
+      "label": "Linux",
+      "arch": "x86_64",
+      "target": "x86_64-unknown-linux-gnu",
+      "file": "openconvert_0.1.0_amd64.deb",
+      "bytes": 16774100,
+      "sha256": "6cbe269e44af0ad2adcebad4d0703c9b2700cd0e462b9fe2194f968cee3dd800",
+      "manager": "flatpak install flathub dev.openconvert.openconvert",
+      "confinement": "Landlock + seccomp-bpf + empty netns + cgroup v2 + no_new_privs",
+      "verified": "measured on a Debian bookworm container",
+      "note": "Built on Ubuntu 22.04, so it installs on that LTS and newer."
+    },
+    {
+      "platform": "linux",
+      "label": "Linux",
+      "arch": "x86_64",
+      "target": "x86_64-unknown-linux-gnu",
+      "file": "openconvert_0.1.0_amd64.AppImage",
+      "bytes": 92908024,
+      "sha256": "8910b1e51dfea9e51a744c289f1063fb1b9af09f18f7a3e4d6333345a5f95c6d",
+      "manager": "chmod +x openconvert_0.1.0_amd64.AppImage",
+      "confinement": "Landlock + seccomp-bpf + empty netns + cgroup v2 + no_new_privs",
+      "verified": "measured on a Debian bookworm container",
+      "note": "No install. Runs on any distribution with FUSE."
+    }
+  ],
+  "ai_pack": {
+    "bytes": 524288000,
+    "label": "about 500 MB",
+    "command": "openconvert models add ocr"
+  }
+}

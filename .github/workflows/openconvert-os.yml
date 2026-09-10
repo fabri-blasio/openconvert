@@ -1,0 +1,66 @@
+# openconvert-os: the confinement crate's own gate.
+#
+# Why two Linux jobs: the suite's tier tests are environment-honest, not
+# environment-independent. Under default Docker, unshare(CLONE_NEWUSER) is
+# blocked and only the Reduced tier (2 mitigations) can be exercised -- the
+# Full-tier assertions skip silently, by design. The seccomp=unconfined job is
+# what actually executes them (3 mitigations). A regression that breaks only
+# the Full path passes a default-only run; it must not pass this file.
+#
+# Why RUST_TEST_THREADS=1: the escape tests fork, and libtest otherwise runs
+# tests on many threads. A forked child that allocates can hit a malloc lock
+# held elsewhere at fork time (the module docs say "syscalls only" between
+# fork and _exit for exactly this reason). Pinning the harness to one thread
+# removes the hazard instead of hoping; these suites are small enough not to
+# care.
+
+name: openconvert-os
+
+on:
+  push:
+    paths:
+      - "crates/openconvert-os/**"
+      - "crates/openconvert-core/**"
+      - ".github/workflows/openconvert-os.yml"
+  pull_request:
+    paths:
+      - "crates/openconvert-os/**"
+      - "crates/openconvert-core/**"
+      - ".github/workflows/openconvert-os.yml"
+  workflow_dispatch:
+
+jobs:
+  linux-reduced:
+    name: Linux / default Docker (Reduced tier, 2 mitigations)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: cargo test (userns blocked by default seccomp)
+        run: >
+          docker run --rm
+          -e RUST_TEST_THREADS=1
+          -v "${GITHUB_WORKSPACE}:/work" -w /work
+          rust:1-bookworm
+          cargo test -p openconvert-os
+
+  linux-full:
+    name: Linux / seccomp=unconfined Docker (Full tier, 3 mitigations)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: cargo test (userns allowed; Full-tier assertions actually run here)
+        run: >
+          docker run --rm --security-opt seccomp=unconfined
+          -e RUST_TEST_THREADS=1
+          -v "${GITHUB_WORKSPACE}:/work" -w /work
+          rust:1-bookworm
+          cargo test -p openconvert-os
+
+  windows:
+    name: Windows host (Job Object / AppContainer path untouched by Linux changes)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo test
+        run: cargo test -p openconvert-os

@@ -1,0 +1,35 @@
+---
+// A6 — THE RECEIPT. (10-WEBSITE §7)
+//
+// The rule for this component is the strictest on the site: always generated
+// from a real run, never hand-written. So the JSON below is the literal stdout
+// of `openconvert convert bundle.zip -t tar --json`, captured by
+// scripts/export-receipt.mjs and checked in. Editing this file to make the
+// receipt read better would be editing the one artefact that has to match.
+import data from '../data/receipt.json';
+
+const NL = String.fromCharCode(10);
+const lines = JSON.stringify(data.receipt, null, 2).split(NL);
+---
+<figure class="panel rp">
+  <div class="rec-bar">
+    <span class="rec-label mono">{data.command}</span>
+    <span class="rec-label">captured on {data.platform}</span>
+  </div>
+  <pre class="rp-out"><code>{lines.map((l, i) => (
+    <span class="rp-line" style={`animation-delay: ${120 + i * 60}ms`}>{l + NL}</span>
+  ))}</code></pre>
+</figure>
+
+<style>
+  .rp-out {
+    border: 0; border-radius: 0; background: var(--surface-raised);
+    font-size: 0.76rem; line-height: 1.6;
+    /* Height reserved from the line count, so nothing below this moves. */
+  }
+  .rp-line {
+    display: block;
+    animation: seq-fade 200ms linear both;
+    white-space: pre;
+  }
+</style>

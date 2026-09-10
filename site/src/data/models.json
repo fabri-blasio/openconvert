@@ -1,0 +1,216 @@
+{
+  "generated_by": "scripts/export-models.mjs from models.toml",
+  "features": [
+    {
+      "id": "denoise",
+      "title": "Clean up noisy audio",
+      "does": "Removes hiss and background noise from speech recordings.",
+      "models": [
+        "deepfilternet 3-v0.5.6",
+        "deepfilternet-aux 3-v0.5.6"
+      ],
+      "artifacts": [
+        {
+          "name": "deepfilternet",
+          "version": "3-v0.5.6",
+          "licence": "MIT",
+          "href": "https://huggingface.co/soniqo/DeepFilterNet3-ONNX",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "deepfilternet-aux",
+          "version": "3-v0.5.6",
+          "licence": "MIT",
+          "href": "https://huggingface.co/soniqo/DeepFilterNet3-ONNX",
+          "host": "Hugging Face"
+        }
+      ],
+      "sizeBytes": 8735835,
+      "size": "8 MB",
+      "licence": "MIT",
+      "usable": true
+    },
+    {
+      "id": "remove-background-small",
+      "title": "Remove image backgrounds",
+      "does": "Cuts the subject out of a photo and leaves the rest transparent.",
+      "models": [
+        "u2netp 1.1.0"
+      ],
+      "artifacts": [
+        {
+          "name": "u2netp",
+          "version": "1.1.0",
+          "licence": "Apache-2.0",
+          "href": "https://github.com/danielgatis/rembg",
+          "host": "GitHub"
+        }
+      ],
+      "sizeBytes": 4574861,
+      "size": "4 MB",
+      "licence": "Apache-2.0",
+      "usable": true
+    },
+    {
+      "id": "remove-background-better",
+      "title": "Remove image backgrounds",
+      "does": "Sharper edges on hair and fur. Falls back to the small model when it finds no subject.",
+      "models": [
+        "modnet 1.0",
+        "u2netp 1.1.0"
+      ],
+      "artifacts": [
+        {
+          "name": "modnet",
+          "version": "1.0",
+          "licence": "Apache-2.0",
+          "href": "https://huggingface.co/Xenova/modnet",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "u2netp",
+          "version": "1.1.0",
+          "licence": "Apache-2.0",
+          "href": "https://github.com/danielgatis/rembg",
+          "host": "GitHub"
+        }
+      ],
+      "sizeBytes": 11207049,
+      "size": "11 MB",
+      "licence": "Apache-2.0",
+      "usable": true
+    },
+    {
+      "id": "remove-background-best",
+      "title": "Remove image backgrounds",
+      "does": "The most accurate cut-out, and much the slowest -- about a minute per image on a CPU.",
+      "models": [
+        "birefnet-lite lite",
+        "u2netp 1.1.0"
+      ],
+      "artifacts": [
+        {
+          "name": "birefnet-lite",
+          "version": "lite",
+          "licence": "MIT",
+          "href": "https://huggingface.co/onnx-community/BiRefNet_lite-ONNX",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "u2netp",
+          "version": "1.1.0",
+          "licence": "Apache-2.0",
+          "href": "https://github.com/danielgatis/rembg",
+          "host": "GitHub"
+        }
+      ],
+      "sizeBytes": 228579949,
+      "size": "218 MB",
+      "licence": "Apache-2.0 + MIT",
+      "usable": true
+    },
+    {
+      "id": "upscale",
+      "title": "Enlarge images",
+      "does": "Doubles or quadruples an image's size without the usual blur.",
+      "models": [
+        "realesrgan-x4 x4plus"
+      ],
+      "artifacts": [
+        {
+          "name": "realesrgan-x4",
+          "version": "x4plus",
+          "licence": "BSD-3-Clause",
+          "href": "https://huggingface.co/imgdesignart/realesrgan-x4-onnx",
+          "host": "Hugging Face"
+        }
+      ],
+      "sizeBytes": 67051787,
+      "size": "64 MB",
+      "licence": "BSD-3-Clause",
+      "usable": true
+    },
+    {
+      "id": "transcribe",
+      "title": "Transcribe speech",
+      "does": "Turns speech in an audio file into text you can read and search.",
+      "models": [
+        "whisper-encoder base",
+        "whisper-decoder base",
+        "whisper-tokenizer base",
+        "silero-vad 5.0"
+      ],
+      "artifacts": [
+        {
+          "name": "whisper-encoder",
+          "version": "base",
+          "licence": "MIT",
+          "href": "https://huggingface.co/onnx-community/whisper-base",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "whisper-decoder",
+          "version": "base",
+          "licence": "MIT",
+          "href": "https://huggingface.co/onnx-community/whisper-base",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "whisper-tokenizer",
+          "version": "base",
+          "licence": "MIT",
+          "href": "https://huggingface.co/onnx-community/whisper-base",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "silero-vad",
+          "version": "5.0",
+          "licence": "MIT",
+          "href": "https://github.com/snakers4/silero-vad",
+          "host": "GitHub"
+        }
+      ],
+      "sizeBytes": 81319482,
+      "size": "78 MB",
+      "licence": "MIT",
+      "usable": true
+    },
+    {
+      "id": "ocr",
+      "title": "Read text in images",
+      "does": "Finds the words in a photo or scan and writes them to a text file.",
+      "models": [
+        "paddleocr-det PP-OCRv6-medium",
+        "paddleocr-rec PP-OCRv6-medium",
+        "paddleocr-dict PP-OCRv6-medium"
+      ],
+      "artifacts": [
+        {
+          "name": "paddleocr-det",
+          "version": "PP-OCRv6-medium",
+          "licence": "Apache-2.0",
+          "href": "https://huggingface.co/PaddlePaddle/PP-OCRv6_medium_det_onnx",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "paddleocr-rec",
+          "version": "PP-OCRv6-medium",
+          "licence": "Apache-2.0",
+          "href": "https://huggingface.co/PaddlePaddle/PP-OCRv6_medium_rec_onnx",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "paddleocr-dict",
+          "version": "PP-OCRv6-medium",
+          "licence": "Apache-2.0",
+          "href": "https://github.com/PaddlePaddle/PaddleOCR",
+          "host": "GitHub"
+        }
+      ],
+      "sizeBytes": 138662763,
+      "size": "132 MB",
+      "licence": "Apache-2.0",
+      "usable": true
+    }
+  ]
+}

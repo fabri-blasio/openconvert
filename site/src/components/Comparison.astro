@@ -1,0 +1,207 @@
+---
+/**
+ * OpenConvert against the alternatives, on five rows.
+ *
+ * Two rules for this table, because a comparison that flatters is worth
+ * nothing to the reader who is checking it:
+ *
+ *   1. Every cell is a fact that can be checked on the competitor's own site
+ *      today, not a characterisation. Where a product genuinely does the
+ *      thing, it gets the tick.
+ *   2. "Other desktop converters" is a category, not a product, so it answers
+ *      "varies" wherever the category actually varies. A column of crosses
+ *      against an unnamed group is an argument nobody can verify.
+ */
+
+type State = 'yes' | 'no' | 'partial';
+type Row = { feature: string; note?: string; cells: { state: State; label?: string }[] };
+
+const columns = [
+  { name: 'iLovePDF', kind: 'cloud' },
+  { name: 'CloudConvert', kind: 'cloud' },
+  { name: 'Other desktop converters', kind: 'local' },
+  { name: 'OpenConvert', kind: 'us' },
+];
+
+const rows: Row[] = [
+  {
+    feature: 'Free & open source',
+    cells: [
+      { state: 'no', label: '€60/yr desktop' },
+      { state: 'no' },
+      { state: 'yes' },
+      { state: 'yes', label: 'Apache-2.0' },
+    ],
+  },
+  {
+    feature: 'Local AI models',
+    note: 'Background removal, transcription, upscaling, text extraction, all on your computer',
+    cells: [{ state: 'no' }, { state: 'no' }, { state: 'no' }, { state: 'yes' }],
+  },
+  {
+    feature: 'Completely offline',
+    cells: [
+      { state: 'no', label: 'Uploads' },
+      { state: 'no', label: 'Uploads' },
+      { state: 'yes' },
+      { state: 'yes' },
+    ],
+  },
+  {
+    feature: 'No conversion limits',
+    note: 'Files per day, file size, minutes of processing',
+    cells: [
+      { state: 'no' },
+      { state: 'no' },
+      { state: 'partial', label: 'Varies' },
+      { state: 'yes' },
+    ],
+  },
+  {
+    feature: 'All in one tool',
+    note: 'Documents, images, audio and video in the same window',
+    cells: [
+      { state: 'partial', label: 'PDF' },
+      { state: 'yes' },
+      { state: 'partial', label: 'Varies' },
+      { state: 'yes' },
+    ],
+  },
+];
+---
+<div class="cmp-scroll">
+  <table class="cmp">
+    <caption class="sr-only">
+      OpenConvert compared with iLovePDF, CloudConvert and other desktop converters
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col"><span class="sr-only">Feature</span></th>
+        {columns.map((c) => (
+          <th scope="col" class:list={['col', { us: c.kind === 'us' }]}>
+            <span class="col-name">{c.name}</span>
+            <span class="col-kind caption">{c.kind === 'us' ? 'this app' : c.kind === 'cloud' ? 'cloud' : 'desktop'}</span>
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr>
+          <th scope="row">
+            <span class="feat">{row.feature}</span>
+            {row.note && <span class="caption note">{row.note}</span>}
+          </th>
+          {row.cells.map((cell, i) => (
+            <td class:list={[cell.state, { us: columns[i].kind === 'us' }]}>
+              <span class="mark" aria-hidden="true">
+                {cell.state === 'yes' ? (
+                  <svg viewBox="0 0 20 20"><path d="M5 10.5l3.4 3.4L15 6.8" fill="none"
+                    stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                ) : cell.state === 'no' ? (
+                  <svg viewBox="0 0 20 20"><path d="M6.4 6.4l7.2 7.2M13.6 6.4l-7.2 7.2" fill="none"
+                    stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg>
+                ) : (
+                  <svg viewBox="0 0 20 20"><path d="M6 10h8" fill="none"
+                    stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg>
+                )}
+              </span>
+              <span class="sr-only">
+                {cell.state === 'yes' ? 'yes' : cell.state === 'no' ? 'no' : 'partly'}
+              </span>
+              {cell.label && <span class="cell-label caption">{cell.label}</span>}
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  /* `position: relative` is load-bearing, not decoration.
+  
+     The `.sr-only` cells inside this table are `position: absolute`, and an
+     absolutely positioned box is laid out against its nearest POSITIONED
+     ancestor — which was not this one, so they resolved against the page and
+     escaped the scroll box entirely. At 390px they sat at x=441, 568 and 694,
+     stretching <html> to 695px and giving the whole site a horizontal scroll
+     on every phone. `overflow-x: auto` never clipped them because they were
+     never really inside it. Measured before: html.scrollWidth 695 against a
+     390px viewport, with body.scrollWidth a correct 390. */
+  .cmp-scroll { overflow-x: auto; position: relative; }
+  .cmp {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--fs-small);
+    /* Rounded on the outside: the border lives on the cells, and the corners
+       are clipped by the wrapper the table paints inside. */
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+
+  .cmp th, .cmp td {
+    padding: var(--s-4) var(--s-4);
+    border-bottom: 1px solid var(--hairline);
+    text-align: center;
+    vertical-align: middle;
+  }
+  .cmp tbody tr:last-child th, .cmp tbody tr:last-child td { border-bottom: 0; }
+
+  thead th {
+    background: var(--surface-sunken);
+    font-family: var(--sans);
+    font-size: var(--fs-small);
+    font-weight: var(--fw-strong);
+    letter-spacing: -0.01em;
+    text-transform: none;
+    color: var(--text-primary);
+    border-bottom-color: var(--hairline-strong);
+    white-space: normal;
+  }
+  .col { display: table-cell; }
+  .col-name { display: block; }
+  .col-kind { display: block; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* The column that is us, marked once in the header and held with a tint the
+     whole way down, so the eye can follow it without re-reading the header. */
+  thead th.us { background: var(--brand-soft); color: var(--brand); }
+  td.us { background: var(--brand-soft); }
+
+  /* base.css sets every `th` in mono, uppercase, 0.68rem and `nowrap` — right
+     for a column header, wrong for a row header that carries a sentence. Left
+     alone the notes ran straight through the columns beside them. */
+  tbody th[scope='row'] {
+    text-align: left;
+    width: 34%;
+    background: var(--surface-base);
+    font-family: var(--sans);
+    font-size: var(--fs-small);
+    font-weight: var(--fw-strong);
+    letter-spacing: -0.01em;
+    text-transform: none;
+    white-space: normal;
+    color: var(--text-primary);
+  }
+  .feat { display: block; }
+  .note { display: block; margin-top: 3px; font-weight: var(--fw-normal); max-width: 36ch; }
+
+  .mark { display: inline-grid; place-items: center; width: 22px; height: 22px; }
+  .mark svg { width: 20px; height: 20px; }
+  td.yes .mark { color: var(--brand); }
+  td.no .mark { color: var(--text-disabled); }
+  td.partial .mark { color: var(--accent-attention); }
+
+  .cell-label { display: block; margin-top: 2px; }
+
+  /* Hidden from sight, kept for screen readers. `clip-path` does the hiding;
+     the 1px box and `overflow: hidden` are what stop the text participating in
+     layout. See the note on `.cmp-scroll` for why that box must be contained. */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+</style>

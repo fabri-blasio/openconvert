@@ -1,0 +1,75 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/openconvert-core",
+    "crates/openconvert-sandbox",
+    "crates/openconvert-os",
+    "crates/openconvert-run",
+    "crates/openconvert",
+    "crates/openconvert-wasm",
+    "crates/engines/openconvert-worker",
+    "crates/engines/oc-images",
+    "crates/engines/oc-image-codecs",
+    "crates/engines/oc-archive",
+    "crates/engines/oc-audio",
+    "crates/engines/oc-pdf",
+    "crates/engines/oc-ai",
+    "corpus",
+    "xtask",
+]
+# Deliberately excluded from the workspace: fixtures that are SUPPOSED to fail a
+# gate. They are built on demand by `cargo xtask verify-gates`, which asserts each
+# one fails. A gate nobody has watched fail is a gate nobody has tested.
+exclude = ["xtask/fixtures", "fuzz"]
+
+[workspace.package]
+version      = "0.1.0"
+edition      = "2021"
+rust-version = "1.90"
+license      = "Apache-2.0"
+repository   = "https://github.com/fabri-blasio/cloudconvert"
+
+[workspace.dependencies]
+# `version` is not decoration on a path dependency. Without it `cargo publish`
+# refuses the crate outright, because the registry has no way to express "the
+# copy that was next to it on someone's disk". cargo-deny flags the same thing
+# as a wildcard, which is how this was found -- the first time that step ever
+# ran, months before anyone would have tried to publish.
+openconvert-core    = { path = "crates/openconvert-core",    version = "0.1.0" }
+openconvert-sandbox = { path = "crates/openconvert-sandbox", version = "0.1.0" }
+openconvert-os      = { path = "crates/openconvert-os",      version = "0.1.0" }
+openconvert-run     = { path = "crates/openconvert-run",     version = "0.1.0" }
+openconvert-worker  = { path = "crates/engines/openconvert-worker", version = "0.1.0" }
+# Test fixtures. publish = false, but it still carries a version: cargo-deny's
+# wildcard rule does not care why a path dep has no version, and neither should
+# we -- this gate caught the same omission twice, which is the gate working.
+corpus            = { path = "corpus",                   version = "0.1.0" }
+
+serde     = { version = "1", features = ["derive"] }
+thiserror = "2"
+anyhow    = "1"
+serde_json = "1"
+
+[profile.release]
+lto           = true
+codegen-units = 1
+panic         = "abort"
+strip         = true
+
+# The browser executor, and only it. Cargo ignores a `[profile]` in a non-root
+# manifest, so this cannot live next to the crate it is for.
+#
+# `opt-level = "z"` rather than `3`: this artifact is downloaded before it is
+# useful, and 10-WEBSITE section 9 budgets the homepage island at 20 KB. Trading
+# throughput for bytes is the right trade for a function that runs once on a few
+# hundred bytes -- and the wrong one for the desktop binaries, which is why this
+# is a separate profile rather than a change to the one above.
+#
+#   cargo build -p openconvert-wasm --target wasm32-unknown-unknown --profile wasm
+[profile.wasm]
+inherits      = "release"
+opt-level     = "z"
+lto           = "fat"
+codegen-units = 1
+panic         = "abort"
+strip         = true

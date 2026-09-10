@@ -1,0 +1,607 @@
+# Model weights: licence, format and hash. One of three licence surfaces.
+#
+# CI asserts every model referenced in code appears here. No model ships in
+# v1 -- every row below is enabled = false, and nothing downloads until the
+# user asks for that exact row by id.
+#
+# SR-8: formats are restricted to safetensors / GGUF / ONNX. Pickle is rejected
+# at the FILE-TYPE layer, not at the loader -- a pickle checkpoint executes code
+# on load, so the refusal has to happen before anything opens it.
+#
+# SR-7: every artifact is content-addressed and hash-pinned, and the trust root
+# ships with the app.
+#
+# ---------------------------------------------------------------------------
+# THE HASH FIELD IS A PIN, NOT A PLACEHOLDER TO CONVERT LATER
+# ---------------------------------------------------------------------------
+# The Tier-S wave below was added as INFRASTRUCTURE in the same pass that
+# built the registry, downloader and verifier. Their sha256 fields are the
+# all-zero sentinel BECAUSE NOBODY HAS YET DOWNLOADED AND HASHED the exact
+# files these rows name -- and a fabricated hash is worse than an honest
+# sentinel, because the verifier would enforce a number someone invented.
+#
+# The model registry REFUSES any row whose sha256 is the zero sentinel: it
+# cannot be downloaded, enabled, or run. To ship a row: fetch the exact
+# artifact the source URL serves today, record its real sha256 and byte size,
+# and flip enabled only after the adapter behind it exists. The gate is
+# fail-closed by design; converting the sentinel into a lie is the one thing
+# it cannot survive.
+#
+# ---------------------------------------------------------------------------
+# AND AN UNSHIPPABLE ROW DOES NOT BELONG IN THIS FILE AT ALL
+# ---------------------------------------------------------------------------
+# Two rows used to sit here carrying the sentinel: `example`, a template, and
+# `kokoro-82m`, whose `source` was a repository page rather than an artifact
+# and whose feature had no tool behind it. Both were listed in Settings with a
+# Download button, and both refused every press -- correctly, and to a user
+# indistinguishably from a bug.
+#
+# The registry is what the app offers. A row that cannot be offered is a note,
+# not a row: see `docs/IMPROVEMENTS.md` for the two above. The unpinned refusal
+# is still tested, against a fixture the test build appends -- `TEST_UNPINNED`
+# in `models.rs` -- so nothing here has to be broken to keep it covered.
+
+# ===========================================================================
+# TIER-S WAVE 1 (required this milestone)
+# ===========================================================================
+
+[[model]]
+# Whisper base, ENCODER half: audio spectrogram to hidden states.
+#
+# The `_quantized` export, not `_int8`. They are the same size and only one
+# runs: the int8 encoder uses `ConvInteger`, which the CPU execution provider
+# does not implement, so it loads and then fails at the first convolution.
+# Recorded here because the two are indistinguishable by name and size.
+name    = "whisper-encoder"
+version = "base"
+licence = "MIT"
+format  = "onnx"
+purpose = "Speech-to-text, first half: audio to hidden states"
+size_bytes = 23201314
+sha256  = "5862993336bf33acd23736071aae2b32261d3b1b2f37780194460d4ef974dd46"
+source  = "https://huggingface.co/onnx-community/whisper-base/resolve/main/onnx/encoder_model_quantized.onnx"
+enabled = false
+
+[[model]]
+# Whisper base, DECODER half. The non-merged export: it takes the whole token
+# prefix each step instead of threading a KV cache, which is slower and very
+# much simpler to drive correctly.
+name    = "whisper-decoder"
+version = "base"
+licence = "MIT"
+format  = "onnx"
+purpose = "Speech-to-text, second half: hidden states to tokens"
+size_bytes = 53310178
+sha256  = "c859636f4463dd5a9ea752546c6c7badeb48ab3e22b340cafef08a15552fcb2e"
+source  = "https://huggingface.co/onnx-community/whisper-base/resolve/main/onnx/decoder_model_quantized.onnx"
+enabled = false
+
+[[model]]
+# The tokeniser. Data, not weights: only `model.vocab` and `added_tokens` are
+# read, and only in the id-to-string direction.
+name    = "whisper-tokenizer"
+version = "base"
+licence = "MIT"
+format  = "txt"
+purpose = "Token vocabulary the decoder's ids index into"
+size_bytes = 2480466
+sha256  = "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566"
+source  = "https://huggingface.co/onnx-community/whisper-base/resolve/main/tokenizer.json"
+enabled = false
+
+[[model]]
+# u2netp: the small background-removal network. Tool: remove-background.
+#
+# THE FIRST PINNED ROW. Everything above and below it still carries the
+# all-zero sentinel, which the registry refuses on sight; this one names a
+# specific artifact, and the size and hash below were taken from the file that
+# was actually downloaded, loaded into ONNX Runtime and run -- not from a
+# release page.
+#
+# `source` is the ONNX EXPORT (rembg's release asset), not the upstream
+# PyTorch repository, because that is the artifact the hash pins. The upstream
+# project is credited in NOTICE; a download URL that does not serve the bytes
+# we hashed would make the pin decorative.
+name    = "u2netp"
+version = "1.1.0"
+licence = "Apache-2.0"
+format  = "onnx"
+purpose = "Foreground segmentation for background removal"
+size_bytes = 4574861
+sha256  = "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8"
+source  = "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx"
+enabled = false
+
+[[model]]
+# DeepFilterNet3, the neural graph only. Its own README is blunt: it takes
+# normalised spectral features and returns an ERB mask plus complex filter
+# coefficients, and "a compatible STFT, feature-normalization, filtering, and
+# synthesis implementation is required". All of that DSP is ours -- see
+# `denoise.rs`, including the one constant that had to be measured.
+name    = "deepfilternet"
+version = "3-v0.5.6"
+licence = "MIT"
+format  = "onnx"
+purpose = "Speech enhancement: removes background noise"
+size_bytes = 8608859
+sha256  = "e1157049059434ae0d5857e32c812abea227b975e946b2eb64d001abbce156d3"
+source  = "https://huggingface.co/soniqo/DeepFilterNet3-ONNX/resolve/main/deepfilter.onnx"
+enabled = false
+
+[[model]]
+# The ERB matrices and Vorbis window that go with the graph. Data, not
+# weights: little-endian f32, the [481,32] forward matrix then the [32,481]
+# inverse then the 960-point window, and nothing deserialises or executes it.
+#
+# Shipped rather than derived on purpose. Generating ERB band edges is exactly
+# the kind of thing that is wrong by one bin and produces a slightly worse
+# result forever, with nothing to catch it.
+name    = "deepfilternet-aux"
+version = "3-v0.5.6"
+licence = "MIT"
+format  = "bin"
+purpose = "ERB matrices and analysis window for speech enhancement"
+size_bytes = 126976
+sha256  = "47e84480f823ab95bee69d9f8a2344074e3d8e7dbb4370d44785b91698a4dca1"
+source  = "https://huggingface.co/soniqo/DeepFilterNet3-ONNX/resolve/main/deepfilter-auxiliary.bin"
+enabled = false
+
+[[model]]
+# Real-ESRGAN x4. FIXED 64x64 input in this export, so the adapter tiles the
+# image and stitches the results -- see `upscale.rs` for why that needs
+# overlap rather than a plain grid.
+name    = "realesrgan-x4"
+version = "x4plus"
+licence = "BSD-3-Clause"
+format  = "onnx"
+purpose = "Image super-resolution, x4"
+size_bytes = 67051787
+sha256  = "fa18ce70de3a55f3149d0cc898d335d2d69fca29edc0692cb362c856b2942c3f"
+source  = "https://huggingface.co/imgdesignart/realesrgan-x4-onnx/resolve/138909edd364e7da67b5803c3918281e0428d19b/onnx/model.onnx"
+enabled = false
+
+[[model]]
+# Silero VAD v5. Part of transcription, not an optional extra: fed silence,
+# Whisper returns invented text rather than nothing, and skipping the window is
+# what prevents that. The saved model run is a bonus.
+#
+# This was attempted, backed out, and fixed. The first adapter fed the model
+# 512 samples -- the chunk size every description of v5 quotes -- and scored
+# below 0.004 on unmistakable speech. The chunk size was right and the INPUT
+# size was not: v5 prepends 64 samples of context OUTSIDE the graph, so the
+# tensor is 576 long. See `vad.rs`.
+name    = "silero-vad"
+version = "5.0"
+licence = "MIT"
+format  = "onnx"
+purpose = "Voice activity detection; keeps transcription off silence"
+size_bytes = 2327524
+sha256  = "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3"
+source  = "https://raw.githubusercontent.com/snakers4/silero-vad/867c2aa692646a1f1de3e94a15c9dd9f614c0acb/src/silero_vad/data/silero_vad.onnx"
+enabled = false
+
+[[model]]
+# MODNet: portrait matting, the QUALITY tier for background removal.
+#
+# BiRefNet-lite was the planned second segmenter and has no ONNX export that
+# loads on the CPU provider today. MODNet fills the same slot -- a heavier,
+# better matte than u2netp, dynamic input shape, same one-in-one-out contract
+# -- so the adapter is shared and only the weights differ. Recorded plainly
+# rather than filed under the name of a model that is not this one.
+name    = "modnet"
+version = "1.0"
+licence = "Apache-2.0"
+format  = "onnx"
+purpose = "Higher-quality foreground matting (remove-background quality tier)"
+size_bytes = 6632188
+sha256  = "92e49898c3e05a6d7a944fc67a8cb87c4aad754ffb6ebd949528c7d1105fee3a"
+source  = "https://huggingface.co/Xenova/modnet/resolve/main/onnx/model_quantized.onnx"
+enabled = false
+
+# ============================================================================
+# CAPABILITIES — the rows above, grouped the way a person chooses them.
+#
+# Nobody wants "paddleocr-det"; they want to read text out of a scan, and that
+# takes three artifacts. The registry pins artifacts because an artifact is what
+# a hash covers. This is the other half: one row, one size, one sentence.
+#
+# THREE READERS, ONE TABLE. `openconvert_run::models::features()` builds the
+# chooser from it, `release/render-installer-text.mjs` prints the sizes on the
+# installer's first page, and a test asserts every `models` id exists, that
+# every real model belongs to exactly one feature, and that every `tool` names a
+# real entry in the tools registry. Sizes are never written here -- they are
+# summed from the rows above, so the number a user is shown is the number that
+# gets fetched.
+#
+# `tool` is the interface that uses it. Omitting it means the artifacts would
+# download and nothing in the app could reach them; the chooser lists those and
+# refuses to offer them, rather than hiding them and disagreeing with this file.
+# ============================================================================
+
+[[feature]]
+id     = "denoise"
+title  = "Clean up noisy audio"
+does   = "Removes hiss and background noise from speech recordings."
+tool   = "audio-denoise"
+models = ["deepfilternet", "deepfilternet-aux"]
+
+[[model]]
+# BiRefNet-lite, ONNX. The best background removal in this build, and the
+# slowest by a wide margin.
+#
+# VERIFIED BEFORE PINNING, because a registry row is a promise that the
+# artifact works and this one had a note against it. `site/scripts/gates.mjs`
+# records that the features page once listed "BiRefNet-lite, which has no ONNX
+# export that loads" -- and the plan flags the same risk from the other side:
+# the export replaces deformable convolution, which has no ONNX operator, with
+# a grid_sample equivalent, so the graph is a rewrite rather than a
+# translation.
+#
+# It loads. Measured on a red disc covering exactly 20.0% of the frame:
+#
+#   u2netp          19.9% opaque   ~1 s
+#   modnet          12.1% opaque   ~5 s   (8.4% before its aspect ratio was fixed)
+#   birefnet-lite   20.0% opaque   ~46 s
+#
+# The 46 seconds is not a typo. The size and hash below are from the file that
+# was downloaded and run, and the hash independently matches the LFS object id
+# HuggingFace publishes for it.
+#
+# ---------------------------------------------------------------------------
+# IT DOES NOT FIT, AND THAT IS MEASURED TOO
+# ---------------------------------------------------------------------------
+# Peak working set for ONE 320x240 image: 6,465 MB. The default worker limit is
+# `Limits::defaults().memory_bytes`, which is 1 GiB -- so this is not a tuning
+# gap, it is six and a half times over, and the run fails with an allocation
+# error rather than producing anything.
+#
+# The cost is in the fixed 1024x1024 input: the graph declares
+# `[1,3,1024,1024]` in and `[1,1,1024,1024]` out, and a transformer backbone's
+# activations at that resolution dominate the 224 MB of weights entirely.
+#
+# Three things it is NOT worth doing to make it fit, recorded so they are not
+# re-derived:
+#
+#   * Raising `memory_bytes` for everything. That loosens the confinement every
+#     conversion runs under to accommodate one optional model.
+#   * Widening limits from `route()`. `limits_for` says in as many words that
+#     it never widens and that widening is the clamp's job to refuse.
+#   * Shipping it enabled and letting it fail. A tier that OOMs is worse than
+#     a tier that is absent.
+#
+# ---------------------------------------------------------------------------
+# WHAT WAS DONE INSTEAD: THE LIMIT IS A SETTING, AND THE PLAN REFUSES EARLY
+# ---------------------------------------------------------------------------
+# None of the three above is what shipped. `Policy::with_worker_memory` makes
+# the limit a choice on ONE machine rather than a new default on every machine:
+# `Settings -> Memory limit per conversion` offers 1/2/4/8/16 GB, and it raises
+# `base_limits` and `limit_ceiling` together because `clamp` takes the minimum
+# of the two and raising either alone does nothing.
+#
+# It is deliberately NOT a ratchet, unlike `force_sandbox` and `worker_reuse`:
+# someone who raised it for this model has to be able to put it back.
+#
+# `route()` then refuses `Quality::Best` outright when the effective limit is
+# under 8 GiB, as `NoRoute::NeedsMoreMemory`, naming both numbers. That check
+# lives in core and not in `tools.rs` because there are two front doors -- the
+# app goes through the tool, `openconvert convert --remove-background=best` does
+# not -- and a check on one of them is the `force_sandbox` half-wiring again.
+#
+# Verified end to end at 8192 MB on the 320x240 subject: it planned, ran
+# sandboxed (ACG + AppContainer), and returned 19.6% opaque with a 1.0% soft
+# edge against a 20.0% truth, in about 2m40s. At the default limit the same
+# command refuses with the sentence above instead of dying in the worker.
+#
+# The row still ships `enabled = false`, like every other row: that flag is the
+# build's default and the user's switch overrides it. Nothing about this model
+# is special-cased off any more -- it costs 213.6 MB, about a minute per image,
+# and a raised memory limit, and all three are now things a person is told and
+# chooses.
+#
+# What probably WOULD work, unmeasured: `onnx-community/BiRefNet_512x512-ONNX`,
+# whose activations should be about a quarter of these. That is a different
+# artifact with a different hash and belongs in its own row, verified the same
+# way this one was.
+#
+# The row stays because it is real, pinned, licence-checked and wired: anyone
+# who raises the ceiling deliberately gets a working best tier, and the number
+# above says what raising it costs.
+name    = "birefnet-lite"
+version = "lite"
+licence = "MIT"
+format  = "onnx"
+purpose = "Highest-quality foreground matting (remove-background best tier)"
+size_bytes = 224005088
+sha256  = "5600024376f572a557870a5eb0afb1e5961636bef4e1e22132025467d0f03333"
+source  = "https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx"
+enabled = false
+
+# TWO TIERS OF ONE TOOL. The user picks; the app never picks silently.
+#
+# These were one feature listing both models, with `tools.rs` deciding between
+# them in code on presence alone -- a good default and a bad ceiling: it could
+# not express "the big model is installed but this batch is four hundred files
+# and I want the fast one".
+#
+# `u2netp` appears in the small tier AND as MODNet's fallback inside the
+# quality adapter, which is deliberate: MODNet is a portrait matting network
+# and returns almost nothing on a subject it was not trained for, so the better
+# tier carries the smaller model as its net. That is why the invariant is "one
+# feature per tool per tier" rather than "one feature per model".
+# THE FULL BiRefNet, not the lite export.
+#
+# `birefnet-lite` is a distilled 224 MB version of this; this is the general
+# checkpoint the paper reports, exported to ONNX by onnx-community from
+# `ZhengPeng7/BiRefNet` (their card names it as the base model). It is what
+# "BiRefNet-general-epoch_244" refers to: the general-purpose weights, as
+# opposed to the portrait, matting and HR checkpoints in the same family.
+#
+# THE MEMORY QUESTION IS NOT SOLVED BY THIS ROW, AND IS NOT MADE WORSE BY IT
+# EITHER. The lite export was measured at 6,465 MB peak working set for one
+# 320x240 image, because the cost is the FIXED 1024x1024 input rather than the
+# weights: `[1,3,1024,1024]` in, `[1,1,1024,1024]` out, and a transformer
+# backbone's activations at that resolution dominate everything else. This
+# model has the same fixed input and 748 MB more weights, so the peak is that
+# measurement plus roughly the extra weights -- NOT MEASURED HERE, and stated
+# as an estimate on purpose. `best_matting_fits` gates the tier at 8 GiB, which
+# still covers it on that estimate; a real measurement is what should replace
+# both this paragraph and that constant.
+[[model]]
+name    = "birefnet-general"
+version = "general"
+licence = "MIT"
+format  = "onnx"
+purpose = "Highest-quality foreground matting (remove-background best tier)"
+size_bytes = 972666916
+sha256  = "58f621f00f5d756097615970a88a791584600dcf7c45b18a0a6267535a1ebd3c"
+source  = "https://huggingface.co/onnx-community/BiRefNet-ONNX/resolve/main/onnx/model.onnx"
+enabled = false
+
+# WHISPER LARGE V3 TURBO, and the QUANTIZED export specifically.
+#
+# Three exports of this model are published and only one of them can be used
+# here:
+#
+#   * fp32 `encoder_model.onnx` is a 439 KB stub beside a 2,430 MB
+#     `.onnx_data` file. ONNX external data is loaded by a relative path
+#     recorded INSIDE the model, and this cache is content-addressed --
+#     every artifact lands as `<sha256>.bin`. The runtime would look for a
+#     neighbour that does not exist under that name. Two rows cannot fix it;
+#     the loader would have to learn about external data.
+#   * fp16 is self-contained at 1,215 MB, and fp16 on the CPU provider is
+#     patchy across operators. This tier must work on a machine with no usable
+#     GPU, because that is what the CPU fallback in `run_pair_for` is for.
+#   * quantized is self-contained, works on both providers, and is THE SAME
+#     EXPORT FAMILY as the base rows above -- which matters more than size:
+#     `whisper.rs` drives a plain decoder and re-runs the full prefix each
+#     step rather than threading a KV cache, so a `_merged` export with
+#     KV-cache branches has a different signature and would not run.
+[[model]]
+name    = "whisper-large-turbo-encoder"
+version = "large-v3-turbo"
+licence = "MIT"
+format  = "onnx"
+purpose = "Speech-to-text, first half: audio to hidden states (large tier)"
+size_bytes = 644822195
+sha256  = "d2f853dc3254fdc0079f55dd4433ea716ac98ec5574d3b475f288f2a77cebba9"
+source  = "https://huggingface.co/onnx-community/whisper-large-v3-turbo/resolve/main/onnx/encoder_model_quantized.onnx"
+enabled = false
+
+[[model]]
+name    = "whisper-large-turbo-decoder"
+version = "large-v3-turbo"
+licence = "MIT"
+format  = "onnx"
+purpose = "Speech-to-text, second half: hidden states to tokens (large tier)"
+size_bytes = 439684851
+sha256  = "b54c67a80cf31304d75b8d525393e8758c23f848027d4fa916f26077e9f4bde2"
+source  = "https://huggingface.co/onnx-community/whisper-large-v3-turbo/resolve/main/onnx/decoder_model_quantized.onnx"
+enabled = false
+
+# THE LADDER MOVED UP A RUNG, and the bottom one was the right one to drop.
+#
+# It was [u2netp] / [modnet, u2netp] / [birefnet-lite, u2netp]. The bottom tier
+# offered ONE ARTIFACT THAT THE TIER ABOVE IT ALREADY CONTAINS -- `small` was
+# [u2netp] and `better` was [modnet, u2netp] -- so it was a strict subset of
+# its own neighbour, under the same title, differing by 6 MB. That is not a
+# choice anybody can make, and it is why the first-run screen appeared to
+# repeat itself even after the 224 MB row was taken off it.
+#
+# `u2netp` STAYS as an artifact and always had to: it is MODNet's fallback
+# inside the quality adapter, because MODNet is a portrait matting network and
+# returns almost nothing on a subject it was not trained for. What was removed
+# is the TIER that offered it alone, not the weights.
+[[feature]]
+id     = "remove-background-small"
+tier   = "small"
+title  = "Remove image backgrounds"
+does   = "Cuts the subject out of a photo and leaves the rest transparent."
+tool   = "image-remove-background"
+models = ["modnet", "u2netp"]
+
+[[feature]]
+id     = "remove-background-better"
+tier   = "better"
+# NOT ON THE FIRST-RUN SCREEN. 224 MB is not a tick box, and this row is the
+# one that used to be `best` -- the reasoning that kept it off that screen has
+# not changed by it moving down a rung.
+offered_at_install = false
+title  = "Remove image backgrounds"
+does   = "Sharper edges on hair and fur, and finds subjects MODNet misses."
+tool   = "image-remove-background"
+models = ["birefnet-lite", "u2netp"]
+
+# ORDERED BY COST, and the best one happens to be at the top of it.
+#
+# A tier is a budget decision, so the ladder is now 10.7 MB then 218 MB then
+# 932 MB. The first two were measured at roughly 5 s and 46 s per image; the
+# third is NOT measured and is expected to be several times the second, which
+# is what "minutes" says rather than a number nobody timed.
+[[feature]]
+id     = "remove-background-best"
+tier   = "best"
+# NOT ON THE FIRST-RUN SCREEN, and less so than ever: 932 MB is emphatically
+# not a tick box. It is offered in the tool, under the tier selector, where
+# the size sits next to the reason for wanting it and the user has already
+# decided that background removal is what they are doing.
+offered_at_install = false
+title  = "Remove image backgrounds"
+does   = "The most accurate cut-out, and much the slowest -- minutes per image on a CPU."
+tool   = "image-remove-background"
+models = ["birefnet-general", "u2netp"]
+
+[[feature]]
+id     = "upscale"
+title  = "Enlarge images"
+# QUADRUPLES. It does not double.
+#
+# This said "doubles or quadruples", which was inherited from
+# `02-FEATURES.md`'s "2x/4x image enlargement" and has never been true of
+# what ships: the registry holds one export, Real-ESRGAN x4, and
+# `run_upscale` refuses any other factor rather than faking it by
+# enlarging four times and shrinking the result back -- slower than a real
+# 2x model, worse than one, and a second resample after a step whose
+# receipt already says the detail is invented.
+#
+# 2x needs its own weights. The private project plan is the
+# plan for them. Until they are here this line says what the model does.
+does   = "Quadruples an image's size without the usual blur."
+tool   = "image-upscale"
+models = ["realesrgan-x4"]
+
+[[feature]]
+# TWO TIERS, and the base one keeps the install-time offer.
+#
+# `tier` was absent here, which made this a one-rung ladder and meant the tool
+# drew no selector at all -- the interface only offers a choice when there is
+# more than one. Naming this rung is what turns the large model below into
+# something a user can pick.
+id     = "transcribe"
+tier   = "small"
+title  = "Transcribe speech"
+does   = "Turns speech in an audio file into text you can read and search."
+tool   = "audio-transcribe"
+models = ["whisper-encoder", "whisper-decoder", "whisper-tokenizer", "silero-vad"]
+
+[[feature]]
+id     = "transcribe-large"
+tier   = "best"
+# NOT ON THE FIRST-RUN SCREEN, for the reason every large row is kept off it:
+# 1,039 MB is not a tick box, and it is a choice that only makes sense once
+# somebody has transcribed something and wants it done better. The tokeniser
+# and the voice-activity model are SHARED with the base tier and appear in
+# both lists -- `featureSize` sums a feature's own artifacts, so a machine
+# that already has the base tier downloads only the two large ones.
+offered_at_install = false
+title  = "Transcribe speech"
+does   = "Noticeably more accurate, especially on accents and background noise. Much slower on a processor."
+tool   = "audio-transcribe"
+models = [
+  "whisper-large-turbo-encoder",
+  "whisper-large-turbo-decoder",
+  "whisper-tokenizer",
+  "silero-vad",
+]
+
+
+# ===========================================================================
+# RESTORED: OCR, on PP-OCRv6 medium
+# ===========================================================================
+#
+# The `ocr` feature and its three PP-OCRv4 artifacts were withdrawn on
+# 2026-09-04, because a registry row exists to be downloaded and offering a
+# download nothing reaches is the defect `every_capability_is_reachable` was
+# written to prevent. The code was never touched: `ocr_to_text`, the worker
+# dispatch arm and the six image -> txt routes stayed, refusing for want of a
+# model.
+#
+# Restored 2026-09-05 on **PP-OCRv6 medium**, which is a version bump rather
+# than a rewrite: same three-artifact shape, same ONNX runtime, same
+# detector/recogniser contract `ocr.rs` already implements. Checked against the
+# published configs before the rows were written, because a version bump bites
+# in exactly two places -- the recogniser's class count and its input height:
+#
+#   * det `inference.yml` normalises with ImageNet mean/std, which is what
+#     `normalise_imagenet` does. Unchanged from v4.
+#   * rec `inference.yml` declares `image_shape: [3, 48, 320]`, and
+#     `REC_HEIGHT` is 48. Unchanged from v4.
+#   * rec `PostProcess: CTCLabelDecode`, which is the decode `ocr.rs` does.
+#   * the dictionary is 18,708 entries in BOTH the recogniser's own
+#     `inference.yml` and `ppocrv6_dict.txt`, counted from each independently.
+#     v4 had 6,623. That number is why the dict is pinned per version.
+#
+# IDS ARE UNVERSIONED, AND THE VERSION LIVES IN `version`. The plan for this
+# work proposed `ppocr-v6-det`. It is `paddleocr-det` instead: model ids appear
+# in the user's `enabled_models`, so putting a version in the id means every
+# future bump silently discards the user's choice to enable the feature. That
+# is also why `engines.rs` names them, and renaming across both for a version
+# bump is churn with a user-visible cost and no benefit.
+#
+# Sizes and hashes are from the files that were downloaded, loaded and run.
+# Both ONNX hashes independently match the LFS object ids HuggingFace
+# publishes, so the pin is confirmed against the server's record and not only
+# against our copy.
+
+[[model]]
+# PaddleOCR PP-OCRv6 medium, DETECTION half: where the text is.
+#
+# THREE ROWS, NOT ONE. OCR is a detection network, a recognition network and
+# the character dictionary the second one's classes index into. Bundling them
+# would mean inventing a container and hashing that instead of the artifacts,
+# when the registry already pins artifacts individually.
+name    = "paddleocr-det"
+version = "PP-OCRv6-medium"
+licence = "Apache-2.0"
+format  = "onnx"
+purpose = "Text detection: finds the lines in an image"
+size_bytes = 62032837
+sha256  = "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1"
+source  = "https://huggingface.co/PaddlePaddle/PP-OCRv6_medium_det_onnx/resolve/main/inference.onnx"
+enabled = false
+
+[[model]]
+# PaddleOCR PP-OCRv6 medium, RECOGNITION half: what each line says.
+# 18,710 output classes = blank + 18,708 dictionary entries + space.
+name    = "paddleocr-rec"
+version = "PP-OCRv6-medium"
+licence = "Apache-2.0"
+format  = "onnx"
+purpose = "Text recognition: reads the lines detection found"
+size_bytes = 76554979
+sha256  = "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba"
+source  = "https://huggingface.co/PaddlePaddle/PP-OCRv6_medium_rec_onnx/resolve/main/inference.onnx"
+enabled = false
+
+[[model]]
+# The character dictionary. Data, not weights -- see FORMAT_ALLOWLIST for why
+# `txt` is an accepted artifact format and why that does not widen SR-8.
+#
+# The recogniser ships its own copy of this list inline in `inference.yml`, and
+# that copy is the authority. It is not what is pinned: `yml` is not on
+# FORMAT_ALLOWLIST, and putting a YAML parser in the worker that handles
+# hostile input to read 18,708 quoted scalars would be new attack surface for a
+# file we can fetch as plain text instead. `ppocrv6_dict.txt` was compared
+# against the inline copy -- same 18,708 entries -- so the two agree and the
+# simpler artifact is the pinned one.
+name    = "paddleocr-dict"
+version = "PP-OCRv6-medium"
+licence = "Apache-2.0"
+format  = "txt"
+purpose = "Character dictionary the recogniser's classes index into"
+size_bytes = 74947
+sha256  = "b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d"
+source  = "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/dict/ppocrv6_dict.txt"
+enabled = false
+
+# NO TIER FIELD, LIKE `transcribe` AND `upscale`.
+#
+# The plan proposed `ocr-small` beside a later `ocr-best` on GLM-OCR. There is
+# no best tier yet, and `tier` defaults to `small`, so writing it now would
+# render a tier ladder with one rung in Settings -- a choice presented to a
+# user who has nothing to choose. It goes in when the second tier does.
+[[feature]]
+id     = "ocr"
+title  = "Read text in images"
+does   = "Finds the words in a photo or scan and writes them to a text file."
+tool   = "image-ocr"
+models = ["paddleocr-det", "paddleocr-rec", "paddleocr-dict"]

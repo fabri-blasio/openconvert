@@ -1,0 +1,39 @@
+# Purity gate for openconvert-core.  03 §4.
+#
+# This file is the ENFORCEMENT of the functional-core claim. It exists because
+# the obvious mechanism does not work: `std` is fully available on
+# wasm32-unknown-unknown, so a core holding File, SystemTime::now and env::var
+# compiles cleanly for that target and produces an rlib (spike S1). A wasm32
+# build is a portability gate. This is the purity gate.
+#
+# Honest class: Hard, not Impossible (03 §7.4). #![no_std] would be Impossible
+# and is the upgrade path if the core stops needing alloc-backed collections.
+# The bypass -- #[allow(clippy::disallowed_types)] -- is itself gated, by a
+# source scan in xtask.
+#
+# NOTE: clippy.toml is workspace-wide. The lints below are set to `warn` at the
+# crate level in every crate EXCEPT openconvert-core, which sets them to `deny`.
+# See each crate's lib.rs.
+
+disallowed-types = [
+    { path = "std::fs::File",          reason = "core is pure; -run owns the HandleTable (03 §11.3)" },
+    { path = "std::fs::OpenOptions",   reason = "core performs no I/O (03 §4)" },
+    { path = "std::path::PathBuf",     reason = "core names no paths; engines receive descriptors (03 §5.2)" },
+    { path = "std::path::Path",        reason = "core names no paths; engines receive descriptors (03 §5.2)" },
+    { path = "std::net::TcpStream",    reason = "SR-9: one outbound call site, and it is not here" },
+    { path = "std::net::UdpSocket",    reason = "SR-9: one outbound call site, and it is not here" },
+    { path = "std::time::SystemTime",  reason = "time is an input to core, never a read (03 §4)" },
+    { path = "std::time::Instant",     reason = "time is an input to core, never a read (03 §4)" },
+    { path = "std::process::Command",  reason = "SR-3: process creation lives in -os (03 §5)" },
+]
+
+disallowed-methods = [
+    { path = "std::time::SystemTime::now", reason = "time is an input to core, never a read" },
+    { path = "std::time::Instant::now",    reason = "time is an input to core, never a read" },
+    { path = "std::env::var",              reason = "core reads no environment (03 §4)" },
+    { path = "std::env::vars",             reason = "core reads no environment (03 §4)" },
+    { path = "std::env::current_dir",      reason = "core reads no environment (03 §4)" },
+    { path = "std::fs::read",              reason = "core performs no I/O (03 §4)" },
+    { path = "std::fs::read_to_string",    reason = "core performs no I/O (03 §4)" },
+    { path = "std::fs::write",             reason = "destructive, and core performs no I/O (03 §7.4)" },
+]

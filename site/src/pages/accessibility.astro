@@ -1,0 +1,48 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base
+  title="Accessibility — OpenConvert"
+  description="WCAG 2.2 AA, enforced by build gates rather than intention: contrast, keyboard traversal, reduced motion, zero layout shift."
+  path="/accessibility">
+
+  <div class="wrap narrow">
+    <section>
+      <span class="eyebrow">accessibility</span>
+      <h1>Conformance by gate, not intention.</h1>
+      <p class="lede measure">
+        Target: WCAG 2.2 AA. What follows is enforced on every build — a check that can fail is
+        the difference between a statement and a wish.
+      </p>
+
+      <div class="table-scroll" style="margin-top: var(--s-6)">
+        <table>
+          <thead><tr><th>requirement</th><th>how it holds</th></tr></thead>
+          <tbody>
+            <tr><td>Perceivable state</td><td>State is never colour alone: glyph + label + border + fill.</td></tr>
+            <tr><td>Contrast</td><td>4.5:1 body text, 3:1 non-text, checked as rendered component pairs.</td></tr>
+            <tr><td>Keyboard</td><td>Full traversal plus an axe pass on every template.</td></tr>
+            <tr><td>Motion</td><td>Under reduced-motion every sequence resolves instantly to its end state; nothing loops.</td></tr>
+            <tr><td>Stability</td><td>Cumulative layout shift budget: zero. Reserved heights everywhere.</td></tr>
+            <tr><td>Structure</td><td>Skip link, landmarks, labelled navs, table headers, focus-visible throughout.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 style="margin-top: var(--s-7)">Known limitation</h2>
+      <p class="small measure">
+        The homepage sample needs JavaScript to convert an image; without it, the page states the
+        same facts statically and nothing depends on the demo. If you hit a barrier anywhere else,
+        write <a href="mailto:hello@openconvert.dev" class="mono">hello@openconvert.dev</a> — fixed
+        within one release cycle.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .narrow { max-width: 760px; }
+  section { padding-block: var(--section-y-tight); }
+  h1 { font-size: clamp(1.9rem, 4vw, 2.5rem); font-weight: var(--fw-normal); }
+  h2 { font-size: 1.05rem; font-weight: var(--fw-strong); }
+</style>

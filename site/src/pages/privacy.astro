@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+import src from '../../../release/privacy.json';
+
+// GENERATED. Every word inside <main> comes from release/privacy.json at the repository — the same file the README's privacy section and the app's settings
+// screen render from. Three hand-maintained copies of a privacy statement are
+// three statements that will disagree, and this is the page where that would
+// matter most.
+//
+// The 300-word cap in 10-WEBSITE §9 is a build gate, not a preference:
+// scripts/gates.mjs counts the words inside <main> and fails the build over.
+// The cap is the whole design — a privacy page nobody finishes is a privacy
+// page nobody read.
+---
+<Base
+  title="Privacy — OpenConvert"
+  description="What leaves your machine, and when. One network call, no identifier, no telemetry — and you can read the request and switch it off."
+  path="/privacy">
+
+  <div class="wrap">
+    <section>
+      <div class="stack stack-6 measure">
+        <h1>One network call. You can read it and switch it off.</h1>
+
+        <div class="stack stack-5">
+          {src.sections.map((s: { id: string; heading: string; body: string }) => (
+            <div class="stack stack-2" id={s.id}>
+              <h2 class="pv-h">{s.heading}</h2>
+              <p class="small">{s.body}</p>
+            </div>
+          ))}
+        </div>
+
+        <p class="note">{src.closing}</p>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .pv-h { font-size: var(--fs-title); }
+</style>

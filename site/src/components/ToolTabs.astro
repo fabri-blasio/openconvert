@@ -1,0 +1,186 @@
+---
+/**
+ * Three groups of tools; pick one and its screens play beside it.
+ *
+ * **No JavaScript**, in two parts:
+ *
+ *   1. The groups are one radio set and the panels are siblings, so `:checked`
+ *      and `:has()` decide which bullet list is open and which stage is
+ *      showing. That works on the first paint, works under `script-src 'none'`
+ *      — this site's CSP on every content page — and inherits the radio group's
+ *      keyboard behaviour instead of reimplementing a tablist badly.
+ *   2. Each stage cycles through its own screenshots on a CSS animation. The
+ *      keyframes are written so the FIRST picture is the one showing at t=0:
+ *      in a tab whose timeline has never started, the stage shows a real
+ *      screen rather than an empty box.
+ *
+ * Every picture is a capture of the shipping UI from `tools/shots`.
+ */
+import Shot from './Shot.astro';
+
+export interface Props {
+  groups: {
+    id: string;
+    title: string;
+    /** The screens this group cycles through, in order. */
+    shots: { id: string; alt?: string }[];
+    items: string[];
+  }[];
+}
+const { groups } = Astro.props as Props;
+
+/**
+ * Which group's stage is showing.
+ *
+ * One pair of rules per group, generated from the groups this instance was
+ * given: the page decides how many there are, so the stylesheet cannot.
+ */
+const groupRules = groups
+  .map(
+    (g) =>
+      `.tabs:has(#tt-${g.id}:checked) .stage-group{visibility:hidden}` +
+      `.tabs:has(#tt-${g.id}:checked) .s-${g.id}{visibility:visible}`,
+  )
+  .join('\n');
+
+
+/** Seconds each screen holds before the next one takes over. */
+const HOLD = 3.6;
+---
+<div class="tabs">
+  <div class="panes">
+    {groups.map((g, i) => (
+      <div class="pane">
+        <input type="radio" name="tooltabs" id={`tt-${g.id}`} class="tt-input" checked={i === 0} />
+        <label class="tt-label" for={`tt-${g.id}`}>
+          <span class="tt-title">{g.title}</span>
+          <span class="tt-caret" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor"
+              stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          </span>
+        </label>
+        <ul class="tt-items">
+          {g.items.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+    ))}
+  </div>
+
+  <div class="stage">
+    {groups.map((g) => (
+      <div
+        class={`stage-group s-${g.id}`}
+        data-n={g.shots.length}
+        style={`--n:${g.shots.length};--cycle:${(g.shots.length * HOLD).toFixed(1)}s`}>
+        {g.shots.map((s, k) => (
+          <figure class="frame" style={`--k:${k}`}>
+            <Shot id={s.id} alt={s.alt} />
+          </figure>
+        ))}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .tabs {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    gap: clamp(var(--s-6), 4vw, var(--s-8));
+    align-items: center;
+  }
+  @media (max-width: 900px) { .tabs { grid-template-columns: 1fr; } }
+
+  .panes { display: flex; flex-direction: column; }
+  .pane { border-bottom: 1px solid var(--hairline); }
+  .pane:first-child { border-top: 1px solid var(--hairline); }
+
+  /* Focusable, announced, and off-screen — never `display: none`, which would
+     take it out of the tab order and the accessibility tree with it. */
+  .tt-input {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  .tt-label {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-5) 0;
+    cursor: pointer; user-select: none;
+  }
+  .tt-title { font-size: var(--fs-title); font-weight: var(--fw-strong); letter-spacing: -0.015em; }
+  .tt-caret { color: var(--text-tertiary); display: grid; place-items: center; }
+  .tt-caret svg { width: 18px; height: 18px; transition: rotate var(--m-standard) var(--curve); }
+  .tt-label:hover .tt-title { color: var(--brand); }
+  .tt-input:focus-visible + .tt-label { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: var(--r-sm); }
+
+  .tt-items {
+    margin: 0;
+    padding: 0 0 var(--s-5) 1.1em;
+    display: none;
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+  }
+  .tt-items li { margin-bottom: var(--s-2); }
+
+  .tt-input:checked + .tt-label .tt-title { color: var(--brand); }
+  .tt-input:checked + .tt-label .tt-caret svg { rotate: 180deg; }
+  .tt-input:checked ~ .tt-items { display: block; }
+
+  /* ---- the stage ---------------------------------------------------------
+     Every group and every frame lives in one grid cell, so the stage keeps a
+     single height and nothing on the page moves when the picture changes. */
+  .stage { display: grid; }
+  .stage-group { grid-area: 1 / 1; display: grid; visibility: hidden; }
+  .frame { grid-area: 1 / 1; margin: 0; }
+  @media (max-width: 900px) { .stage { order: -1; } }
+
+  .stage-group:first-child { visibility: visible; }
+
+  /* ---- the cycle ---------------------------------------------------------
+     Opacity, not transform, because this is a cross-fade between two pictures
+     of the same window; sliding them would read as a different feature.
+
+     The RESTING state carries the fallback: frame one is opaque, the rest are
+     not, and the animation runs with no fill. So a timeline that never starts
+     leaves the first screen showing instead of an empty stage, and while the
+     cycle runs the animation is active on every frame and wins. */
+  .frame { opacity: 0; }
+  .frame:first-child { opacity: 1; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .frame {
+      animation-duration: var(--cycle);
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      animation-delay: calc(var(--k) * var(--cycle) / var(--n));
+    }
+    /* One keyframe set per group size: each frame holds for its own 1/N slot
+       and cross-fades out over the last tenth of it. A single set of
+       percentages cannot serve both, because the slot IS the percentage. */
+    [data-n='2'] .frame { animation-name: cycle-2; }
+    [data-n='3'] .frame { animation-name: cycle-3; }
+    [data-n='4'] .frame { animation-name: cycle-4; }
+  }
+
+  @keyframes cycle-2 {
+    0%, 45%   { opacity: 1; }
+    50%, 95%  { opacity: 0; }
+    100%      { opacity: 1; }
+  }
+  @keyframes cycle-3 {
+    0%, 29%   { opacity: 1; }
+    33%, 96%  { opacity: 0; }
+    100%      { opacity: 1; }
+  }
+  @keyframes cycle-4 {
+    0%, 21%   { opacity: 1; }
+    25%, 97%  { opacity: 0; }
+    100%      { opacity: 1; }
+  }
+</style>
+
+<!-- One pair of rules per group, generated from the groups this instance was
+     given: the page decides how many there are, so the stylesheet cannot. -->
+<style is:inline set:html={groupRules}></style>

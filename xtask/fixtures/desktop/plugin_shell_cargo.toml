@@ -1,0 +1,7 @@
+# NEGATIVE FIXTURE. This comment names tauri-plugin-shell on purpose, for the
+# same reason as the JSON one: a gate that fires here is reading prose.
+# The Rust half of the mistake -- `Command::new` never appears in our source,
+# so the crates/ scan stays green while a webview message can spawn a process.
+[dependencies]
+tauri = "2"
+tauri-plugin-shell = "2"

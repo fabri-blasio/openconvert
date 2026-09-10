@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">OpenConvert mole app icon</title>
+  <desc id="desc">A minimal alert mole peeking through a safe verdigris tunnel.</desc>
+
+  <!-- Platform-safe squircle. The 20 px inset preserves transparent corners. -->
+  <rect x="20" y="20" width="472" height="472" rx="112" fill="#2F6F6A"/>
+  <rect x="23" y="23" width="466" height="466" rx="109" fill="none" stroke="#6FB3AC" stroke-width="6"/>
+
+  <!-- Passage / tunnel. -->
+  <circle cx="256" cy="258" r="174" fill="#FAFAFA"/>
+  <circle cx="256" cy="258" r="139" fill="#245B57"/>
+
+  <!-- Mole head: one uninterrupted silhouette. -->
+  <path fill="#1D1D1F" d="M256 139c-69 0-123 53-123 123v75c0 61 50 111 111 111h24c61 0 111-50 111-111v-75c0-70-54-123-123-123Z"/>
+
+  <!-- Alert eyes, kept large enough to survive 32 px. -->
+  <ellipse cx="211" cy="246" rx="13" ry="16" fill="#FAFAFA"/>
+  <ellipse cx="301" cy="246" rx="13" ry="16" fill="#FAFAFA"/>
+  <circle cx="215" cy="250" r="6" fill="#1D1D1F"/>
+  <circle cx="297" cy="250" r="6" fill="#1D1D1F"/>
+
+  <!-- Two-shape muzzle and signature nose. -->
+  <ellipse cx="222" cy="307" rx="58" ry="45" fill="#FAFAFA"/>
+  <ellipse cx="290" cy="307" rx="58" ry="45" fill="#FAFAFA"/>
+  <path d="M256 326c-10 0-18 7-18 16 0 8 8 15 18 15s18-7 18-15" fill="none" stroke="#1D1D1F" stroke-width="9" stroke-linecap="round"/>
+  <path fill="#E78B8C" d="M256 266c20 0 34 10 34 24 0 12-16 28-34 35-18-7-34-23-34-35 0-14 14-24 34-24Z"/>
+  <ellipse cx="246" cy="280" rx="8" ry="5" fill="#FAFAFA" opacity=".8"/>
+
+  <!-- Broad digging paws overlap the tunnel rim and finish the silhouette. -->
+  <path fill="#1D1D1F" d="M129 339c16-22 48-26 70-10 13 10 24 28 33 52 7 20-10 39-30 32l-54-18c-25-8-34-36-19-56Z"/>
+  <path fill="#1D1D1F" d="M383 339c-16-22-48-26-70-10-13 10-24 28-33 52-7 20 10 39 30 32l54-18c25-8 34-36 19-56Z"/>
+  <g fill="none" stroke="#FAFAFA" stroke-width="10" stroke-linecap="round">
+    <path d="m151 355 19 25M176 346l15 27M361 355l-19 25M336 346l-15 27"/>
+  </g>
+</svg>

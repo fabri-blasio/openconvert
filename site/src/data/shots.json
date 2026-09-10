@@ -1,0 +1,297 @@
+{
+  "_comment": "WRITTEN BY site/tools/shots/encode.mjs, never by hand. Alt text is authored in tools/shots/scenes.mjs, beside the click path that produces each picture. app_sha is the commit the app was captured at; scripts/gates.mjs refuses a build whose screenshots are more than one release behind it.",
+  "generated_by": "site/tools/shots/encode.mjs",
+  "encoder": "openconvert 0.1.0",
+  "app_sha": "f54cc57",
+  "captured": "2026-09-10",
+  "shots": [
+    {
+      "id": "ai-features",
+      "alt": "The OpenConvert first-run panel headed “Add AI features?”, listing four optional on-device models with their size on disk and licence, none of them installed, and a “Not now” button.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 115703,
+          "webp": 162590
+        },
+        "light": {
+          "avif": 119380,
+          "webp": 148936
+        }
+      }
+    },
+    {
+      "id": "drop-idle",
+      "alt": "The empty OpenConvert window: one large dashed drop area reading “Drop files to convert”, with “or click to choose · Ctrl+O” beneath it.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 42709,
+          "webp": 33606
+        },
+        "light": {
+          "avif": 44738,
+          "webp": 31332
+        }
+      }
+    },
+    {
+      "id": "batch-plan",
+      "alt": "Five dropped files listed in OpenConvert, each showing its detected format and the target it will convert to — three HEIC photos to JPEG, a file named screenshot.png flagged “The name says PNG and the content says JPEG; routing by content”, and a FLAC recording to WAV.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 93989,
+          "webp": 116038
+        },
+        "light": {
+          "avif": 93014,
+          "webp": 107660
+        }
+      }
+    },
+    {
+      "id": "progress",
+      "alt": "A conversion running in OpenConvert: a progress bar, the heading “4 of 5”, four rows marked done, one marked started, and a Cancel button.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 35467,
+          "webp": 38922
+        },
+        "light": {
+          "avif": 36420,
+          "webp": 37402
+        }
+      }
+    },
+    {
+      "id": "batch-done",
+      "alt": "The OpenConvert results screen: “4 converted · 1 failed · 5 total”, elapsed time and bytes in and out, each converted file listed with its operation class and duration, and one honest failure — “libheif could not decode this file: unsupported colour profile”.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 66574,
+          "webp": 94970
+        },
+        "light": {
+          "avif": 69615,
+          "webp": 93448
+        }
+      }
+    },
+    {
+      "id": "receipt-open",
+      "alt": "A conversion receipt expanded inside OpenConvert, listing the engine and its version, the exact parameters, the operation class, the limits and sandbox profile the job ran under, the hash of the bytes read, and the number of network calls made.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 90119,
+          "webp": 134042
+        },
+        "light": {
+          "avif": 96129,
+          "webp": 126210
+        }
+      }
+    },
+    {
+      "id": "tools-menu",
+      "alt": "The OpenConvert Tools menu open, grouped Image, Audio and PDF: remove background, upscale ×4, invert colours, black and white, colour picker, remove background noise, transcribe to text, merge documents, reorder pages, and sign.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 50455,
+          "webp": 72084
+        },
+        "light": {
+          "avif": 50395,
+          "webp": 69546
+        }
+      }
+    },
+    {
+      "id": "remove-bg",
+      "alt": "The OpenConvert background-removal workspace: the image on a transparency checkerboard with the subject cut out, a before/after toggle, zoom controls, and the status line “Background removed, now transparent”.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 85702,
+          "webp": 106894
+        },
+        "light": {
+          "avif": 75549,
+          "webp": 99282
+        }
+      }
+    },
+    {
+      "id": "upscale",
+      "alt": "The OpenConvert upscaling workspace showing an image enlarged four times on device, with zoom controls and a before/after toggle.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 71254,
+          "webp": 220240
+        },
+        "light": {
+          "avif": 68199,
+          "webp": 213138
+        }
+      }
+    },
+    {
+      "id": "transcribe",
+      "alt": "The OpenConvert transcription workspace: a speech recording with its waveform and the transcript produced from it on this machine.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 70809,
+          "webp": 94318
+        },
+        "light": {
+          "avif": 75268,
+          "webp": 86780
+        }
+      }
+    },
+    {
+      "id": "pdf-merge",
+      "alt": "The OpenConvert document workspace with two PDFs loaded, their pages laid out as thumbnails ready to be merged and reordered.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 48009,
+          "webp": 67668
+        },
+        "light": {
+          "avif": 47975,
+          "webp": 63582
+        }
+      }
+    },
+    {
+      "id": "colour-picker",
+      "alt": "The OpenConvert colour picker: an image open in the workspace with a sampled colour and its value shown beside it.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 78196,
+          "webp": 239090
+        },
+        "light": {
+          "avif": 75444,
+          "webp": 231156
+        }
+      }
+    },
+    {
+      "id": "pdf-reorder",
+      "alt": "The OpenConvert page-reordering workspace: a document's pages listed so they can be moved or dropped before the file is written.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 70219,
+          "webp": 108874
+        },
+        "light": {
+          "avif": 68658,
+          "webp": 100528
+        }
+      }
+    },
+    {
+      "id": "denoise",
+      "alt": "The OpenConvert noise-removal workspace: a speech recording with its waveform, cleaned up on this machine.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 85523,
+          "webp": 125986
+        },
+        "light": {
+          "avif": 91204,
+          "webp": 114290
+        }
+      }
+    },
+    {
+      "id": "invert",
+      "alt": "The OpenConvert image workspace with an image's colours inverted, before and after available.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 72589,
+          "webp": 228662
+        },
+        "light": {
+          "avif": 68223,
+          "webp": 221988
+        }
+      }
+    },
+    {
+      "id": "black-and-white",
+      "alt": "The OpenConvert image workspace converting an image to black and white on this machine.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 68662,
+          "webp": 147494
+        },
+        "light": {
+          "avif": 66685,
+          "webp": 140354
+        }
+      }
+    },
+    {
+      "id": "sign",
+      "alt": "The OpenConvert signing workspace: a signature kept on this machine, placed on a document page.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 52273,
+          "webp": 81958
+        },
+        "light": {
+          "avif": 51822,
+          "webp": 72250
+        }
+      }
+    },
+    {
+      "id": "settings-models",
+      "alt": "The OpenConvert settings screen, showing each on-device model with its size, licence, an enable switch, and a control that deletes it and reclaims the disk space.",
+      "width": 1800,
+      "height": 1360,
+      "themes": {
+        "dark": {
+          "avif": 89281,
+          "webp": 134332
+        },
+        "light": {
+          "avif": 93343,
+          "webp": 123804
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+; The pdfium functions this worker calls, and nothing else.
+;
+; WHY THIS FILE IS IN THE REPO
+;
+; The upstream binary distribution ships pdfium.dll and no import library, so
+; one is generated from this list at setup time (`cargo xtask deps`). That
+; makes the .def a SOURCE artifact rather than a derived one: it is this
+; project's declaration of its own interface to pdfium, and it belongs beside
+; the code that uses it.
+;
+; It lived in %TEMP% and was edited by hand. A missing entry does not fail the
+; build -- it fails the LINK, later, with an unresolved symbol, which is a
+; confusing way to learn that someone called a new function. Adding a call to
+; pdfium means adding its name here in the same commit.
+LIBRARY pdfium
+EXPORTS
+FPDF_InitLibrary
+FPDF_DestroyLibrary
+FPDF_LoadMemDocument64
+FPDF_GetPageCount
+FPDF_LoadPage
+FPDF_ClosePage
+FPDF_CloseDocument
+FPDF_GetPageWidthF
+FPDF_GetPageHeightF
+FPDF_RenderPageBitmap
+FPDFBitmap_CreateEx
+FPDFBitmap_FillRect
+FPDFBitmap_GetBuffer
+FPDFBitmap_GetStride
+FPDFBitmap_Destroy
+FPDF_GetLastError
+FPDFText_LoadPage
+FPDFText_ClosePage
+FPDFText_CountChars
+FPDFText_GetUnicode
+FPDFText_GetCharBox
+FPDFText_GetFontSize

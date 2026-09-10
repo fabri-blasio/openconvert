@@ -1,0 +1,338 @@
+---
+import '../styles/tokens.css';
+import '../styles/base.css';
+import release from '../data/release.json';
+
+export interface Props {
+  title: string;
+  description: string;
+  /** Route path for nav highlighting, e.g. "/safety" */
+  path?: string;
+  /**
+   * Admit the homepage island (the live conversion sample) on this page.
+   *
+   * Exactly one page sets it. Every other page budgets 0 KB of script, so the
+   * budget is policy rather than promise: a content page that grew a script
+   * would stop executing it, because its own CSP says `script-src 'none'`.
+   */
+  island?: boolean;
+  /**
+   * Admit `/copy.js` — the clipboard button on /download.
+   *
+   * A second exception, and it is worth naming why. /download is a page whose
+   * content is commands you paste into a terminal; copying them IS the page's
+   * job. Sixty lines of vanilla JavaScript, same origin, no dependency, and
+   * the page renders and reads identically without it.
+   */
+  copy?: boolean;
+  /**
+   * Admit `/contact.js` — the contact form on /contact.
+   *
+   * It composes a `mailto:` and hands it to the visitor's own mail client.
+   * Nothing is posted, so `form-action` stays `'none'` here too.
+   */
+  contact?: boolean;
+}
+
+const { title, description, path = '/', island = false, copy = false, contact = false } = Astro.props;
+
+// Zero external requests, enforced by policy as well as by convention.
+// Dev needs the HMR websocket; production allows nothing to connect at all.
+//
+// `script-src 'none'` in production is the JavaScript budget written as a
+// header: a content page that grew a script would stop executing it rather
+// than quietly shipping it.
+//
+// The island page is the one exception and it pays for itself in the policy:
+// `'wasm-unsafe-eval'` to compile the router module, and `connect-src 'self'`
+// to fetch it — nothing off this origin either way.
+// Every page now carries one script — `theme.js`, six hundred bytes that read
+// a preference and stamp an attribute — so `script-src 'none'` is no longer
+// true anywhere and pretending otherwise in a header would be worse than the
+// script. The policy stays as tight as it can be: 'self' only, no host is ever
+// named, and the island page adds exactly the one extra token it needs to
+// compile a WebAssembly module.
+const scriptSrc = island
+  ? "script-src 'self' 'wasm-unsafe-eval'"
+  : import.meta.env.PROD
+    ? "script-src 'self'"
+    : "script-src 'self' 'unsafe-inline'";
+
+// Only two pages fetch anything, and both only from this origin: the island
+// loads the wasm router, and /contact posts the form to /api/contact. The copy
+// button touches the clipboard and nothing else, so /download stays on 'none'.
+const connectSrc = island || contact
+  ? "connect-src 'self'"
+  : import.meta.env.PROD
+    ? "connect-src 'none'"
+    : "connect-src 'self' ws:";
+
+// Where a <form> may submit. 'self' on /contact and nowhere else, so no page
+// on this site can be made to post anywhere but back to this origin.
+const formAction = contact ? "form-action 'self'" : "form-action 'none'";
+
+const CSP = [
+  "default-src 'self'",
+  "img-src 'self' data:",
+  "style-src 'self' 'unsafe-inline'",
+  scriptSrc,
+  "font-src 'self'",
+  connectSrc,
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  formAction,
+].join('; ');
+
+/**
+ * Four links and one button (13-SITE-REBUILD §5).
+ *
+ * `/safety` and `/changelog` left the nav for the footer. They are proof pages:
+ * someone reaches them from a claim they have just read, not from a menu they
+ * scan before they know what the product is.
+ *
+ * `/enterprise` earns a slot the proof pages did not, because it is the one
+ * page a visitor cannot get to by reading on — the person who needs it arrives
+ * knowing they need it and looks for the word in the menu.
+ */
+const nav = [
+  { href: '/features',   label: 'Features' },
+  { href: '/enterprise', label: 'Enterprise' },
+  { href: '/community',  label: 'Community' },
+  { href: '/about',      label: 'About' },
+];
+
+const GITHUB = 'https://github.com/fabri-blasio/cloudconvert';
+const year = new Date().getFullYear();
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="canonical" href={new URL(path, 'https://openconvert.dev').href} />
+
+  <!-- Open Graph: no remote images. The card is text. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={new URL(path, 'https://openconvert.dev').href} />
+
+  <!-- No third-party requests, ever. Enforced here and by a build check. -->
+  <meta http-equiv="Content-Security-Policy" content={CSP} />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/favicon-180.png" />
+
+  <!-- Same-origin font, fetched early so first paint and first swap agree. -->
+  <link rel="preload" href="/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin />
+
+  <!-- Blocking, and deliberately so: a deferred theme script paints the wrong
+       palette and corrects it after layout, which is a white flash on every
+       navigation for anyone browsing dark. -->
+  <script src="/theme.js" is:inline></script>
+</head>
+<body>
+  <a href="#main" class="skip">Skip to content</a>
+
+  <header class="site-head">
+    <div class="wrap head-inner">
+      <a href="/" class="brand plain" aria-label="OpenConvert home">
+        <!-- Two files, one geometry. The mark is monoline in #1D1D1F, which is
+             invisible on the dark palette's #0A0A0A, so dark mode gets the same
+             drawing with the ink and the verdigris swapped for their dark-side
+             values rather than a filter over the light one. The folder body is
+             filled rather than hollow, so the mark is opaque in its own shape —
+             a square plate behind it would show as a box in the header. -->
+        <img class="brand-mark only-light" src="/logo.svg" width="34" height="30" alt="" />
+        <img class="brand-mark only-dark" src="/logo-dark.svg" width="34" height="30" alt="" />
+        <span class="brand-name">openconvert</span>
+      </a>
+      <div class="head-right">
+        <nav aria-label="Main">
+          <ul class="nav-list">
+            {nav.map((item) => (
+              <li>
+                <a href={item.href}
+                   class:list={['nav-link', 'plain', { active: path.startsWith(item.href) }]}
+                   aria-current={path.startsWith(item.href) ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div class="nav-icons">
+          <a href={GITHUB} class="icon-link plain" aria-label="OpenConvert on GitHub" rel="noopener">
+            <svg viewBox="0 0 16 16" width="17" height="17" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          </a>
+          <a href="/community" class="icon-link plain" aria-label="Discord — the invite is on the community page">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.44 2.9a.07.07 0 0 0-.08.04c-.21.37-.44.86-.6 1.25a18.27 18.27 0 0 0-5.5 0 12.6 12.6 0 0 0-.61-1.25.08.08 0 0 0-.08-.04c-.83.14-1.63.38-4.88 1.47a.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.22-2a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13c.13-.09.25-.19.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01c.12.1.24.2.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.88a.08.08 0 0 0-.04.12c.36.7.77 1.36 1.22 1.99a.08.08 0 0 0 .08.03 19.84 19.84 0 0 0 6.02-3.03.08.08 0 0 0 .03-.05c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Z"/></svg>
+          </a>
+          <button type="button" class="icon-link theme-btn" data-theme-toggle
+            aria-label="Change the theme: system, light or dark">
+            <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.4" />
+              <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" />
+            </svg>
+            <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.7" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z" />
+            </svg>
+          </button>
+
+          <a href="/download" class="btn btn-primary nav-cta">Download</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <slot />
+  </main>
+
+  {copy && <script src="/copy.js" defer is:inline></script>}
+  {contact && <script src="/contact.js" defer is:inline></script>}
+
+  <footer class="site-foot">
+    <div class="wrap">
+      <div class="foot-grid">
+        <div class="stack stack-3">
+          <span class="eyebrow">Product</span>
+          <a href="/features" class="foot-link">Features</a>
+          <a href="/download" class="foot-link">Download</a>
+          <a href="/changelog" class="foot-link">Changelog</a>
+        </div>
+        <div class="stack stack-3">
+          <span class="eyebrow">Trust</span>
+          <a href="/safety" class="foot-link">Safety</a>
+          <a href="/privacy" class="foot-link">Privacy</a>
+          <a href="/accessibility" class="foot-link">Accessibility</a>
+        </div>
+        <div class="stack stack-3">
+          <span class="eyebrow">Company</span>
+          <a href="/about" class="foot-link">About</a>
+          <a href="/enterprise" class="foot-link">Enterprise</a>
+          <a href="/community" class="foot-link">Community</a>
+          <a href="/contact" class="foot-link">Contact</a>
+          <a href={GITHUB} class="foot-link" rel="noopener">Source&nbsp;code ↗</a>
+        </div>
+        <div class="stack stack-3">
+          <span class="eyebrow">Legal</span>
+          <a href="/terms" class="foot-link">Terms</a>
+          <a href="/licences" class="foot-link">Licences</a>
+          <a href="/imprint" class="foot-link">Imprint</a>
+        </div>
+      </div>
+      <div class="foot-base">
+        <span class="caption">
+          © {year} Clura srls · PI 18314321003 ·
+          <a href="/imprint">company details</a>
+        </span>
+        <span class="caption">openconvert {release.version} · Apache-2.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    .skip {
+      position: absolute; left: -9999px; top: 0; z-index: 10;
+      background: var(--brand); color: var(--brand-ink);
+      padding: 10px 16px; border-radius: 0 0 var(--r-sm) 0; border: 0;
+      font-size: 0.8rem; font-weight: var(--fw-strong);
+    }
+    .skip:focus { left: 0; }
+
+    .site-head {
+      position: sticky; top: 0; z-index: 20;
+      border-bottom: 1px solid var(--hairline);
+      background: color-mix(in srgb, var(--surface-base) 86%, transparent);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .head-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--s-5); min-height: 56px;
+    }
+    .brand { display: inline-flex; align-items: center; gap: var(--s-2); }
+    /* The mole, at its own aspect ratio. Not boxed, not tinted: the mark
+       carries the brand colour itself and a plate behind it would be a second
+       shape competing with the one that is the logo. */
+    .brand-mark { width: 34px; height: 30px; flex: none; display: block; }
+    .brand-name {
+      font-family: var(--sans); font-weight: 600; font-size: 0.92rem;
+      letter-spacing: -0.01em; color: var(--text-primary);
+    }
+    .head-right { display: flex; align-items: center; gap: var(--s-5); }
+    .nav-list {
+      list-style: none; margin: 0; padding: 0;
+      display: flex; gap: var(--s-5);
+    }
+    .nav-link {
+      font-family: var(--sans); font-weight: 500; font-size: 0.85rem;
+      letter-spacing: -0.005em;
+      color: var(--text-secondary);
+      transition: color var(--m-micro) ease-out;
+    }
+    .nav-link:hover { color: var(--text-primary); }
+    .nav-link.active { color: var(--brand); }
+    .nav-icons { display: flex; align-items: center; gap: var(--s-4); }
+    .icon-link {
+      color: var(--text-tertiary); display: grid; place-items: center;
+      transition: color var(--m-micro) ease-out;
+    }
+    .icon-link:hover { color: var(--text-primary); }
+
+    /* The control shows the theme you are IN, not the one you would move to:
+       a sun on a light page, a moon on a dark one. Which icon is drawn follows
+       the same two branches as the palette itself — the media query for
+       "system", the attribute for an explicit choice — so it can never
+       disagree with what is on screen. */
+    .theme-btn { border: 0; background: none; padding: 0; cursor: pointer; }
+    .theme-btn svg { width: 17px; height: 17px; display: block; }
+    .theme-btn .i-moon { display: none; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme='light']) .theme-btn .i-sun { display: none; }
+      :root:not([data-theme='light']) .theme-btn .i-moon { display: block; }
+    }
+    :root[data-theme='dark'] .theme-btn .i-sun { display: none; }
+    :root[data-theme='dark'] .theme-btn .i-moon { display: block; }
+    :root[data-theme='light'] .theme-btn .i-sun { display: block; }
+    :root[data-theme='light'] .theme-btn .i-moon { display: none; }
+    .nav-cta { padding: 7px 16px; font-size: 0.8rem; }
+
+    @media (max-width: 900px) {
+      .head-inner { flex-direction: column; align-items: flex-start; padding-block: var(--s-3); gap: var(--s-2); }
+      .head-right { flex-wrap: wrap; gap: var(--s-3) var(--s-4); }
+      .nav-list { gap: var(--s-4); flex-wrap: wrap; }
+      .site-head { position: static; }
+    }
+
+    /* No margin above the footer. Every page ends in a section that owns its
+       own bottom padding, and on a page whose last section is a tinted band the
+       gap read as a strip of bare page between the band and the footer rule. */
+    .site-foot { border-top: 1px solid var(--hairline); }
+    .foot-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-6); padding-block: var(--s-7);
+    }
+    @media (max-width: 820px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px) { .foot-grid { grid-template-columns: 1fr; } }
+    .foot-link {
+      font-size: var(--fs-small); color: var(--text-secondary);
+      border-bottom: 0; width: fit-content;
+      transition: color var(--m-micro) ease-out;
+    }
+    .foot-link:hover { color: var(--brand); }
+    .foot-base {
+      display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); flex-wrap: wrap;
+      padding-block: var(--s-5); border-top: 1px solid var(--hairline);
+    }
+  </style>
+</body>
+</html>

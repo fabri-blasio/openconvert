@@ -1,0 +1,440 @@
+/* ============================================================================
+   BASE — layout, type, and the shared primitives.
+   Components own their own styles; this file owns the page.
+   ============================================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  line-height: 1.62;
+  font-variant-numeric: tabular-nums;   /* 07 §6.3 — non-negotiable */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- layout ------------------------------------------------------------ */
+.wrap { max-width: var(--content); margin-inline: auto; padding-inline: var(--s-5); }
+.measure { max-width: var(--measure); }
+
+.stack { display: flex; flex-direction: column; }
+.stack-2 { gap: var(--s-2); } .stack-3 { gap: var(--s-3); }
+.stack-4 { gap: var(--s-4); } .stack-5 { gap: var(--s-5); }
+.stack-6 { gap: var(--s-6); } .stack-7 { gap: var(--s-7); }
+
+.row { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-6); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-6); }
+/* A grid item's automatic minimum size is its CONTENT's minimum, so one long
+   unbroken line inside a column — a shell command in a <pre>, a hash — makes
+   that column wider than its 1fr share and pushes the whole page sideways.
+   Measured: /features scrolled to 1340px inside a 1265px viewport, and the
+   right-hand column's `overflow-x: auto` never came into play because the
+   overflow had already happened one level up. */
+.grid-2 > *, .grid-3 > * { min-width: 0; }
+@media (max-width: 760px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; gap: var(--s-5); }
+}
+
+section { padding-block: var(--section-y); border-top: 1px solid var(--hairline); }
+section:first-of-type { border-top: 0; }
+
+/* ---- type -------------------------------------------------------------- */
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: var(--fw-strong);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+h1 { font-size: var(--fs-display); line-height: 1.08; letter-spacing: -0.033em; }
+h2 { font-size: var(--fs-heading); line-height: 1.2;  letter-spacing: -0.025em; }
+h3 { font-size: var(--fs-title);   line-height: 1.35; letter-spacing: -0.012em; }
+h4 { font-size: 0.95rem;           line-height: 1.42; }
+p  { margin: 0; }
+
+.lede { font-size: 1.12rem; line-height: 1.55; color: var(--text-secondary); }
+.small { font-size: var(--fs-small); line-height: 1.58; color: var(--text-secondary); }
+.caption { font-size: var(--fs-caption); line-height: 1.5; color: var(--text-tertiary); }
+.dim { color: var(--text-secondary); }
+.dimmer { color: var(--text-tertiary); }
+
+.eyebrow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.mono, code, kbd { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+code {
+  font-size: 0.86em;
+  background: var(--surface-sunken);
+  padding: 0.12em 0.38em;
+  border-radius: 4px;
+}
+pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: var(--s-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* ---- links ------------------------------------------------------------- */
+a { color: var(--brand); text-decoration: none; border-bottom: 1px solid var(--brand-line); }
+a:hover { border-bottom-color: var(--brand); }
+a.plain { border-bottom: 0; color: inherit; }
+a.plain:hover { color: var(--brand); }
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ---- rules ------------------------------------------------------------- */
+hr, .hairline { height: 1px; background: var(--hairline); border: 0; margin: 0; }
+
+/* ---- tables ------------------------------------------------------------ */
+/* `position: relative` is not decoration here.
+ 
+   Tables on this site carry `.sr-only` cells, which are `position: absolute`.
+   An absolutely positioned box is laid out against its nearest POSITIONED
+   ancestor, so without this they resolved against the page, escaped the scroll
+   box entirely and stretched <html> past the viewport — /download scrolled
+   sideways by 158px on a 390px screen, from three 1px spans nobody can see.
+   `overflow-x: auto` never clipped them because they were never inside it. */
+.table-scroll { overflow-x: auto; position: relative; }
+table { border-collapse: collapse; width: 100%; font-size: var(--fs-small); min-width: 480px; }
+th, td {
+  text-align: left;
+  padding: 10px var(--s-4) 10px 0;
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: top;
+}
+th {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  border-bottom-color: var(--hairline-strong);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+
+/* ---- buttons ----------------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  padding: 10px 18px;
+  font-size: 0.85rem; font-weight: var(--fw-strong); letter-spacing: -0.005em;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--hairline-strong);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color var(--m-micro) ease-out, color var(--m-micro) ease-out,
+              background var(--m-micro) ease-out;
+}
+.btn:hover { border-color: var(--text-tertiary); }
+.btn-primary {
+  background: var(--brand); border-color: var(--brand); color: var(--brand-ink);
+}
+.btn-primary:hover { filter: brightness(1.08); border-color: var(--brand); }
+
+/* ---- note callouts ----------------------------------------------------- */
+.note {
+  border-left: 2px solid var(--brand-line);
+  padding: 2px 0 2px var(--s-4);
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+}
+.note-attention { border-left-color: var(--accent-attention); }
+.note-critical  { border-left-color: var(--accent-critical); }
+
+/* ---- entrance motion: TRANSFORM ONLY, and this is not a style choice -------
+   The first version faded content in from `opacity: 0` with a delay. In a tab
+   whose document timeline has not started — one opened in the background, one
+   restored from a session, one that has never composited a frame — the
+   animation sits pending at t=0 and `animation-fill-mode: both` holds the
+   BACKWARDS fill, so every animated row renders at opacity 0 and the page is
+   blank. Measured here: `document.timeline.currentTime` was 0 and every
+   `.cm-row` computed to `opacity: 0` while the markup was fully present.
+
+   10-WEBSITE §6 makes the rule explicit — a sequence never blocks reading, and
+   nothing beneath it waits for it. So the sequences animate `transform` and
+   nothing else. A frozen clock now costs a few pixels of offset instead of the
+   content, which is the failure worth having.                               */
+.reveal { animation: reveal-in 460ms var(--curve) both; }
+.reveal-2 { animation-delay: 60ms; }
+.reveal-3 { animation-delay: 120ms; }
+
+@keyframes reveal-in {
+  from { transform: translateY(10px); }
+  to   { transform: none; }
+}
+
+/* ============================================================================
+   WHEN a sequence plays — scroll position, not page load.
+
+   Every sequence on this site used to start when the document did. On a page
+   four screens tall that means the denial log on /safety finishes playing while
+   the reader is still in the first paragraph, and the only people who ever saw
+   it were the ones who happened to land mid-page. An animation nobody is
+   looking at is weight, not communication.
+
+   `animation-timeline: view()` binds an element's animation to its own
+   visibility, so it plays when it is reached. Three things make that safe here:
+
+     1. The STAGGER comes from geometry. Each row in a sequence enters the
+        viewport a few pixels after the one above it, so a single uniform range
+        produces the cascade that inline `animation-delay` used to fake. Every
+        one of those delays is now inert — a progress-based timeline ignores
+        time-based delays — and none of them had to be deleted for this to work.
+     2. An INACTIVE timeline produces no output at all, and a timeline is
+        inactive until the page composites — a tab restored in the background,
+        a tab never fronted. So these keyframes may only ever animate transform,
+        the same rule the load-time sequences follow above and for the same
+        reason: a frozen clock must cost a few pixels of offset, never content.
+     3. `animation-timeline` is set HERE and the `animation` shorthand is set in
+        the component. Kept in one block the minifier folds them together into a
+        shorthand carrying a timeline name, which no browser accepts, and the
+        whole declaration is dropped. A gate fails the build if that shape
+        reappears in dist/.
+   ============================================================================ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* The doubled class is not a typo, and neither is `:root`.
+
+       A component declares its motion with the `animation` SHORTHAND, and the
+       shorthand resets `animation-timeline` to `auto` along with everything
+       else it does not mention. Astro scopes that component rule by adding its
+       own attribute to the selector, so `.cm-row[data-astro-cid-…]` carries
+       specificity (0,2,0) against this file's (0,1,0) — the component won, every
+       sequence stayed on the document timeline, and the change appeared to do
+       nothing at all while reading exactly right in the source. `:root .seq.seq`
+       is (0,3,0), which wins on merit rather than on import order. Measured:
+       `getComputedStyle(row).animationTimeline` was "auto" before, "view()"
+       after. */
+    :root .seq.seq, :root .reveal.reveal {
+      animation-timeline: view();
+      /* Started just after the element's top edge appears, finished well before
+         it reaches the middle of the screen: the motion is over by the time the
+         reader's eye arrives, rather than moving while they read. */
+      animation-range: entry 2% entry 34%;
+    }
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION — every narrative sequence resolves to its END STATE.
+   Nobody loses information by turning motion off. (10-WEBSITE §6)
+
+   Duration alone is not enough: a sequence staggered by `animation-delay` would
+   still play out over three seconds with 1ms frames. The delay has to go too.
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+    /* Duration is meaningless to a progress-based timeline, so zeroing it does
+       not stop a scroll-driven animation — the element would still animate as
+       it was scrolled past. Putting it back on the document timeline, where the
+       1ms above does apply, resolves it to its end state immediately. */
+    animation-timeline: auto !important;
+  }
+}
+
+/* ---- sequence primitives (10-WEBSITE §6) ---------------------------------
+   Every narrative sequence is built from these two keyframes and a delay.
+   Transform only — see the note above on the frozen-timeline case. The
+   layout-shift budget is zero, so each stage reserves its height before it
+   animates, and a transform never contributes to layout in any case.         */
+@keyframes seq-line {
+  from { transform: translateY(8px); }
+  to   { transform: none; }
+}
+@keyframes seq-fade {
+  from { transform: translateX(-6px); }
+  to   { transform: none; }
+}
+
+figure { margin: 0; }
+
+/* A labelled recording. 10-WEBSITE §6 rule four: a recording says so. */
+.rec-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--s-4); padding: 9px var(--s-4);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-base);
+}
+.rec-label {
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-tertiary);
+}
+.panel {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--surface-raised);
+}
+.panel-body { padding: var(--s-4); }
+
+.glyph { font-family: var(--mono); }
+
+/* ============================================================================
+   PRODUCT-SITE PRIMITIVES (13-SITE-REBUILD §7 §8)
+
+   The pages that sell — /, /features, /download, /about, /community — are built
+   from the six classes below plus the components. Everything here is layout and
+   scale; the palette above is untouched, because on these pages the colour
+   comes from the screenshots.
+   ============================================================================ */
+
+/* ---- the hero promise --------------------------------------------------
+   One line, as large as it deserves, and never a subclause. */
+.hero-title {
+  font-size: var(--fs-hero);
+  line-height: 1.03;
+  letter-spacing: -0.035em;
+  font-weight: var(--fw-strong);
+  text-wrap: balance;
+}
+.hero-lede { font-size: clamp(1.06rem, 1.6vw, 1.25rem); max-width: 46ch; }
+
+/* The one line under the button that removes the last objection before the
+   click. Ellie and Luna both run it; ours is the privacy claim, not a price. */
+.reassure {
+  font-size: var(--fs-small);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- the one big button ------------------------------------------------
+   `.btn-lg` exists so the hero CTA is unmistakably the primary action. A gate
+   fails any section on / that contains more than one `.btn-primary`. */
+.btn-lg {
+  padding: 15px 30px;
+  font-size: 0.95rem;
+  font-family: var(--sans);
+  font-weight: var(--fw-strong);
+  border-radius: var(--r-full);
+  letter-spacing: -0.01em;
+}
+
+/* ---- alternating bands -------------------------------------------------
+   The scroll cadence the reference pattern depends on: every other block sits
+   on the sunken surface, so the eye is told where one idea ends. */
+.band {
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--hairline);
+}
+.band + .band { border-top: 0; }
+
+/* ---- a screenshot ------------------------------------------------------
+   `.shot` is the only element on this site allowed a shadow — see the note on
+   --shadow-shot. Intrinsic width/height live on the <img> so nothing reflows
+   when it decodes; the layout-shift budget is zero, not "low". */
+.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-shot);
+  background: var(--surface-base);
+}
+
+/* The hero's screenshot leans back a few degrees, which is the difference
+   between "here is a picture of software" and "here is software". Transform
+   only — it never contributes to layout, so a frozen clock or a failed decode
+   costs nothing. */
+.shot-tilted {
+  transform: perspective(2400px) rotateY(-7deg) rotateX(2deg) scale(1.02);
+  transform-origin: left center;
+}
+@media (max-width: 900px) {
+  .shot-tilted { transform: none; }
+}
+
+/* ---- the alternating copy/shot row ------------------------------------- */
+.shot-block {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(var(--s-6), 5vw, var(--s-9));
+  align-items: center;
+}
+.shot-block.flip > .shot-copy { order: 2; }
+@media (max-width: 900px) {
+  .shot-block { grid-template-columns: 1fr; gap: var(--s-6); }
+  .shot-block.flip > .shot-copy { order: 0; }
+}
+.shot-copy { max-width: 42ch; }
+
+/* ---- the fact row under the hero -------------------------------------- */
+.proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-6);
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+.proof li { display: flex; align-items: center; gap: var(--s-2); }
+.proof li::before { content: "·"; color: var(--text-disabled); }
+.proof li:first-child::before { content: none; }
+
+/* ---- chips ------------------------------------------------------------- */
+.chips { display: flex; flex-wrap: wrap; gap: var(--s-2); list-style: none; margin: 0; padding: 0; }
+.chip {
+  display: inline-block;
+  padding: 5px 11px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-full);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   TWO-VARIANT ARTWORK — the screenshots and the logo.
+
+   A `<picture>` with `media="(prefers-color-scheme: dark)"` reads the OS and
+   nothing else, so it ignores the theme button entirely: pick dark on a light
+   machine and the page turns dark around a light screenshot. Both variants are
+   in the markup instead and these four rules choose, on exactly the branches
+   `tokens.css` uses for the palette — the media query for "system", the
+   attribute for an explicit choice.
+
+   The hidden variant is `display: none` and its image is lazy, so it is not
+   fetched until the reader actually switches.
+   ============================================================================ */
+.only-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .only-light { display: none; }
+  :root:not([data-theme='light']) .only-dark { display: block; }
+}
+:root[data-theme='dark'] .only-light { display: none; }
+:root[data-theme='dark'] .only-dark { display: block; }
+:root[data-theme='light'] .only-light { display: block; }
+:root[data-theme='light'] .only-dark { display: none; }

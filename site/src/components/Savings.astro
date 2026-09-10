@@ -1,0 +1,173 @@
+---
+/**
+ * What the same month costs somewhere else.
+ *
+ * **The rate is the reader's, not our claim about a competitor.** Per-image and
+ * per-minute pricing at the cloud tools moves, differs by plan and by region,
+ * and a number typed here in September is a number that misrepresents somebody
+ * by March. So the page asks what you would be paying and does the arithmetic;
+ * every figure on screen is that assumption multiplied out, and the one number
+ * this site asserts is its own, which is zero.
+ *
+ * No JavaScript: the volumes and the rates are two radio groups, the twelve
+ * results are all rendered, and `:has()` shows the one that matches.
+ */
+
+/** Files a month. */
+const volumes = [200, 1000, 5000, 10000];
+/**
+ * Per-file rates, opening on CloudConvert's.
+ *
+ * $0.02 is where the scale starts because that is roughly what a CloudConvert
+ * conversion minute works out at per file, and it is the honest floor: the
+ * cheapest of the hosted options, so the saving shown by default is the
+ * smallest one this comparison can truthfully claim. The dearer rates are
+ * still offered because background removal and OCR credits sell far above a
+ * plain conversion, and a reader paying those should be able to see it.
+ */
+const rates = [0.02, 0.05, 0.1, 0.2];
+
+const money = (n: number) =>
+  n >= 1000 ? `$${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `$${n.toFixed(n < 10 ? 2 : 0)}`;
+
+/** One rule per control and per result, generated from the two lists. */
+const key = (r: number) => String(r).replace('.', '');
+const calcRules = [
+  ...volumes.map(
+    (v) =>
+      `.calc:has(#cv-${v}:checked) .o-v${v}` +
+      `{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}`,
+  ),
+  ...rates.map(
+    (r) =>
+      `.calc:has(#cr-${key(r)}:checked) .o-r${key(r)}` +
+      `{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}`,
+  ),
+  ...volumes.flatMap((v) =>
+    rates.map((r) => `.calc:has(#cv-${v}:checked):has(#cr-${key(r)}:checked) .v${v}-r${key(r)}{display:grid}`),
+  ),
+].join('\n');
+
+---
+<div class="calc">
+  {volumes.map((v, i) => (
+    <input type="radio" name="calc-vol" id={`cv-${v}`} class="c-in" checked={i === 1}
+      aria-label={`${v} files a month`} />
+  ))}
+  {rates.map((r, i) => (
+    <input type="radio" name="calc-rate" id={`cr-${String(r).replace('.', '')}`} class="c-in" checked={i === 0}
+      aria-label={`${r} dollars per file`} />
+  ))}
+
+  <div class="calc-controls">
+    <div class="ctl">
+      <p class="eyebrow">Files a month</p>
+      <div class="opts">
+        {volumes.map((v) => (
+          <label class={`opt o-v${v}`} for={`cv-${v}`}>{v.toLocaleString('en-GB')}</label>
+        ))}
+      </div>
+    </div>
+
+    <div class="ctl">
+      <p class="eyebrow">What you'd pay per file elsewhere</p>
+      <div class="opts">
+        {rates.map((r) => (
+          <label class={`opt o-r${String(r).replace('.', '')}`} for={`cr-${String(r).replace('.', '')}`}>
+            ${r.toFixed(2)}
+          </label>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="calc-out">
+    {volumes.map((v) =>
+      rates.map((r) => (
+        <div class={`res v${v}-r${String(r).replace('.', '')}`}>
+          <div class="col">
+            <span class="caption">A cloud tool, per year</span>
+            <span class="fig them">{money(v * r * 12)}</span>
+          </div>
+          <div class="col">
+            <span class="caption">OpenConvert, per year</span>
+            <span class="fig us">$0</span>
+          </div>
+        </div>
+      )),
+    )}
+  </div>
+
+  <p class="caption calc-note">
+    It opens on $0.02, about what a CloudConvert conversion works out at per
+    file. Per-file and per-minute pricing at the hosted tools changes by plan
+    and by month, and background removal or OCR credits cost several times a
+    plain conversion, so treat every rate here as an estimate and pick the one
+    closest to what you actually pay. The only figure this page asserts is its
+    own, and that one is zero.
+  </p>
+</div>
+
+
+
+<style>
+  .calc {
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    background: var(--surface-base);
+    padding: clamp(var(--s-5), 3vw, var(--s-7));
+    display: grid;
+    gap: var(--s-6);
+  }
+
+  .c-in {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  .calc-controls {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6);
+  }
+  @media (max-width: 620px) { .calc-controls { grid-template-columns: 1fr; } }
+  .ctl { display: grid; gap: var(--s-3); }
+  .opts { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  .opt {
+    padding: 6px 14px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-full);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    transition: border-color var(--m-micro) ease-out, color var(--m-micro) ease-out;
+  }
+  .opt:hover { border-color: var(--brand-line); color: var(--text-primary); }
+
+  .calc-out { display: grid; }
+  .res {
+    grid-area: 1 / 1;
+    display: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+  @media (max-width: 620px) { .res { grid-template-columns: 1fr; } }
+  .col {
+    display: grid; gap: var(--s-2);
+    padding: var(--s-5);
+    border-radius: var(--r-md);
+    background: var(--surface-sunken);
+  }
+  .fig {
+    font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+    font-weight: var(--fw-strong);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .them { color: var(--text-primary); }
+  .us { color: var(--brand); }
+  .calc-note { max-width: 62ch; }
+</style>
+
+<!-- One rule per control and per result, generated from the two lists. -->
+<style is:inline set:html={calcRules}></style>

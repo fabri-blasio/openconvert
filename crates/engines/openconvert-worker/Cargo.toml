@@ -1,0 +1,26 @@
+[package]
+name = "openconvert-worker"
+description = "Shared worker-side runtime: protocol, confinement self-application, read-back."
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+
+[dependencies]
+openconvert-core    = { workspace = true }
+openconvert-sandbox = { workspace = true }
+openconvert-os      = { workspace = true }
+serde             = { workspace = true }
+serde_json        = "1"
+thiserror         = { workspace = true }
+
+# THE one outbound fetch path (SR-9) lives here, in `net`. Native linkage is
+# permitted on this side of the depcheck boundary -- which matters because
+# every pure-Rust TLS stack bottoms out in `ring` or aws-lc-rs.
+ureq              = { version = "2", default-features = false, features = ["tls"] }
+
+[lints.clippy]
+# Worker-side runtime; it reads and writes real descriptors.
+disallowed_types   = "allow"
+disallowed_methods = "allow"

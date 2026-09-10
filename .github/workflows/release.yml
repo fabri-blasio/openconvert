@@ -1,0 +1,218 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: release
+
+# ============================================================================
+# The job that turns a tag into the six artifacts /download names.
+#
+# `site/src/data/release.json` already lists them, with a per-artifact
+# `confinement` string and a `verified` field that says whether that claim was
+# measured or merely built. This workflow produces the files; the last job
+# fills that JSON in with real sizes and hashes and uploads it for a human to
+# commit.
+#
+# `site/scripts/gates.mjs` fails the site build if a page renders a placeholder
+# hash while `release.state` is "published", so the gate is already waiting for
+# this workflow rather than being added alongside it.
+#
+# ⚠️ WHAT THIS WORKFLOW DOES NOT DO
+#
+#   - It does not sign anything. Windows Authenticode and macOS codesign +
+#     notarization both need secrets this repository does not hold, and an
+#     unsigned .dmg is quarantined by Gatekeeper on the user's machine. The
+#     steps are marked below rather than faked.
+#   - It does not make macOS confinement true. `crates/openconvert-os/src/macos.rs`
+#     has never executed on a Mac. This workflow will happily build a .dmg whose
+#     `verified` field says exactly that, which is the point of the field.
+#   - It does not build aarch64 Linux. Cross-compiling a webkit2gtk app needs a
+#     sysroot, and docs/spec/TARGETS.md is explicit that emulation validates compilation
+#     and never confinement — so a green arm64 job would buy nothing it does not
+#     already have.
+# ============================================================================
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            # The MSI has no directory page; the NSIS .exe is the one that asks
+            # where to install. Both are built, and /download offers both.
+            artifacts: 'msi,nsis'
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifacts: 'dmg'
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifacts: 'dmg'
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifacts: 'deb,appimage'
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 22.04 rather than latest, deliberately: a .deb links against the
+      # webkit2gtk it was built against, and building on the newest Ubuntu
+      # produces a package that will not install on the LTS most people run.
+      - name: linux build dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            patchelf \
+            libayatana-appindicator3-dev
+
+      # Windows workers dynamically link the replaceable native engines that
+      # ship beside them. The hosted runner includes vcpkg itself, but not
+      # these ports; xtask supplies the pinned pdfium/ONNX/DirectML binaries.
+      # Export VCPKG_ROOT because the worker build scripts intentionally use a
+      # single explicit installation tree instead of searching PATH.
+      - name: windows native dependencies
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (-not $env:VCPKG_INSTALLATION_ROOT) {
+            throw 'VCPKG_INSTALLATION_ROOT is not available on this runner'
+          }
+          "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install `
+            libheif:x64-windows `
+            libraw:x64-windows `
+            lcms:x64-windows `
+            mp3lame:x64-windows `
+            opus:x64-windows
+          cargo run -p xtask -- deps
+
+      # The installer's licence page is generated. Building a release from a
+      # stale one would ship a privacy statement that no longer matches the
+      # source every other surface renders.
+      - name: installer text is current
+        run: node release/render-installer-text.mjs --check
+
+      - name: frontend dependencies
+        working-directory: apps/desktop
+        run: npm ci
+
+      # The desktop shell is a separate Cargo workspace. Its build script can
+      # stage workers into the installer, but it deliberately does not build
+      # them. Build the exact release target first so a clean runner never
+      # packages an empty `engines/` directory or a worker from another target.
+      - name: build release engines
+        run: >-
+          cargo build --release --target ${{ matrix.target }}
+          -p oc-images -p oc-pdf -p oc-archive -p oc-audio -p oc-ai
+
+      # The gates run in ci.yml on every commit; they run again here because a
+      # tag can point at a commit that never passed them.
+      - name: gates
+        run: |
+          cargo run -p xtask -- manifest
+          cargo run -p xtask -- desktop
+          cargo run -p xtask -- lint
+
+      - name: build bundle
+        working-directory: apps/desktop
+        run: npx tauri build --target ${{ matrix.target }} --bundles ${{ matrix.artifacts }}
+
+      # TODO(signing): Authenticode on Windows, codesign + notarytool on macOS.
+      # Both need secrets. Until they exist, macOS users must clear the
+      # quarantine attribute by hand and /download says so rather than letting
+      # them discover it.
+
+      # Tauri names bundles for each platform's own convention; /download names
+      # them by target triple. This is the join, and it fails the build if the
+      # two lists disagree in either direction.
+      - name: collect and rename
+        run: node release/collect-bundles.mjs ${{ matrix.target }} dist-bundles
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.target }}
+          path: dist-bundles/*
+          if-no-files-found: error
+
+  # One job, one source of truth: every hash on the download page comes from
+  # the bytes this workflow produced, never from a human reading a terminal.
+  manifest:
+    needs: bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: checksums
+        run: |
+          find dist-artifacts -type f \
+            \( -name '*.msi' -o -name '*.exe' -o -name '*.dmg' \
+               -o -name '*.deb' -o -name '*.AppImage' \) \
+            -exec sha256sum {} + | tee SHA256SUMS
+
+      # Written into the CI checkout and uploaded, NOT committed and NOT pushed
+      # to the site. A workflow that force-pushes a data file to main on every
+      # tag is a workflow that can publish a hash nobody looked at. Someone
+      # takes this artifact, commits it, and the site build then refuses any
+      # placeholder that survived -- which is the review step, made explicit.
+      - name: rewrite release.json
+        run: node release/write-release-manifest.mjs SHA256SUMS --date "$(date -u +%F)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: |
+            SHA256SUMS
+            site/src/data/release.json
+
+      # Keep the release private until the generated manifest has been reviewed
+      # and committed. Publishing the draft then makes these stable URLs match
+      # the download page's base_url.
+      - name: create or update draft GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mapfile -t bundles < <(find dist-artifacts -type f \
+            \( -name '*.msi' -o -name '*.exe' -o -name '*.dmg' \
+               -o -name '*.deb' -o -name '*.AppImage' \) -print)
+          if [ "${#bundles[@]}" -ne 6 ]; then
+            echo "expected 6 release bundles, found ${#bundles[@]}" >&2
+            exit 1
+          fi
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${bundles[@]}" SHA256SUMS --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${bundles[@]}" SHA256SUMS \
+              --draft --verify-tag --generate-notes \
+              --title "OpenConvert $GITHUB_REF_NAME"
+          fi

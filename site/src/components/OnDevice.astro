@@ -1,0 +1,94 @@
+---
+// A4 — ON-DEVICE. (10-WEBSITE §7)
+//
+// A 21 MB model reads a page and nothing leaves. Two numbers carry it: the model
+// size and the byte counter, both on screen the whole time. The output lines are
+// what makes people look at the counter.
+//
+// The progress bar animates `transform: scaleX()`, never `width` — the gate in
+// scripts/gates.mjs rejects any animated layout property, and the CLS budget is
+// zero rather than low.
+// A literal newline per line, so copying the block out of the page yields the
+// text rather than one run-on string.
+const NL = String.fromCharCode(10);
+
+const lines = [
+  'INVOICE  No. 2026-0418',
+  'Bill to  Ashcombe Media Ltd',
+  'Due      30 September 2026',
+  'Total    £4,820.00',
+];
+---
+<figure class="panel od">
+  <div class="rec-bar">
+    <span class="rec-label">recorded · OCR on a 300 dpi scan</span>
+    <span class="rec-label">4 cores · 8 GB · no GPU</span>
+  </div>
+
+  <div class="panel-body stack stack-4">
+    <div class="od-head">
+      <div class="stack stack-1">
+        <span class="eyebrow">Model</span>
+        <span class="od-model mono">tesseract-lstm-eng · 21 MB</span>
+      </div>
+      <div class="stack stack-1 od-counter">
+        <span class="eyebrow">Bytes sent</span>
+        <span class="od-bytes mono">0</span>
+      </div>
+    </div>
+
+    <div class="od-track" role="img" aria-label="Model loaded, 900 ms">
+      <span class="od-fill"></span>
+    </div>
+
+    <pre class="od-out"><code>{lines.map((l, i) => (
+      <span class="od-line seq" style={`animation-delay: ${1000 + i * 380}ms`}>{l + NL}</span>
+    ))}</code></pre>
+
+    <p class="caption">
+      The counter is the component. It reads 0 at the start, 0 while the model
+      loads, 0 while the text appears, and 0 at the end — there is no endpoint
+      for it to count towards.
+    </p>
+  </div>
+</figure>
+
+<style>
+  .od-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: var(--s-4); flex-wrap: wrap;
+  }
+  .stack-1 { display: flex; flex-direction: column; gap: 2px; }
+  .od-model { font-size: 0.82rem; color: var(--text-primary); }
+  .od-counter { text-align: right; }
+  .od-bytes {
+    font-size: 1.5rem; line-height: 1.1; color: var(--brand);
+    font-weight: var(--fw-strong);
+  }
+
+  .od-track {
+    height: 3px; border-radius: var(--r-full);
+    background: var(--surface-sunken); overflow: hidden;
+  }
+  /* Deliberately NOT animated. A bar that fills over 900 ms is decoration, and
+     on a frozen document timeline it sits at scaleX(0) — an empty bar reading
+     as a stalled load, on the one component whose job is making local
+     inference believable. The model is loaded; the bar says so and holds
+     still. The 900 ms it used to take is now the delay before the first output
+     line, where it carries the same information and cannot fail closed. */
+  .od-fill {
+    display: block; height: 100%; background: var(--brand);
+    transform-origin: left center;
+  }
+
+  .od-out {
+    /* Reserved height for four lines. Nothing below this waits for the
+       sequence and nothing shifts when the lines arrive. */
+    min-height: calc(4 * 1.65em + 2 * var(--s-4));
+    font-size: 0.8rem;
+  }
+  .od-line {
+    display: block;
+    animation: seq-line 300ms var(--curve) both;
+  }
+</style>

@@ -1,0 +1,36 @@
+---
+/**
+ * One idea: a short heading, one line about it, one screenshot, one link.
+ *
+ * The rhythm the reference sites are built on — the shot alternates sides down
+ * the page, so each block is visibly a new claim rather than more of the last
+ * one. Never a paragraph here: if the point needs a paragraph it belongs on
+ * /features with its table.
+ */
+import Shot from './Shot.astro';
+
+export interface Props {
+  /** Scene id in shots.json. */
+  shot: string;
+  title: string;
+  eyebrow?: string;
+  /** Which side the picture sits on. */
+  side?: 'left' | 'right';
+  /** Where the claim is proved. */
+  href?: string;
+  linkText?: string;
+  /** Override the screenshot's authored alt when this context narrows it. */
+  alt?: string;
+}
+
+const { shot, title, eyebrow, side = 'right', href, linkText, alt } = Astro.props;
+---
+<div class:list={['shot-block', { flip: side === 'left' }]}>
+  <div class="shot-copy stack stack-4">
+    {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+    <h2>{title}</h2>
+    <div class="lede"><slot /></div>
+    {href && <p><a href={href}>{linkText ?? 'How it works'} →</a></p>}
+  </div>
+  <Shot id={shot} alt={alt} />
+</div>
