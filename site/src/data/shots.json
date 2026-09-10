@@ -2,7 +2,7 @@
   "_comment": "WRITTEN BY site/tools/shots/encode.mjs, never by hand. Alt text is authored in tools/shots/scenes.mjs, beside the click path that produces each picture. app_sha is the commit the app was captured at; scripts/gates.mjs refuses a build whose screenshots are more than one release behind it.",
   "generated_by": "site/tools/shots/encode.mjs",
   "encoder": "openconvert 0.1.0",
-  "app_sha": "f54cc57",
+  "app_sha": "e65b596",
   "captured": "2026-09-10",
   "shots": [
     {
