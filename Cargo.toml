@@ -27,7 +27,7 @@ version      = "0.1.0"
 edition      = "2021"
 rust-version = "1.90"
 license      = "Apache-2.0"
-repository   = "https://github.com/fabri-blasio/cloudconvert"
+repository   = "https://github.com/fabri-blasio/openconvert"
 
 [workspace.dependencies]
 # `version` is not decoration on a path dependency. Without it `cargo publish`

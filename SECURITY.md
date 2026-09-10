@@ -10,7 +10,7 @@ report has somewhere to go, rather than arriving before the process exists.
 ## Reporting
 
 Email **security@openconvert.dev** — or, until that address is live, open a
-[GitHub security advisory](https://github.com/fabri-blasio/cloudconvert/security/advisories/new),
+[GitHub security advisory](https://github.com/fabri-blasio/openconvert/security/advisories/new),
 which is private to the maintainers.
 
 Please do **not** open a public issue for a vulnerability.

@@ -1,8 +1,8 @@
 {
   "_comment": "`ideas`, `tiers`, `built`, `source` and `new_url` are WRITTEN BY site/scripts/export-board.mjs from GitHub Discussions. `discord` is authored here — set `invite` to the server's permanent invite URL and the community page links it; while it is null the page says the invite is not published yet rather than linking somewhere that is not the server.",
   "generated_by": "site/scripts/export-board.mjs",
-  "source": "https://github.com/fabri-blasio/cloudconvert/discussions/categories/ideas",
-  "new_url": "https://github.com/fabri-blasio/cloudconvert/discussions/new?category=ideas",
+  "source": "https://github.com/fabri-blasio/openconvert/discussions/categories/ideas",
+  "new_url": "https://github.com/fabri-blasio/openconvert/discussions/new?category=ideas",
   "built": null,
   "discord": {
     "invite": null,

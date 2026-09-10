@@ -1,8 +1,8 @@
 # https://securitytxt.org/
 Contact: mailto:security@openconvert.dev
-Contact: https://github.com/fabri-blasio/cloudconvert/security/advisories/new
+Contact: https://github.com/fabri-blasio/openconvert/security/advisories/new
 Expires: 2027-08-14T00:00:00.000Z
 Preferred-Languages: en
 Canonical: https://openconvert.dev/.well-known/security.txt
-Policy: https://github.com/fabri-blasio/cloudconvert/blob/main/SECURITY.md
+Policy: https://github.com/fabri-blasio/openconvert/blob/main/SECURITY.md
 Acknowledgments: https://openconvert.dev/security/thanks

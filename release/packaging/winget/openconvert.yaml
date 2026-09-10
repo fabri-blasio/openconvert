@@ -24,15 +24,15 @@ PackageVersion: 0.1.0
 PackageLocale: en-US
 Publisher: The OpenConvert Authors
 PublisherUrl: https://openconvert.dev
-PublisherSupportUrl: https://github.com/fabri-blasio/cloudconvert/issues
+PublisherSupportUrl: https://github.com/fabri-blasio/openconvert/issues
 PrivacyUrl: https://openconvert.dev/privacy
 Author: The OpenConvert Authors
 PackageName: OpenConvert
 PackageUrl: https://openconvert.dev
 License: Apache-2.0
-LicenseUrl: https://github.com/fabri-blasio/cloudconvert/blob/main/LICENSE
+LicenseUrl: https://github.com/fabri-blasio/openconvert/blob/main/LICENSE
 Copyright: Copyright 2026 The OpenConvert Authors
-CopyrightUrl: https://github.com/fabri-blasio/cloudconvert/blob/main/NOTICE
+CopyrightUrl: https://github.com/fabri-blasio/openconvert/blob/main/NOTICE
 ShortDescription: Convert any file into anything, on your machine.
 Description: |-
   OpenConvert converts files locally. Every third-party engine runs inside an
@@ -60,7 +60,7 @@ Tags:
   - offline
   - privacy
   - sandbox
-ReleaseNotesUrl: https://github.com/fabri-blasio/cloudconvert/releases/tag/v0.1.0
+ReleaseNotesUrl: https://github.com/fabri-blasio/openconvert/releases/tag/v0.1.0
 DocumentationUrl: https://openconvert.dev/docs
 
 MinimumOSVersion: 10.0.17763.0
@@ -88,13 +88,9 @@ FileExtensions:
   - dng
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/fabri-blasio/cloudconvert/releases/download/v0.1.0/openconvert-0.1.0-x86_64-pc-windows-msvc.msi
-    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
-    ProductCode: '{00000000-0000-0000-0000-000000000000}'
-  - Architecture: arm64
-    InstallerUrl: https://github.com/fabri-blasio/cloudconvert/releases/download/v0.1.0/openconvert-0.1.0-aarch64-pc-windows-msvc.msi
-    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
-    ProductCode: '{00000000-0000-0000-0000-000000000000}'
+    InstallerUrl: https://github.com/fabri-blasio/openconvert/releases/download/v0.1.0/openconvert-0.1.0-x86_64-pc-windows-msvc.msi
+    InstallerSha256: DB52A17EB94D120207D88256FFC3BD28F50FE676F85624314DF3EF4A46A7B761
+    ProductCode: '{B9037C64-2509-43AB-B3B4-DEA53AD3C880}'
 
 ManifestType: singleton
 ManifestVersion: 1.6.0

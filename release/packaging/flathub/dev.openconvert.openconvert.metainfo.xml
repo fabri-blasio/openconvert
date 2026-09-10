@@ -73,9 +73,9 @@
   <launchable type="desktop-id">dev.openconvert.openconvert.desktop</launchable>
 
   <url type="homepage">https://openconvert.dev</url>
-  <url type="bugtracker">https://github.com/fabri-blasio/cloudconvert/issues</url>
+  <url type="bugtracker">https://github.com/fabri-blasio/openconvert/issues</url>
   <url type="help">https://openconvert.dev/docs</url>
-  <url type="vcs-browser">https://github.com/fabri-blasio/cloudconvert</url>
+  <url type="vcs-browser">https://github.com/fabri-blasio/openconvert</url>
   <url type="contact">https://openconvert.dev/security</url>
 
   <categories>
@@ -137,7 +137,7 @@
           <li>A receipt beside every output, and a batch journal that resumes an interrupted run.</li>
         </ul>
       </description>
-      <url type="details">https://github.com/fabri-blasio/cloudconvert/releases/tag/v0.1.0</url>
+      <url type="details">https://github.com/fabri-blasio/openconvert/releases/tag/v0.1.0</url>
     </release>
   </releases>
 </component>

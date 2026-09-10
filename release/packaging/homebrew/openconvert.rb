@@ -15,14 +15,14 @@ cask "openconvert" do
   version "0.1.0"
 
   on_arm do
-    sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-    url "https://github.com/fabri-blasio/cloudconvert/releases/download/v#{version}/openconvert-#{version}-aarch64-apple-darwin.dmg",
-        verified: "github.com/fabri-blasio/cloudconvert/"
+    sha256 "b3e7606f063009ec0057f8b468e6b397a8d7db6aa8ba9605732f1120b35dd355"
+    url "https://github.com/fabri-blasio/openconvert/releases/download/v#{version}/openconvert-#{version}-aarch64-apple-darwin.dmg",
+        verified: "github.com/fabri-blasio/openconvert/"
   end
   on_intel do
-    sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-    url "https://github.com/fabri-blasio/cloudconvert/releases/download/v#{version}/openconvert-#{version}-x86_64-apple-darwin.dmg",
-        verified: "github.com/fabri-blasio/cloudconvert/"
+    sha256 "4d7dccea3a5ff3758d72745482f5eab8c4ef69db2c72597d56b94d9716a61958"
+    url "https://github.com/fabri-blasio/openconvert/releases/download/v#{version}/openconvert-#{version}-x86_64-apple-darwin.dmg",
+        verified: "github.com/fabri-blasio/openconvert/"
   end
 
   name "OpenConvert"

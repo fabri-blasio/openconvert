@@ -4,7 +4,7 @@
   "state": "published",
   "date": "2026-09-10",
   "tag": "v0.1.0",
-  "base_url": "https://github.com/fabri-blasio/cloudconvert/releases/download/v0.1.0",
+  "base_url": "https://github.com/fabri-blasio/openconvert/releases/download/v0.1.0",
   "artifacts": [
     {
       "platform": "windows",

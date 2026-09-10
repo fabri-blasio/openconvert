@@ -10,7 +10,7 @@ desktop app, and the Astro website for `openconvert.dev`.
 ## Downloads
 
 Installers will be published on the
-[GitHub Releases page](https://github.com/fabri-blasio/cloudconvert/releases).
+[GitHub Releases page](https://github.com/fabri-blasio/openconvert/releases).
 Pushing a `v*` tag builds six platform bundles and creates a **draft** release;
 the release remains private until its checksums and installers are reviewed and
 the draft is published. The website's download page reads the same release
@@ -24,7 +24,7 @@ Requirements: Rust 1.90, Node.js 22, npm, and the platform prerequisites listed
 by [Tauri](https://v2.tauri.app/start/prerequisites/).
 
 ```powershell
-git clone https://github.com/fabri-blasio/cloudconvert.git
+git clone https://github.com/fabri-blasio/openconvert.git
 cd openconvert
 cargo build --workspace
 
