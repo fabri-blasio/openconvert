@@ -17,6 +17,8 @@
     "export:board": "node scripts/export-board.mjs"
   },
   "dependencies": {
+    "@emnapi/core": "^1.11.3",
+    "@emnapi/runtime": "^1.11.3",
     "@astrojs/vercel": "^11.0.10",
     "astro": "^7.3.2",
     "pdf-lib": "^1.17.1"
