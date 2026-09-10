@@ -105,6 +105,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The screenshot-freshness gate proves shots.json's capture commit is
+          # an ancestor of HEAD. A depth-1 checkout cannot answer that question.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
