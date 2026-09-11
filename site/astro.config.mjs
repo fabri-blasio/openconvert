@@ -18,7 +18,9 @@ export default defineConfig({
   // Everything else — all fourteen pages — is still a file on disk, and the
   // gates still read them out of dist/.
   output: 'static',
-  adapter: vercel(),
+  adapter: vercel({
+    webAnalytics: { enabled: true },
+  }),
   trailingSlash: 'never',
   build: {
     inlineStylesheets: 'always',
