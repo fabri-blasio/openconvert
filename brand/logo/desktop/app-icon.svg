@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1450 1244" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -103 1450 1450" role="img" aria-labelledby="title desc">
   <title id="title">OpenConvert folder mole</title>
   <desc id="desc">Vector trace of the supplied monoline folder and mole logo.</desc>
-  <rect width="1450" height="1244" fill="#FCFCFB"/>
+  <!-- Keep the supplied logo unchanged; only the desktop tile is rounded. -->
+  <rect x="20" y="-83" width="1410" height="1410" rx="210" fill="#FCFCFB"/>
 
   <!-- Folder contour traced from the supplied stencil. -->
   <path d="M200 61h390c27 0 48 9 66 31l80 101c13 16 29 22 51 22h504c58 0 105 47 105 105v630c0 58-47 105-105 105H200c-58 0-105-47-105-105V166c0-58 47-105 105-105Z"

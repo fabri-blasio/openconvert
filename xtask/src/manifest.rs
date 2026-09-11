@@ -75,8 +75,8 @@ const REQUIRED: &[(&str, &str)] = &[
     // fail a `cargo build`; it fails a `tauri build`, at the end, on a machine
     // that has already spent ten minutes compiling. Cheaper to say so now.
     (
-        "apps/desktop/src-tauri/icons/icon.ico",
-        "the app icon and the NSIS installerIcon, generated from brand/logo",
+        "brand/logo/desktop/app-icon.ico",
+        "the app icon and the NSIS installerIcon used directly from the final brand package",
     ),
     (
         "apps/desktop/src-tauri/installer/header.bmp",

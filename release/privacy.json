@@ -1,7 +1,7 @@
 {
   "_comment": "THE SINGLE PRIVACY SOURCE. Three surfaces render this file: openconvert.dev/privacy, the privacy section of README.md, and the app's settings screen. 10-WEBSITE §9 gates the site copy at 300 words and diffs it against the other two, because three hand-maintained copies of a privacy statement are three statements that will disagree. Edit here, re-render, never edit a rendering.",
   "word_cap": 300,
-  "revised": "2026-08-24",
+  "revised": "2026-09-11",
   "sections": [
     {
       "id": "files",
@@ -26,7 +26,7 @@
     {
       "id": "website",
       "heading": "This website",
-      "body": "Static files. No cookies, no third-party scripts, no remote fonts or images, no tag manager. A Content-Security-Policy blocks outbound connections and a build check verifies it. Any future analytics are self-hosted, cookieless, and disclosed in this paragraph."
+      "body": "Vercel Web Analytics counts page views without cookies or cross-site identifiers. Vercel receives URL, referrer, coarse location, browser, operating system and device type — never files. No custom events, remote fonts, images or tag manager."
     }
   ],
   "closing": "Generated from one file shared with the README and the app's settings screen. The build fails if the three disagree."

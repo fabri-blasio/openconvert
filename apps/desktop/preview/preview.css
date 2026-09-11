@@ -31,7 +31,9 @@ html.preview-frame #app {
   max-width: 100%;
   max-height: 100%;
   overflow: hidden;
-  border-radius: 10px;
+  /* Use the real frame geometry. A separate preview-only radius concealed the
+     mismatch between the webview clip and Windows' native outside border. */
+  border-radius: var(--window-frame-radius);
   background: var(--surface-base);
   box-shadow:
     0 0 0 0.5px light-dark(rgba(0, 0, 0, 0.14), rgba(255, 255, 255, 0.14)),

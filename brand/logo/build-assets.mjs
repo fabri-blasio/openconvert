@@ -2,6 +2,7 @@ import sharp from "sharp";
 import fs from "node:fs/promises";
 
 const source = "brand/logo/openconvert-mole-logo.svg";
+const desktopSource = "brand/logo/desktop/app-icon.svg";
 const website = "brand/logo/website";
 const desktop = "brand/logo/desktop";
 const background = { r: 252, g: 252, b: 251, alpha: 1 };
@@ -19,8 +20,8 @@ await sharp(source).resize({ width: 1200 }).png().toFile(`${website}/og-image.pn
 const sizes = [16, 32, 48, 64, 128, 256, 512, 1024];
 const buffers = [];
 for (const size of sizes) {
-  const buffer = await sharp(source)
-    .resize(size, size, { fit: "contain", background: background })
+  const buffer = await sharp(desktopSource)
+    .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()
     .toBuffer();
   buffers.push(buffer);

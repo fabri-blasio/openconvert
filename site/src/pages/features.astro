@@ -13,13 +13,15 @@
  */
 import Base from '../layouts/Base.astro';
 import Shot from '../components/Shot.astro';
-import ToolList from '../components/ToolList.astro';
+import ToolTabs from '../components/ToolTabs.astro';
 import RoutePicker from '../components/RoutePicker.astro';
 import Savings from '../components/Savings.astro';
+import Receipt from '../components/Receipt.astro';
 import PlatformCta from '../components/PlatformCta.astro';
 import data from '../data/formats.json';
 import models from '../data/models.json';
 import toolData from '../data/tools.json';
+import { toolGroups } from '../data/tool-groups';
 
 type Fmt = { id: string; kind: string; routes: { to: string }[] };
 const formats = data.formats as Fmt[];
@@ -45,6 +47,19 @@ type Feature = {
   size: string; licence: string; usable: boolean;
 };
 const pack = (models.features as Feature[]).filter((f) => f.usable);
+const modelGroups = [
+  {
+    id: 'image',
+    title: 'Image models',
+    items: pack.filter((f) =>
+      f.id.startsWith('remove-background') || f.id === 'upscale' || f.id === 'ocr'),
+  },
+  {
+    id: 'audio',
+    title: 'Audio models',
+    items: pack.filter((f) => f.id === 'denoise' || f.id === 'transcribe'),
+  },
+];
 
 /* The receipt, in the four lines a person actually wants from it. */
 const receiptFields = [
@@ -92,7 +107,7 @@ const receiptFields = [
           search you have ever run about your own files.
         </p>
       </div>
-      <ToolList />
+      <ToolTabs groups={toolGroups} />
     </div>
   </section>
 
@@ -108,29 +123,39 @@ const receiptFields = [
       </div>
 
       <div class="models">
-        <ul class="model-list">
-          {pack.map((f) => (
-            <li class="model">
-              <div class="m-top">
-                <span class="m-title">{f.title}</span>
-                <span class="m-size caption">{f.size}</span>
-              </div>
-              <p class="small m-does">{f.does}</p>
-              <p class="caption m-meta">
-                {f.artifacts.map((a, i) => (
-                  <>
-                    {i > 0 && ' · '}
-                    {a.href
-                      ? <a href={a.href} rel="noopener">{a.name}</a>
-                      : <span>{a.name}</span>}
-                    {' '}{a.version}
-                  </>
+        <div class="model-groups">
+          {modelGroups.map((group, i) => (
+            <details class="model-group" open={i === 0}>
+              <summary>
+                <span>{group.title}</span>
+                <span class="caption">{group.items.length} options</span>
+              </summary>
+              <ul class="model-list">
+                {group.items.map((f) => (
+                  <li class="model">
+                    <div class="m-top">
+                      <span class="m-title">{f.title}</span>
+                      <span class="m-size caption">{f.size}</span>
+                    </div>
+                    <p class="small m-does">{f.does}</p>
+                    <p class="caption m-meta">
+                      {f.artifacts.map((a, artifactIndex) => (
+                        <>
+                          {artifactIndex > 0 && ' · '}
+                          {a.href
+                            ? <a href={a.href} rel="noopener">{a.name}</a>
+                            : <span>{a.name}</span>}
+                          {' '}{a.version}
+                        </>
+                      ))}
+                      {' — '}{f.licence}
+                    </p>
+                  </li>
                 ))}
-                {' — '}{f.licence}
-              </p>
-            </li>
+              </ul>
+            </details>
           ))}
-        </ul>
+        </div>
 
         <div class="m-shot">
           <Shot id="ai-features" alt="The OpenConvert first-run panel offering four optional models, none installed." />
@@ -147,7 +172,7 @@ const receiptFields = [
   <section id="cost">
     <div class="wrap stack stack-6">
       <div class="sec-head stack stack-3">
-        <h2>The money you save.</h2>
+        <h2>The $ you save.</h2>
         <p class="lede">
           Background removal and file conversion are metered almost everywhere
           else. With OpenConvert they are free, for good.
@@ -178,7 +203,13 @@ const receiptFields = [
           </dl>
           <p><a href="/safety">How the confinement it records actually works →</a></p>
         </div>
-        <Shot id="receipt-open" alt="A receipt expanded in OpenConvert, listing engine, class, limits, hashes and network calls." />
+        <div class="receipt-example">
+          <Shot id="receipt-open" alt="A receipt expanded in OpenConvert, listing engine, class, limits, hashes and network calls." />
+          <details class="receipt-json">
+            <summary>Example receipt JSON</summary>
+            <Receipt />
+          </details>
+        </div>
       </div>
     </div>
   </section>
@@ -201,23 +232,40 @@ const receiptFields = [
   .sec-head { text-align: center; align-items: center; }
   .sec-head h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); letter-spacing: -0.028em; }
   .sec-head .lede { max-width: 56ch; }
+  #tools .wrap, #ai .wrap { max-width: min(94vw, 1140px); }
 
   /* ---- models ---- */
   .models {
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    grid-template-columns: minmax(0, 3fr) minmax(0, 8fr);
     gap: clamp(var(--s-6), 5vw, var(--s-8));
     align-items: center;
   }
   @media (max-width: 900px) { .models { grid-template-columns: 1fr; } }
 
+  .model-groups {
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: var(--surface-base);
+  }
+  .model-group + .model-group { border-top: 1px solid var(--hairline); }
+  .model-group summary {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s-4);
+    padding: var(--s-5);
+    cursor: pointer;
+    font-weight: var(--fw-strong);
+    list-style: none;
+  }
+  .model-group summary::-webkit-details-marker { display: none; }
+  .model-group summary::after { content: '⌄'; color: var(--text-tertiary); }
+  .model-group[open] summary::after { rotate: 180deg; }
+  .model-group summary:hover { color: var(--brand); }
   .model-list {
     list-style: none; margin: 0; padding: 0;
     display: grid; gap: 1px;
     background: var(--hairline);
-    border: 1px solid var(--hairline);
-    border-radius: var(--r-lg);
-    overflow: hidden;
+    border-top: 1px solid var(--hairline);
   }
   .model { padding: var(--s-4) var(--s-5); background: var(--surface-base); }
   .m-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
@@ -235,6 +283,19 @@ const receiptFields = [
   }
   @media (max-width: 900px) { .receipt-split { grid-template-columns: 1fr; } }
   .r-copy { max-width: 48ch; }
+  .receipt-example { display: grid; gap: var(--s-4); min-width: 0; }
+  .receipt-json {
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: var(--surface-base);
+  }
+  .receipt-json > summary {
+    padding: var(--s-4) var(--s-5);
+    cursor: pointer;
+    font-weight: var(--fw-strong);
+  }
+  .receipt-json > :global(.rp) { margin: 0; border: 0; border-top: 1px solid var(--hairline); border-radius: 0; }
 
   .fields { margin: 0; display: grid; gap: var(--s-3); }
   .fields dt {

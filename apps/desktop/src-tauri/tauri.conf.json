@@ -16,7 +16,7 @@
         "label": "main",
         "title": "OpenConvert",
         "decorations": false,
-        "transparent": false,
+        "transparent": true,
         "shadow": true,
         "width": 900,
         "height": 680,
@@ -36,11 +36,11 @@
     "active": true,
     "targets": "all",
     "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
+      "../../../brand/logo/desktop/app-icon-32.png",
+      "../../../brand/logo/desktop/app-icon-128.png",
+      "../../../brand/logo/desktop/app-icon-256.png",
+      "../../../brand/logo/desktop/app-icon.icns",
+      "../../../brand/logo/desktop/app-icon.ico"
     ],
     "resources": [
       "engines/*"
@@ -56,7 +56,7 @@
     "windows": {
       "nsis": {
         "installMode": "both",
-        "installerIcon": "icons/icon.ico",
+        "installerIcon": "../../../brand/logo/desktop/app-icon.ico",
         "headerImage": "installer/header.bmp",
         "sidebarImage": "installer/sidebar.bmp",
         "startMenuFolder": "OpenConvert",

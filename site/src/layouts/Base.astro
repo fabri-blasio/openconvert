@@ -1,7 +1,14 @@
 ---
 import '../styles/tokens.css';
 import '../styles/base.css';
+import Analytics from '@vercel/analytics/astro';
 import release from '../data/release.json';
+
+// @vercel/analytics publishes its Astro component through a TypeScript
+// re-export. Astro's checker does not infer that re-export as a component even
+// though Vite resolves it correctly, so give the template the component-shaped
+// value it expects without weakening the rest of this layout.
+const VercelAnalytics = Analytics as unknown as (props: Record<string, never>) => unknown;
 
 export interface Props {
   title: string;
@@ -36,36 +43,23 @@ export interface Props {
 
 const { title, description, path = '/', island = false, copy = false, contact = false } = Astro.props;
 
-// Zero external requests, enforced by policy as well as by convention.
-// Dev needs the HMR websocket; production allows nothing to connect at all.
+// Vercel Analytics uses a same-origin script and intake route. No third-party
+// origin is admitted; the website privacy section discloses the aggregated
+// page-view fields sent through that route.
 //
-// `script-src 'none'` in production is the JavaScript budget written as a
-// header: a content page that grew a script would stop executing it rather
-// than quietly shipping it.
-//
-// The island page is the one exception and it pays for itself in the policy:
-// `'wasm-unsafe-eval'` to compile the router module, and `connect-src 'self'`
-// to fetch it — nothing off this origin either way.
-// Every page now carries one script — `theme.js`, six hundred bytes that read
-// a preference and stamp an attribute — so `script-src 'none'` is no longer
-// true anywhere and pretending otherwise in a header would be worse than the
-// script. The policy stays as tight as it can be: 'self' only, no host is ever
-// named, and the island page adds exactly the one extra token it needs to
-// compile a WebAssembly module.
+// Analytics' official Astro component emits a small inline bootstrap which
+// then loads Vercel's same-origin endpoint. The island page additionally needs
+// `wasm-unsafe-eval` to compile the router module. No third-party origin is
+// named by either branch.
 const scriptSrc = island
-  ? "script-src 'self' 'wasm-unsafe-eval'"
-  : import.meta.env.PROD
-    ? "script-src 'self'"
-    : "script-src 'self' 'unsafe-inline'";
+  ? "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'"
+  : "script-src 'self' 'unsafe-inline'";
 
-// Only two pages fetch anything, and both only from this origin: the island
-// loads the wasm router, and /contact posts the form to /api/contact. The copy
-// button touches the clipboard and nothing else, so /download stays on 'none'.
-const connectSrc = island || contact
+// Analytics adds a same-origin page-view request everywhere. Development also
+// needs Astro's websocket; production still admits no external origin.
+const connectSrc = import.meta.env.PROD
   ? "connect-src 'self'"
-  : import.meta.env.PROD
-    ? "connect-src 'none'"
-    : "connect-src 'self' ws:";
+  : "connect-src 'self' ws:";
 
 // Where a <form> may submit. 'self' on /contact and nowhere else, so no page
 // on this site can be made to post anywhere but back to this origin.
@@ -135,6 +129,7 @@ const year = new Date().getFullYear();
        palette and corrects it after layout, which is a white flash on every
        navigation for anyone browsing dark. -->
   <script src="/theme.js" is:inline></script>
+  <VercelAnalytics />
 </head>
 <body>
   <a href="#main" class="skip">Skip to content</a>

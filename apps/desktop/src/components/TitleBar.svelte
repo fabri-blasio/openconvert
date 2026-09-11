@@ -29,6 +29,7 @@
   async function refresh() {
     try {
       maximized = await win.isMaximized();
+      document.documentElement.dataset.windowMaximized = String(maximized);
     } catch {
       // A window that cannot answer is not a reason to fail the chrome.
     }
@@ -40,7 +41,10 @@
     void win.onResized(() => void refresh()).then((fn) => {
       unlisten = fn;
     });
-    return () => unlisten?.();
+    return () => {
+      unlisten?.();
+      delete document.documentElement.dataset.windowMaximized;
+    };
   });
 
   /** Drag the window, unless the press landed on a control. */
@@ -172,6 +176,9 @@
 
   .controls {
     margin-left: auto;
+    /* The app shell insets content by --space-5. Caption buttons are window
+       chrome, not content, so give that inset back at the physical edge. */
+    margin-right: calc(-1 * var(--space-5));
     display: flex;
     align-self: stretch;
     /* Cancel the bar's vertical padding: a caption button that stops short of

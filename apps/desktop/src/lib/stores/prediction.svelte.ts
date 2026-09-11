@@ -34,6 +34,8 @@ export interface FileEntry {
   selected: number;
   plan: PlanPreview | null;
   planning: boolean;
+  /** Monotonic token that prevents an older async plan replacing a newer one. */
+  planGeneration: number;
   /**
    * Whether the user has explicitly chosen this file's target.
    *
@@ -200,6 +202,7 @@ class PredictionStore {
           selected: 0,
           plan: null,
           planning: false,
+          planGeneration: 0,
           confirmed: false,
           checked: true,
         }));
@@ -361,14 +364,22 @@ class PredictionStore {
       file.planning = false;
       return;
     }
+    const generation = ++file.planGeneration;
     file.planning = true;
     try {
-      file.plan = await getPlan([file.probe.path], target);
+      const plan = await getPlan([file.probe.path], target);
+      if (this.files[fileIndex] === file && file.planGeneration === generation) {
+        file.plan = plan;
+      }
     } catch (e) {
-      this.error = errorText(e);
-      file.plan = null;
+      if (this.files[fileIndex] === file && file.planGeneration === generation) {
+        this.error = errorText(e);
+        file.plan = null;
+      }
     } finally {
-      file.planning = false;
+      if (this.files[fileIndex] === file && file.planGeneration === generation) {
+        file.planning = false;
+      }
     }
   }
 
@@ -390,7 +401,7 @@ class PredictionStore {
   async settle() {
     const pending = this.files
       .map((file, index) => ({ file, index }))
-      .filter(({ file, index }) => !file.planning && file.plan === null && this.fileTarget(index) !== null);
+      .filter(({ file, index }) => file.plan === null && this.fileTarget(index) !== null);
     if (pending.length === 0) return;
     await Promise.all(pending.map(({ index }) => this.planFile(index)));
   }

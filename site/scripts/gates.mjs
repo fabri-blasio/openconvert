@@ -284,7 +284,7 @@ if (islandFiles.length === 0) {
     : fail('homepage island budget', `${total.toFixed(1)} KB, budget ${BUDGET.homepageJsKb} KB`);
 }
 
-/* ---- 3. zero external requests ----------------------------------------- */
+/* ---- 3. zero cross-origin requests ------------------------------------- */
 // Anything that would make the browser contact another host. Canonical and
 // og:url point at our own origin and are not requests; w3.org is an XML
 // namespace; nvd.nist.gov links on /security are anchors a reader clicks, not
@@ -304,16 +304,15 @@ for (const f of [...html, ...files.filter((x) => extname(x) === '.css')]) {
   }
 }
 leaks.length === BUDGET.externalHosts
-  ? pass('zero external requests')
-  : fail('zero external requests', leaks.slice(0, 5).join('; '));
+  ? pass('zero cross-origin requests')
+  : fail('zero cross-origin requests', leaks.slice(0, 5).join('; '));
 
 /* ---- 4. CSP present and locked down ------------------------------------ */
 // Every page carries one, and each page's policy is exactly as wide as what it
 // actually runs — the JavaScript budget expressed where a browser enforces it.
 //
-//   index.html     script 'self' + 'wasm-unsafe-eval', connect 'self'
-//   download.html  script 'self', connect 'none' — the clipboard is not a fetch
-//   everything else  both 'none'
+//   every page     script 'self' + 'unsafe-inline', connect 'self' for Analytics
+//   index.html     also adds 'wasm-unsafe-eval' for the router demo
 //
 // No page may name a host in any case, so none of the three can reach another
 // origin however the markup changes.
@@ -326,14 +325,13 @@ const looseCsp = html.filter((f) => {
 
   const wantScript =
     name === '/'
-      ? /script-src 'self' 'wasm-unsafe-eval'/
-      : /script-src 'self'(?!\s+')/;
+      ? /script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'/
+      : /script-src 'self' 'unsafe-inline'/;
 
-  // Two pages open a connection and both only to this origin: the homepage
-  // island fetches the wasm router, and /contact posts the form to
-  // /api/contact. Everything else stays on 'none'.
-  const wantConnect =
-    name === '/' || name === '/contact' ? /connect-src 'self'/ : /connect-src 'none'/;
+  // Analytics posts a page view through Vercel's same-origin route on every
+  // page. The homepage and contact page use that same permission for their own
+  // first-party requests; no external host is admitted.
+  const wantConnect = /connect-src 'self'/;
 
   // Only /contact has a form, so only /contact may submit one — and only back
   // here. Every other page must refuse outright.
@@ -346,7 +344,7 @@ const looseCsp = html.filter((f) => {
 noCsp.length === 0 && looseCsp.length === 0
   ? pass(
       'CSP on every page',
-      `${html.length} pages; island adds wasm-unsafe-eval, /contact adds form-action 'self'`,
+      `${html.length} pages; Analytics stays same-origin, island adds wasm-unsafe-eval`,
     )
   : fail('CSP on every page', `${noCsp.length} missing, ${looseCsp.map(rel).join(', ')} too loose`);
 

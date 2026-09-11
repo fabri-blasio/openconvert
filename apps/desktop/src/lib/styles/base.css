@@ -9,6 +9,7 @@
 html,
 body {
   height: 100%;
+  background: transparent;
 }
 
 /* The mount point needs a height, and only the app supplies one.
@@ -27,11 +28,21 @@ body {
 #app {
   height: 100%;
   min-height: 0;
+  overflow: hidden;
+  border-radius: var(--window-frame-radius);
+  background: var(--surface-base);
+}
+
+/* DWM removes its rounding when a Windows window is maximised. Keep the
+   webview clip in the same state or the four transparent corner gaps return. */
+html[data-window-maximized="true"] #app {
+  border-radius: 0;
 }
 
 body {
   margin: 0;
-  background: var(--surface-base);
+  padding: 0;
+  background: transparent;
   color: var(--text-primary);
   font-family: var(--font-ui);
   font-size: var(--text-body-size);

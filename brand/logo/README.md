@@ -18,6 +18,7 @@ approved folder-and-mole master.
 
 - `desktop/app-icon.svg` — vector source for platforms that support SVG.
 - `desktop/app-icon.ico` — Windows multi-resolution icon.
+- `desktop/app-icon.icns` — macOS multi-resolution icon.
 - `desktop/app-icon-1024.png` through `app-icon-16.png` — standard raster sizes
   for Windows, macOS, Linux, installers, and taskbars.
 

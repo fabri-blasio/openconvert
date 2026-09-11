@@ -175,12 +175,14 @@ const curlFor = (a: Artifact) => `curl -fL ${release.base_url}/${a.file} -o ${a.
   .head { padding-block: clamp(var(--s-7), 6vw, var(--s-9)) var(--s-8); }
   .head-grid {
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
     gap: clamp(var(--s-6), 5vw, var(--s-8));
     align-items: center;
   }
   @media (max-width: 900px) { .head-grid { grid-template-columns: 1fr; } }
   .head-copy { position: relative; }
+  .head-shot { width: min(100%, 560px); justify-self: end; }
+  @media (max-width: 900px) { .head-shot { width: min(100%, 680px); justify-self: start; } }
   .head-copy .hero-lede { color: var(--text-secondary); }
 
   /* The mark sits ABOVE the heading, in the flow.

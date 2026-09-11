@@ -109,6 +109,11 @@
   --radius-xl: 20px;
   --radius-full: 999px;
 
+  /* Windows 11 draws the native outside frame with an 8px corner. This is
+     window geometry, not a card radius: using --radius-lg here made the
+     webview's painted corner visibly tighter than the frame at 200% scaling. */
+  --window-frame-radius: 8px;
+
   --space-1: 2px;
   --space-2: 4px;
   --space-3: 8px;
@@ -267,5 +272,4 @@
   --shadow-float: 0 0 0 0.5px var(--hairline-strong),
     0 12px 40px rgba(0, 0, 0, 0.5);
 }
-
 

@@ -2,7 +2,9 @@
 
 The product site. Fourteen pages are prerendered, with one server route for the
 contact form and a lazy, local-only conversion island on the homepage. The
-published experience makes no third-party browser requests.
+published experience makes no cross-origin browser requests. Vercel Web
+Analytics is disclosed on the privacy page and uses Vercel's same-origin
+analytics route without cookies.
 
 Built to [10-WEBSITE](../docs/spec/10-WEBSITE.md). Visual language is inherited
 from [07-DESIGN-SYSTEM](../docs/spec/07-DESIGN-SYSTEM.md) — the tokens in `src/styles/tokens.css`

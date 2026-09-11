@@ -147,6 +147,14 @@ const inY = [56, 118, 180, 242];
 
   <!-- ══ fully local ══ -->
   <article class="cell cell-local">
+    <div class="cell-head">
+      <h3>Completely offline</h3>
+      <p class="small">
+        Every conversion runs with no network capability at all. The only
+        connection the app makes is downloading an AI model from Hugging Face,
+        if you ask for one.
+      </p>
+    </div>
     <div class="off-box">
       <svg class="offline" viewBox="0 0 120 96" role="img"
         aria-label="A wireless signal struck through: the app makes no network request at all.">
@@ -161,14 +169,6 @@ const inY = [56, 118, 180, 242];
           <path class="s2" d="M77 38 L43 72" />
         </g>
       </svg>
-    </div>
-    <div class="cell-head">
-      <h3>Completely offline</h3>
-      <p class="small">
-        Every conversion runs with no network capability at all. The only
-        connection the app makes is downloading an AI model from Hugging Face,
-        if you ask for one.
-      </p>
     </div>
   </article>
 
@@ -245,8 +245,8 @@ const inY = [56, 118, 180, 242];
     grid-template-columns: repeat(4, minmax(0, 1fr));
     grid-template-areas:
       "ai ai open conv"
-      "batch batch sand conv"
-      "local local local local";
+      "batch batch local conv"
+      "sand sand sand sand";
     gap: var(--s-4);
   }
   @media (max-width: 1000px) {
@@ -284,6 +284,14 @@ const inY = [56, 118, 180, 242];
   .cell-local { grid-area: local; }
   .cell-batch { grid-area: batch; }
   .cell-sand  { grid-area: sand; }
+  .cell-sand {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
+    align-items: center;
+  }
+  @media (max-width: 620px) {
+    .cell-sand { display: flex; }
+  }
 
   .cell-head { display: flex; flex-direction: column; gap: var(--s-2); }
   .cell h3 { font-size: var(--fs-title); letter-spacing: -0.015em; }
@@ -399,7 +407,7 @@ const inY = [56, 118, 180, 242];
 
   /* ---- the cage ---- */
   .cage-box { flex: 1; display: grid; place-items: center; min-height: 0; }
-  .cage { width: 100%; max-width: 300px; height: auto; }
+  .cage { width: 100%; max-width: 500px; height: auto; }
   .cage-file { color: var(--text-secondary); }
   .bars line, .frame line { stroke: var(--accent-critical); }
 

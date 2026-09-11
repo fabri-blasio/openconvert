@@ -335,7 +335,13 @@
    * (`armed`); nothing here hard-codes a number.
    */
   async function confirm() {
-    if (screen !== "preview" || !prediction.ready) return;
+    if (screen !== "preview") return;
+
+    // A click is also a final consistency check. Planning is asynchronous and
+    // a quick target change can otherwise leave the action looking live while
+    // its previous plan is still settling. Re-plan every missing target here
+    // and wait for the current generation before deciding whether to run.
+    await prediction.settle();
 
     // ASK ONCE, THEN BELIEVE THE ANSWER.
     //
@@ -785,7 +791,12 @@
             {/if}
           </span>
           <button type="button" class="secondary" onclick={browse}>Add more files</button>
-          <button type="button" class="primary" onclick={confirm} disabled={!prediction.ready}>
+          <button
+            type="button"
+            class="primary"
+            onclick={confirm}
+            disabled={prediction.loading || prediction.files.every((file) => file.options.length === 0)}
+          >
             Convert
             <span class="key" aria-hidden="true">⏎</span>
           </button>

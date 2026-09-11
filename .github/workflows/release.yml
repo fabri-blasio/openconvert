@@ -14,12 +14,15 @@ name: release
 # hash while `release.state` is "published", so the gate is already waiting for
 # this workflow rather than being added alongside it.
 #
-# ⚠️ WHAT THIS WORKFLOW DOES NOT DO
+# ⚠️ SIGNING REQUIREMENTS
 #
-#   - It does not sign anything. Windows Authenticode and macOS codesign +
-#     notarization both need secrets this repository does not hold, and an
-#     unsigned .dmg is quarantined by Gatekeeper on the user's machine. The
-#     steps are marked below rather than faked.
+#   - macOS is signed and notarized when all five APPLE_* secrets used below
+#     are present. A partial configuration fails instead of silently publishing
+#     another broken DMG. Without any of them, workflow_dispatch may still make
+#     an explicitly unsigned development artifact, but the strict release test
+#     will not claim that it is ready for users.
+#   - Windows Authenticode still needs a certificate this repository does not
+#     hold.
 #   - It does not make macOS confinement true. `crates/openconvert-os/src/macos.rs`
 #     has never executed on a Mac. This workflow will happily build a .dmg whose
 #     `verified` field says exactly that, which is the point of the field.
@@ -136,14 +139,79 @@ jobs:
           cargo run -p xtask -- desktop
           cargo run -p xtask -- lint
 
-      - name: build bundle
+      - name: prepare macOS signing and notarization
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        env:
+          MAC_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          MAC_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          MAC_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          MAC_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          MAC_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: |
+          values=("$MAC_CERTIFICATE" "$MAC_CERTIFICATE_PASSWORD" "$MAC_API_ISSUER" "$MAC_API_KEY" "$MAC_API_KEY_P8")
+          present=0
+          for value in "${values[@]}"; do
+            if [ -n "$value" ]; then present=$((present + 1)); fi
+          done
+          if [ "$present" -eq 0 ]; then
+            if [ "$GITHUB_REF_TYPE" = 'tag' ]; then
+              echo 'tagged macOS releases require all five APPLE_* signing secrets' >&2
+              exit 1
+            fi
+            echo 'OPENCONVERT_MAC_SIGNED=false' >> "$GITHUB_ENV"
+          elif [ "$present" -ne 5 ]; then
+            echo 'macOS signing is only partially configured; all five APPLE_* secrets are required' >&2
+            exit 1
+          else
+            key_path="$RUNNER_TEMP/AuthKey_${MAC_API_KEY}.p8"
+            printf '%s' "$MAC_API_KEY_P8" > "$key_path"
+            chmod 600 "$key_path"
+            echo "APPLE_API_KEY_PATH=$key_path" >> "$GITHUB_ENV"
+            echo 'OPENCONVERT_MAC_SIGNED=true' >> "$GITHUB_ENV"
+          fi
+
+      - name: build signed macOS bundle
+        if: matrix.os == 'macos-latest' && env.OPENCONVERT_MAC_SIGNED == 'true'
+        working-directory: apps/desktop
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: npx tauri build --target ${{ matrix.target }} --bundles ${{ matrix.artifacts }}
+
+      - name: build unsigned macOS development bundle
+        if: matrix.os == 'macos-latest' && env.OPENCONVERT_MAC_SIGNED != 'true'
         working-directory: apps/desktop
         run: npx tauri build --target ${{ matrix.target }} --bundles ${{ matrix.artifacts }}
 
-      # TODO(signing): Authenticode on Windows, codesign + notarytool on macOS.
-      # Both need secrets. Until they exist, macOS users must clear the
-      # quarantine attribute by hand and /download says so rather than letting
-      # them discover it.
+      - name: build non-macOS bundle
+        if: matrix.os != 'macos-latest'
+        working-directory: apps/desktop
+        run: npx tauri build --target ${{ matrix.target }} --bundles ${{ matrix.artifacts }}
+
+      - name: macOS artifact smoke test
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          dmg="$(find apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle -name '*.dmg' -print -quit)"
+          if [ "$OPENCONVERT_MAC_SIGNED" = 'true' ]; then
+            bash release/platform-tests/macos-smoke.sh "$dmg"
+          else
+            bash release/platform-tests/macos-smoke.sh --allow-unsigned "$dmg"
+          fi
+
+      - name: Linux artifact smoke tests
+        if: matrix.os == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          appimage="$(find apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle -iname '*.AppImage' -print -quit)"
+          deb="$(find apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle -name '*.deb' -print -quit)"
+          bash release/platform-tests/linux-smoke.sh "$appimage"
+          bash release/platform-tests/linux-smoke.sh "$deb"
+
+      # TODO(signing): Authenticode on Windows still needs a certificate.
 
       # Tauri names bundles for each platform's own convention; /download names
       # them by target triple. This is the join, and it fails the build if the

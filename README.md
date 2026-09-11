@@ -101,7 +101,7 @@ Under 300 words, and the same words the site and the app's settings screen show.
 
 **Stored locally.** Config, history, recipes, the batch journal and the engine quarantine list, all under your user profile, all readable and wipeable. None can enable a capability: quarantine only ever disables, and no config key touches the network floor, because that key does not exist.
 
-**This website.** Static files. No cookies, no third-party scripts, no remote fonts or images, no tag manager. A Content-Security-Policy blocks outbound connections and a build check verifies it. Any future analytics are self-hosted, cookieless, and disclosed in this paragraph.
+**This website.** Vercel Web Analytics counts page views without cookies or cross-site identifiers. Vercel receives URL, referrer, coarse location, browser, operating system and device type — never files. No custom events, remote fonts, images or tag manager.
 
 *Generated from one file shared with the README and the app's settings screen. The build fails if the three disagree.*
 

@@ -102,15 +102,13 @@ site/.vercel/
 /docs/workspace-improvements.md
 **/HANDOFF.md
 /docs/reviews/
+/PROJECT-BRIEF.md
 
-# Exploratory brand work is private; only the selected assets under
-# brand/final and brand/logo belong in the public source tree.
-/brand/animal-concepts/
-/brand/route-variants/
-/brand/previews/
-/brand/aioc-*
-/brand/concept-*
-/brand/README.md
+# Exploratory brand work is private. The approved package under brand/logo is
+# the only brand material that belongs in the public source tree.
+/brand/*
+!/brand/logo/
+!/brand/logo/**
 
 # Screenshot source captures and conversion receipts can contain local working
 # context. The optimized, reviewed images in site/public/shots remain public.

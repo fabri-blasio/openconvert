@@ -17,7 +17,7 @@ WHAT YOU ARE INSTALLING
 
 PRIVACY
 
-  The same words as openconvert.dev/privacy, revised 2026-08-24. The section
+  The same words as openconvert.dev/privacy, revised 2026-09-11. The section
   about the website itself is left out here and is on that page; everything
   the PROGRAM does is below, in full.
 
