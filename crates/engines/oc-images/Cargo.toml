@@ -12,7 +12,7 @@ name = "oc-images"
 path = "src/main.rs"
 
 [dependencies]
-oc-image-codecs = { path = "../oc-image-codecs", version = "0.1.0" }
+oc-image-codecs = { path = "../oc-image-codecs", version = "0.1.1" }
 serde = {version="1",features=["derive"]}
 serde_json="1"
 # SVG rasterisation. Apache-2.0 OR MIT, pure Rust, no C backend -- which is
@@ -53,7 +53,7 @@ tiff = "0.11.3"
 # roughly doubles what a full AV1 decoder compiles to for a case this build
 # would refuse on pixel budget anyway.
 rav1d = { version = "1", default-features = false, features = ["bitdepth_8"] }
-openconvert-worker = { path = "../openconvert-worker", version = "0.1.0" }
+openconvert-worker = { path = "../openconvert-worker", version = "0.1.1" }
 thiserror        = { workspace = true }
 
 # Pure Rust today for the common codecs; libvips, libraw and lcms2 arrive in

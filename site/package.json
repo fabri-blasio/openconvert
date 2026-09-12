@@ -9,7 +9,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "export": "node scripts/export-data.mjs && node scripts/export-tools.mjs && node scripts/export-receipt.mjs && node scripts/export-cli.mjs && node scripts/export-threats.mjs",
+    "export": "node scripts/export-data.mjs && node scripts/export-tools.mjs && node scripts/export-models.mjs && node scripts/export-receipt.mjs && node scripts/export-cli.mjs && node scripts/export-threats.mjs",
     "gates": "node scripts/gates.mjs",
     "verify": "astro check && astro build && node scripts/gates.mjs",
     "shots": "node tools/shots/run.mjs",

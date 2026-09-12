@@ -1,5 +1,5 @@
 {
-  "generated_by": "scripts/export-data.mjs from openconvert 0.1.0",
+  "generated_by": "scripts/export-data.mjs from openconvert 0.1.1",
   "formats": [
     {
       "id": "png",

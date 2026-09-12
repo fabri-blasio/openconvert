@@ -6,6 +6,7 @@ import release from '../data/release.json';
 type Artifact = {
   platform: string; label: string; arch: string; target: string; file: string;
   bytes: number; sha256: string; manager: string;
+  version?: string; date?: string; url?: string;
   confinement: string; verified: string; note: string;
 };
 const artifacts = release.artifacts as Artifact[];
@@ -55,11 +56,11 @@ const runsOn = (a: Artifact) =>
  */
 const releasesPage = release.base_url.replace(/\/download\/[^/]+$/, '');
 const hrefFor = (a: Artifact) =>
-  release.state === 'published' ? `${release.base_url}/${a.file}` : releasesPage;
+  release.state === 'published' ? (a.url ?? `${release.base_url}/${a.file}`) : releasesPage;
 
 /* The headless line is built from the release job's own base URL and file
    name, so it can never point at an artifact this release did not publish. */
-const curlFor = (a: Artifact) => `curl -fL ${release.base_url}/${a.file} -o ${a.file}`;
+const curlFor = (a: Artifact) => `curl -fL ${hrefFor(a)} -o ${a.file}`;
 ---
 <Base
   title="Install OpenConvert"
@@ -131,8 +132,8 @@ const curlFor = (a: Artifact) => `curl -fL ${release.base_url}/${a.file} -o ${a.
                 <tr>
                   <td><span class="pkg">{kind(a.file)}</span></td>
                   <td class="runs">{runsOn(a)}</td>
-                  <td class="mono">{release.version}</td>
-                  <td class="mono">{release.date}</td>
+                  <td class="mono">{a.version ?? release.version}</td>
+                  <td class="mono">{a.date ?? release.date}</td>
                   <td class="mono">{mb(a.bytes)}</td>
                   <td class="dl-cell">
                     <a class="dl-link" href={hrefFor(a)} rel="noopener">Download</a>

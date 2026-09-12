@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
-const SRC = join(ROOT, '..', '09-THREAT-MODEL.md');
+const SRC = join(ROOT, '..', 'docs', 'spec', '09-THREAT-MODEL.md');
 
 const lines = readFileSync(SRC, 'utf8').split(/\r?\n/);
 const start = lines.findIndex((l) => /^##\s*8\.\s*What we don't protect against/.test(l));

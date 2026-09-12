@@ -43,21 +43,31 @@ type Artifact = {
 };
 type Feature = {
   id: string; title: string; does: string;
+  tier: string | null;
   models: string[]; artifacts: Artifact[];
   size: string; licence: string; usable: boolean;
 };
 const pack = (models.features as Feature[]).filter((f) => f.usable);
 const modelGroups = [
   {
-    id: 'image',
-    title: 'Image models',
-    items: pack.filter((f) =>
-      f.id.startsWith('remove-background') || f.id === 'upscale' || f.id === 'ocr'),
+    id: 'remove-background',
+    title: 'Remove Background',
+    items: pack.filter((f) => f.id.startsWith('remove-background')),
   },
   {
-    id: 'audio',
-    title: 'Audio models',
-    items: pack.filter((f) => f.id === 'denoise' || f.id === 'transcribe'),
+    id: 'image-enlarge',
+    title: 'Image Enlarge',
+    items: pack.filter((f) => f.id === 'upscale'),
+  },
+  {
+    id: 'audio-transcription',
+    title: 'Audio Transcription',
+    items: pack.filter((f) => f.id.startsWith('transcribe')),
+  },
+  {
+    id: 'audio-denoising',
+    title: 'Audio Denoising',
+    items: pack.filter((f) => f.id === 'denoise'),
   },
 ];
 
@@ -124,17 +134,17 @@ const receiptFields = [
 
       <div class="models">
         <div class="model-groups">
-          {modelGroups.map((group, i) => (
-            <details class="model-group" open={i === 0}>
+          {modelGroups.map((group) => (
+            <details class="model-group">
               <summary>
                 <span>{group.title}</span>
-                <span class="caption">{group.items.length} options</span>
+                <span class="caption">{group.items.length} {group.items.length === 1 ? 'option' : 'options'}</span>
               </summary>
               <ul class="model-list">
                 {group.items.map((f) => (
                   <li class="model">
                     <div class="m-top">
-                      <span class="m-title">{f.title}</span>
+                      <span class="m-title">{f.tier ? `${f.tier[0].toUpperCase()}${f.tier.slice(1)}` : f.artifacts[0]?.name}</span>
                       <span class="m-size caption">{f.size}</span>
                     </div>
                     <p class="small m-does">{f.does}</p>
@@ -143,9 +153,8 @@ const receiptFields = [
                         <>
                           {artifactIndex > 0 && ' · '}
                           {a.href
-                            ? <a href={a.href} rel="noopener">{a.name}</a>
-                            : <span>{a.name}</span>}
-                          {' '}{a.version}
+                            ? <a href={a.href} rel="noopener">{a.name} {a.version}</a>
+                            : <span>{a.name} {a.version}</span>}
                         </>
                       ))}
                       {' — '}{f.licence}

@@ -1,7 +1,7 @@
 {
   "name": "openconvert-desktop",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "The OpenConvert desktop shell. Svelte 5 over Vite, with no runtime dependency beyond @tauri-apps/api.",
   "scripts": {

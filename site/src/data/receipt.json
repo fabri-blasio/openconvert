@@ -4,13 +4,13 @@
   "platform": "win32 x64",
   "receipt": {
     "version": 1,
-    "tool": "openconvert 0.1.0",
+    "tool": "openconvert 0.1.1",
     "content_id": "845c65d1e47b19221591a3356f5e059c0e4e8dbf555344154e3537bb75c2e948",
     "detected": "zip",
     "declared_mismatch": null,
     "steps": [
       {
-        "kind": "Extract",
+        "kind": "Extract { from: Zip, to: Tar }",
         "class": "A (lossless)",
         "engine": "oc-archive",
         "isolation": "sandboxed (read back in the worker): engaged ACG, AppContainer; not engaged CIG",

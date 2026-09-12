@@ -42,7 +42,9 @@ const TOML = join(ROOT, '..', 'models.toml');
 function parseTables(text) {
   const out = { model: [], feature: [] };
   let current = null;
-  for (const raw of text.split(/\r?\n/)) {
+  const lines = text.split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    const raw = lines[index];
     const line = raw.trim();
     if (line === '' || line.startsWith('#')) continue;
 
@@ -58,9 +60,13 @@ function parseTables(text) {
     const kv = /^(\w+)\s*=\s*(.+)$/.exec(line);
     if (!kv) continue;
     const [, key, rawValue] = kv;
-    const value = rawValue.trim();
+    let value = rawValue.trim();
 
     if (value.startsWith('[')) {
+      while (!value.includes(']') && index + 1 < lines.length) {
+        index += 1;
+        value += ` ${lines[index].trim()}`;
+      }
       current[key] = [...value.matchAll(/"([^"]*)"/g)].map((m) => m[1]);
     } else if (value.startsWith('"')) {
       current[key] = value.slice(1, value.lastIndexOf('"'));
@@ -129,6 +135,7 @@ const rows = features.map((f) => {
   const licences = [...new Set(parts.map((p) => p.licence))].sort();
   return {
     id: f.id,
+    tier: f.tier ?? null,
     title: f.title,
     does: f.does,
     // The artifacts, named. A capability is several files and the page said so

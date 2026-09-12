@@ -97,6 +97,7 @@ const nav = [
 ];
 
 const GITHUB = 'https://github.com/fabri-blasio/openconvert';
+const currentVersion = release.artifacts.find((artifact) => artifact.file.endsWith('.exe'))?.version ?? release.version;
 const year = new Date().getFullYear();
 ---
 <!doctype html>
@@ -229,7 +230,7 @@ const year = new Date().getFullYear();
           © {year} Clura srls · PI 18314321003 ·
           <a href="/imprint">company details</a>
         </span>
-        <span class="caption">openconvert {release.version} · Apache-2.0</span>
+        <span class="caption">openconvert {currentVersion} · Apache-2.0</span>
       </div>
     </div>
   </footer>

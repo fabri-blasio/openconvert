@@ -456,7 +456,7 @@ checksum = "7f8f80099a98041a3d1622845c271458a2d73e688351bf3cb999266764b81d48"
 
 [[package]]
 name = "corpus"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "cpubits"
@@ -1721,7 +1721,7 @@ dependencies = [
 
 [[package]]
 name = "oc-ai"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "hound",
  "image",
@@ -1738,7 +1738,7 @@ dependencies = [
 
 [[package]]
 name = "oc-archive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "brotli",
  "flate2",
@@ -1754,7 +1754,7 @@ dependencies = [
 
 [[package]]
 name = "oc-audio"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "flacenc",
  "hound",
@@ -1768,7 +1768,7 @@ dependencies = [
 
 [[package]]
 name = "oc-image-codecs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "mozjpeg",
  "oxipng",
@@ -1776,7 +1776,7 @@ dependencies = [
 
 [[package]]
 name = "oc-images"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "avif-parse",
  "image",
@@ -1798,7 +1798,7 @@ dependencies = [
 
 [[package]]
 name = "oc-pdf"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "calamine",
  "getrandom 0.3.4",
@@ -1824,7 +1824,7 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "openconvert"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "blake3",
@@ -1838,7 +1838,7 @@ dependencies = [
 
 [[package]]
 name = "openconvert-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "openconvert-core",
  "serde",
@@ -1846,7 +1846,7 @@ dependencies = [
 
 [[package]]
 name = "openconvert-os"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "openconvert-core",
  "thiserror",
@@ -1855,7 +1855,7 @@ dependencies = [
 
 [[package]]
 name = "openconvert-run"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "blake3",
@@ -1877,7 +1877,7 @@ dependencies = [
 
 [[package]]
 name = "openconvert-sandbox"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "corpus",
  "openconvert-core",
@@ -1887,14 +1887,14 @@ dependencies = [
 
 [[package]]
 name = "openconvert-wasm"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "openconvert-core",
 ]
 
 [[package]]
 name = "openconvert-worker"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "openconvert-core",
  "openconvert-os",

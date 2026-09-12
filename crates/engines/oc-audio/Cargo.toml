@@ -13,7 +13,7 @@ name = "oc-audio"
 path = "src/main.rs"
 
 [dependencies]
-openconvert-worker = { path = "../openconvert-worker", version = "0.1.0" }
+openconvert-worker = { path = "../openconvert-worker", version = "0.1.1" }
 
 # Decode: pure Rust (MPL-2.0), no `links` key. Permitted here because the
 # depcheck gate constrains `-run`'s graph, not the far side of the boundary --

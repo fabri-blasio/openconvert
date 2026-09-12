@@ -24,6 +24,16 @@ date.
 
 ---
 
+## 0.1.1 · 2026-09-12
+
+Windows maintenance release: restores the final app icon, fixes the window
+corner and title-bar alignment, makes combined edits configurable and
+reorderable, and prevents Convert from waiting for the output format to be
+selected a second time. The website now points directly at this corrected
+installer and describes each optional local-AI tier from `models.toml`.
+
+---
+
 ## The rename: Transitus becomes OpenConvert · 2026-09-08
 
 Every crate, engine, binary, bundle and document. `openconvert`,

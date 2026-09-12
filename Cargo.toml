@@ -23,7 +23,7 @@ members = [
 exclude = ["xtask/fixtures", "fuzz"]
 
 [workspace.package]
-version      = "0.1.0"
+version      = "0.1.1"
 edition      = "2021"
 rust-version = "1.90"
 license      = "Apache-2.0"
@@ -35,15 +35,15 @@ repository   = "https://github.com/fabri-blasio/openconvert"
 # copy that was next to it on someone's disk". cargo-deny flags the same thing
 # as a wildcard, which is how this was found -- the first time that step ever
 # ran, months before anyone would have tried to publish.
-openconvert-core    = { path = "crates/openconvert-core",    version = "0.1.0" }
-openconvert-sandbox = { path = "crates/openconvert-sandbox", version = "0.1.0" }
-openconvert-os      = { path = "crates/openconvert-os",      version = "0.1.0" }
-openconvert-run     = { path = "crates/openconvert-run",     version = "0.1.0" }
-openconvert-worker  = { path = "crates/engines/openconvert-worker", version = "0.1.0" }
+openconvert-core    = { path = "crates/openconvert-core",    version = "0.1.1" }
+openconvert-sandbox = { path = "crates/openconvert-sandbox", version = "0.1.1" }
+openconvert-os      = { path = "crates/openconvert-os",      version = "0.1.1" }
+openconvert-run     = { path = "crates/openconvert-run",     version = "0.1.1" }
+openconvert-worker  = { path = "crates/engines/openconvert-worker", version = "0.1.1" }
 # Test fixtures. publish = false, but it still carries a version: cargo-deny's
 # wildcard rule does not care why a path dep has no version, and neither should
 # we -- this gate caught the same omission twice, which is the gate working.
-corpus            = { path = "corpus",                   version = "0.1.0" }
+corpus            = { path = "corpus",                   version = "0.1.1" }
 
 serde     = { version = "1", features = ["derive"] }
 thiserror = "2"

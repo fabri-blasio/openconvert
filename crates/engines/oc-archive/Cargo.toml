@@ -12,7 +12,7 @@ name = "oc-archive"
 path = "src/main.rs"
 
 [dependencies]
-openconvert-worker = { path = "../openconvert-worker", version = "0.1.0" }
+openconvert-worker = { path = "../openconvert-worker", version = "0.1.1" }
 
 # PURE RUST, and that is the point of this worker existing now.
 #

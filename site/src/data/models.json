@@ -3,6 +3,7 @@
   "features": [
     {
       "id": "denoise",
+      "tier": null,
       "title": "Clean up noisy audio",
       "does": "Removes hiss and background noise from speech recordings.",
       "models": [
@@ -32,29 +33,9 @@
     },
     {
       "id": "remove-background-small",
+      "tier": "small",
       "title": "Remove image backgrounds",
       "does": "Cuts the subject out of a photo and leaves the rest transparent.",
-      "models": [
-        "u2netp 1.1.0"
-      ],
-      "artifacts": [
-        {
-          "name": "u2netp",
-          "version": "1.1.0",
-          "licence": "Apache-2.0",
-          "href": "https://github.com/danielgatis/rembg",
-          "host": "GitHub"
-        }
-      ],
-      "sizeBytes": 4574861,
-      "size": "4 MB",
-      "licence": "Apache-2.0",
-      "usable": true
-    },
-    {
-      "id": "remove-background-better",
-      "title": "Remove image backgrounds",
-      "does": "Sharper edges on hair and fur. Falls back to the small model when it finds no subject.",
       "models": [
         "modnet 1.0",
         "u2netp 1.1.0"
@@ -81,9 +62,10 @@
       "usable": true
     },
     {
-      "id": "remove-background-best",
+      "id": "remove-background-better",
+      "tier": "better",
       "title": "Remove image backgrounds",
-      "does": "The most accurate cut-out, and much the slowest -- about a minute per image on a CPU.",
+      "does": "Sharper edges on hair and fur, and finds subjects MODNet misses.",
       "models": [
         "birefnet-lite lite",
         "u2netp 1.1.0"
@@ -110,9 +92,40 @@
       "usable": true
     },
     {
+      "id": "remove-background-best",
+      "tier": "best",
+      "title": "Remove image backgrounds",
+      "does": "The most accurate cut-out, and much the slowest -- minutes per image on a CPU.",
+      "models": [
+        "birefnet-general general",
+        "u2netp 1.1.0"
+      ],
+      "artifacts": [
+        {
+          "name": "birefnet-general",
+          "version": "general",
+          "licence": "MIT",
+          "href": "https://huggingface.co/onnx-community/BiRefNet-ONNX",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "u2netp",
+          "version": "1.1.0",
+          "licence": "Apache-2.0",
+          "href": "https://github.com/danielgatis/rembg",
+          "host": "GitHub"
+        }
+      ],
+      "sizeBytes": 977241777,
+      "size": "932 MB",
+      "licence": "Apache-2.0 + MIT",
+      "usable": true
+    },
+    {
       "id": "upscale",
+      "tier": null,
       "title": "Enlarge images",
-      "does": "Doubles or quadruples an image's size without the usual blur.",
+      "does": "Quadruples an image's size without the usual blur.",
       "models": [
         "realesrgan-x4 x4plus"
       ],
@@ -132,6 +145,7 @@
     },
     {
       "id": "transcribe",
+      "tier": "small",
       "title": "Transcribe speech",
       "does": "Turns speech in an audio file into text you can read and search.",
       "models": [
@@ -176,7 +190,54 @@
       "usable": true
     },
     {
+      "id": "transcribe-large",
+      "tier": "best",
+      "title": "Transcribe speech",
+      "does": "Noticeably more accurate, especially on accents and background noise. Much slower on a processor.",
+      "models": [
+        "whisper-large-turbo-encoder large-v3-turbo",
+        "whisper-large-turbo-decoder large-v3-turbo",
+        "whisper-tokenizer base",
+        "silero-vad 5.0"
+      ],
+      "artifacts": [
+        {
+          "name": "whisper-large-turbo-encoder",
+          "version": "large-v3-turbo",
+          "licence": "MIT",
+          "href": "https://huggingface.co/onnx-community/whisper-large-v3-turbo",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "whisper-large-turbo-decoder",
+          "version": "large-v3-turbo",
+          "licence": "MIT",
+          "href": "https://huggingface.co/onnx-community/whisper-large-v3-turbo",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "whisper-tokenizer",
+          "version": "base",
+          "licence": "MIT",
+          "href": "https://huggingface.co/onnx-community/whisper-base",
+          "host": "Hugging Face"
+        },
+        {
+          "name": "silero-vad",
+          "version": "5.0",
+          "licence": "MIT",
+          "href": "https://github.com/snakers4/silero-vad",
+          "host": "GitHub"
+        }
+      ],
+      "sizeBytes": 1089315036,
+      "size": "1.0 GB",
+      "licence": "MIT",
+      "usable": true
+    },
+    {
       "id": "ocr",
+      "tier": null,
       "title": "Read text in images",
       "does": "Finds the words in a photo or scan and writes them to a text file.",
       "models": [
